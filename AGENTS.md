@@ -16,8 +16,8 @@ adding or changing a component.
   `ButtonGroup`, `ToggleButton`, `Fab`, `Rating`, `Slider`, `NumberField`,
   `Autocomplete`, `TransferList`, `Navbar`, `Drawer`, `List`, `ListItem`,
   `ListSubheader`, `Divider`, `Box`, `Container`, `Stack`, `Grid`,
-  `GridItem`, `ImageList`, `ImageListItem`, ...), plus `Helpers`,
-  `Elevation`, `Spacing`, `Shape`, `Ripple`.
+  `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, ...),
+  plus `Helpers`, `Elevation`, `Spacing`, `Shape`, `Ripple`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
 - `priv/static/phoenix_paper.css` — the Tailwind v4 theme (color tokens,
@@ -63,6 +63,17 @@ markup into a private function component (e.g. `ListItem`'s `item_content/1`)
 called from both branches instead of duplicating it — passing the same
 `assigns` map through works fine since it's still just a Phoenix.Component
 function receiving assigns, not a macro needing anything special.
+
+`Typography` hits the same wall with more branches (`variant="h1"` needs
+`<h1>`, `variant="body1"` needs `<p>`, `variant="code"` needs `<code>`, ...)
+— it's just one `:if` per distinct *tag* (grouping variants that share a
+tag into one `:if={@variant in [...]}`), not per variant, and the inner
+content (`render_slot(@inner_block)`) is a single line repeated across
+branches rather than factored out, since factoring it here would cost more
+than it saves. Unlike MUI's `Typography`, there's no `component` prop to
+pick the tag independently of `variant` — one attr driving both keeps this
+to 8 branches instead of the cross product of every variant with every
+possible tag.
 
 ## The ripple effect
 
@@ -124,9 +135,9 @@ Every component takes a `paperize` boolean attribute, **default `true`**.
 
 - `paperize={true}` (default): the component renders with PhoenixPaper's
   Material Design classes (the "paper" skin) — colors, elevation, shape,
-  typography. A caller-supplied `class` is still merged on top via `Tails`
-  (last conflicting utility wins), so small tweaks don't require dropping
-  into `paperize={false}`.
+  typography. A caller-supplied `class` is still merged on top via
+  `PhoenixPaper.Tails` (last conflicting utility wins), so small tweaks
+  don't require dropping into `paperize={false}`.
 - `paperize={false}`: **all** of the component's built-in classes are
   dropped. Only the caller's `class` and `rest` attrs render. The DOM
   structure needed for the component to function stays (e.g. the
@@ -142,6 +153,69 @@ Helpers.classes(@paperize, paper_classes(...), @class)
 
 Never hand-roll this gate inside a component — if `Helpers.classes/3`
 doesn't fit a new component's needs, fix it there.
+
+One attr doesn't go through that gate and needs its own handling:
+`ripple` (`Button`, `Fab`, `ToggleButton`, `ListItem`) fires via an
+`onclick` attribute, not a class, so `Helpers.classes/3` dropping
+`paper_classes(...)` under `paperize={false}` doesn't touch it — the
+ripple would still fire with nothing to size/clip it. Every ripple-capable
+component computes an effective `ripple and paperize` value and uses
+*that* everywhere `ripple` would otherwise appear (see
+`PhoenixPaper.Ripple`'s moduledoc). Keep that pattern for any new
+component that adds `ripple`.
+
+## `PhoenixPaper.Tails`, not plain `Tails` — and updating it when adding a color token
+
+`Helpers.classes/3` merges through `PhoenixPaper.Tails`, a `Tails.Custom`
+instance, **never** the plain `Tails` module directly. This isn't
+stylistic: plain `Tails` only recognizes Tailwind's own built-in palette
+names when deciding whether two classes conflict. It has no idea `pp-*` is
+a color family, so when a class sharing a prefix with a `pp-*` color shows
+up in the same merge — a font-size utility and `text-pp-*` both start
+`text-`; a border/outline *width* utility and `border-pp-*`/`outline-pp-*`
+both start `border-`/`outline-`) — it can't tell they're different CSS
+properties, lumps them into one "conflicting" group, and silently keeps
+only the last one. This was a real, already-shipping bug: `focus-visible:
+outline-2` was being dropped by every component using the standard focus
+ring pattern (`outline-2` + `outline-pp-primary` together), quietly
+shrinking every focus ring in the library to the browser default width.
+`PhoenixPaper.Tails` is `Tails.Custom` told about `pp-*` via `color_classes`
+specifically to fix this class of bug for good — see its moduledoc.
+
+That configuration lives entirely in `mix.exs`, split across **two
+mechanisms that are both required together** — this took two failed
+attempts (verified against a real external app depending on this package
+via `path:`, not just this package's own `mix test`, since that's what
+actually exposed each gap) to land correctly:
+
+- A plain `Application.put_env(:phoenix_paper, PhoenixPaper.Tails,
+  color_classes: [...])` at the top of `mix.exs`, so the value is visible
+  when `PhoenixPaper.Tails` itself compiles (`Application.compile_env/2`
+  reads whatever's in the application environment *at that moment* — a
+  `config/config.exs` file can't help here at all, since **Mix ignores
+  `config/config.exs` from dependencies** entirely; `mix.exs` works because
+  Mix always evaluates a dependency's `mix.exs` first, before any of its
+  `lib/*.ex`, to learn how to build it).
+- The *same* value again, in `application/0`'s `env:` key. This one's
+  needed because `Application.compile_env/2` doesn't just read a value —
+  it also makes Mix validate that value against whatever `:phoenix_paper`
+  is loaded with when the OTP application actually **starts** (e.g. when
+  `PhoenixPlayground.start/1` boots the full app tree in `dev.exs`).
+  Application loading resets the app's environment from its compiled
+  `.app` resource file, discarding the ad-hoc `put_env` from step one —
+  `env:` is what bakes a value directly into that resource, so it's there
+  when loading happens. Without it, `mix compile`/`mix test` pass (they
+  never start the OTP application) but booting a real LiveView server
+  crashes with a `Mix.Error` about mismatched compile-time/runtime values.
+
+Using only one of the two isn't enough — the `mix.exs` module comment
+where both live spells out exactly which failure mode each one alone
+leaves open, if you're ever tempted to simplify it back down to one.
+
+**If you ever add a new `pp-*` token** (a new palette color in
+`priv/static/phoenix_paper.css`, say), add its name to the shared
+`color_classes` list in `mix.exs` too — otherwise it inherits this exact
+bug the moment it's combined with a same-prefixed non-color utility.
 
 ## Tailwind class safety — no dynamic class names
 
@@ -234,6 +308,31 @@ a list of children it could interleave dividers between. `Container`'s
 `max_width` uses Tailwind's own `sm`/`md`/`lg`/`xl`/`2xl` screen scale
 rather than replicating MUI's specific pixel breakpoints.
 
+## Surfaces and composition (`Paper`, `Card`, `Typography`)
+
+`PhoenixPaper.Paper` is the base surface primitive (background + elevation
++ shape, no padding, no slots) — `Card` is built by composing `Paper`
+rather than duplicating its `paper_classes`, matching MUI's real
+architecture (`Card` wraps `Paper` there too). When a new component needs
+"a raised surface," reach for `<.pp_paper>` instead of hand-rolling
+`bg-pp-surface` + `Elevation.class/1` + `Shape.class/1` again.
+
+Composing one PhoenixPaper component inside another needs one extra step
+`Card` uses: `Paper` hardcodes `data-pp-component="paper"` on its own root,
+and every component is expected to mark itself with *its own* name (see
+"Component conventions") — so `Paper` exposes a `component` attr (default
+`"paper"`) that a wrapper overrides, e.g. `<.pp_paper component="card">`.
+Don't try to override it by passing `data-pp-component="card"` through
+`{@rest}` instead — `Paper`'s `<div>` already has that attribute set
+literally, so the one from `rest` would just render as an ignored
+duplicate rather than replacing it; only the first `data-pp-component` a
+browser sees wins.
+
+There is no shipped `CodeSnippet` component — `dev.exs`'s catalog is the
+only place PhoenixPaper renders source code, and it does that with
+highlight.js (a real, established syntax highlighter) rather than a
+hand-rolled component; see "Dev / live preview" below.
+
 ## Theming
 
 Colors are Tailwind v4 theme tokens backed by CSS custom properties, defined
@@ -321,14 +420,123 @@ string literal a component (or its tests/docs examples) renders, avoid
 literal `{`/`}` characters entirely (write `paperize: false`, not
 `paperize={false}`).
 
-## Tailwind/Phoenix version note
+## More HEEx gotchas: nested heredocs, and `<`/escaped `"` in plain string attrs
 
-`priv/static/phoenix_paper.css` uses Tailwind v4 syntax (`@theme`,
-`@utility`, `@source`) and assumes a Phoenix 1.7+ app (vendored heroicons).
-There is currently no separate dev/preview environment in this repo — verify
-component changes by writing/running the `test/phoenix_paper/*_test.exs`
-suite (`mix test`), or by wiring this checkout into a real Phoenix app as a
-`path:` dependency per "Consumer setup" above.
+Two more ways to corrupt a `~H"""..."""` template without a compile error
+that points at the real cause, both hit while building `dev.exs`'s catalog:
+
+- **A `~S"""..."""` (or any other triple-quoted heredoc/sigil) written
+  directly inside a `~H"""..."""` collides with it.** Elixir's tokenizer
+  scans for the *outer* heredoc's closing `"""` at the raw character level —
+  it has no idea it's inside a sigil versus plain code, so the first `"""`
+  it finds (the nested sigil's own opening or closing delimiter) can get
+  mistaken for the outer one, breaking heredoc matching for everything
+  after it. Fix: pull the nested content into its own top-level module
+  attribute (`@some_code ~S"""..."""`, defined outside any `~H` block) and
+  reference it inside the template as `{@some_code}` — a plain variable,
+  no nesting.
+- **A literal `<tag>` or an escaped `word=\"value\"` sequence inside a
+  plain (non-`{}`-wrapped) HEEx attribute string breaks the tokenizer too**
+  — e.g. `description="...tag=\"span\"..."` fails with "invalid character
+  in attribute name" even though there's no `<` anywhere near it. The
+  tokenizer's attribute-value scanner isn't a full string-aware parser; it
+  reads `<` as tag-start and `identifier="` as attribute-start regardless
+  of the surrounding quotes. This does **not** affect strings inside a
+  `{...}`-wrapped attribute value (e.g. `props={[{"key", "a <select>
+  element"}]}`) — that switches to full Elixir-expression parsing, which
+  handles escaped quotes normally. Fix: avoid literal `<...>` and escaped
+  `\"...\"` in plain string attributes; rephrase in prose, use single
+  quotes for a "quoted" term, or move the string into a `{}`-wrapped
+  expression/module attribute instead.
+
+## Dev / live preview
+
+`dev.exs` at the project root is a self-contained script (`Mix.install`,
+`path: "."` back to this checkout, `phoenix_playground`, and the real
+Tailwind v4 CLI via the `tailwind` hex package — see "Tailwind class
+safety" isn't relevant here since it compiles for real, not via a CDN) that
+boots a real Phoenix + LiveView server rendering a docs-site catalog: a
+left `PhoenixPaper.Drawer` for navigation, a sticky `PhoenixPaper.Navbar`,
+and one section per component with a live example, its options, and the
+HEEx snippet that produced it. Run it with:
+
+```
+elixir dev.exs
+```
+
+CSS is compiled once at boot (see the file's own header comment for the
+`.dev_tailwind_input.css`/`@source` mechanics — same approach as before,
+nothing new there), so a **new** Tailwind class name needs a restart to
+show up; structural/logic edits still hot-reload live via
+`phoenix_live_reload`. When adding a component, add a section for it here
+in the same change — a demo, its `props` list, and a `@<name>_code` module
+attribute with the snippet — so the catalog stays complete.
+
+Each section's snippet is hidden behind a "Show code"/"Hide code" toggle
+(matching MUI's docs-site pattern), implemented the same CSS-only way as
+everything else here: a hidden checkbox, a `<label>`, and the code panel
+`<div>` as flat siblings (`peer-*` needs that — see above), all inside
+`demo_section/1` in the `PhoenixPaperDemo.UI` module. The label itself has
+two child `<span>`s ("▸ Show code" / "▾ Hide code") and swaps which one is
+visible via an arbitrary child-selector variant on the *label*, keyed off
+its own sibling checkbox —
+`peer-checked:[&>.pp-show-code]:hidden peer-checked:[&>.pp-hide-code]:inline`
+— rather than the usual pattern of `peer-checked:` toggling a single
+sibling's own visibility.
+
+The revealed panel is a plain `<pre><code class="language-elixir">{@code}</code></pre>`
+(HEEx-escaped, same as before), colored by **highlight.js** plus its
+official **highlightjs-copy** plugin (the "Copy" button) — real, established
+JS libraries loaded from cdnjs/jsdelivr in `@hljs_assets`, rather than
+building highlighting or a copy button by hand.
+
+Two non-obvious things had to be gotten right for this to actually render
+colored, not just plain text with a dark background (which looks *close*
+enough to "working" at a glance to be easy to ship broken):
+
+- **Language is `elixir`, not `xml`/`html`,** even though every snippet is
+  a HEEx template and looks tag-shaped. HEEx's function-component syntax
+  (`<.pp_button ...>`) is not valid XML — a tag name can't start with `.`
+  — and highlight.js's strict XML/HTML grammar throws on it per element;
+  hljs catches that internally and silently falls back to *plain,
+  uncolored* text for that block (still sets `class="hljs"` and
+  `data-highlighted="yes"`, so nothing *looks* like an error — it just
+  never colors anything). That hit almost every snippet on this page; only
+  the couple using bare `<div>`/`<button>` happened to parse as valid XML
+  and came out colored. `elixir`'s regex-based lexer doesn't choke on `<`
+  or the leading dot — it just treats them as punctuation — so every
+  snippet highlights safely, at the cost of not coloring the tags
+  themselves as tags (there's no dedicated HEEx grammar to reach for;
+  strings/atoms/keywords/numbers still color correctly). `highlight.min.js`'s
+  bundled core only ships xml/html/css/js, so the elixir grammar is loaded
+  separately from `/languages/elixir.min.js`.
+- **The init script must run *after* the `<pre><code>` markup exists in
+  the DOM**, not just after the hljs library loads. `@hljs_assets` is
+  emitted near the top of the body (next to `@style_tag`), before any code
+  panel — a classic (non-async/defer) `<script>` pauses the HTML parser
+  and runs immediately at that point in the document, so calling
+  `hljs.highlightAll()` directly there finds zero elements every time
+  (irrelevant that the whole HTTP response already arrived — the parser
+  still walks it as a left-to-right token stream and hasn't built the
+  later DOM nodes yet). Wrapping the call in a `DOMContentLoaded` listener
+  defers it until parsing has finished the whole document. The `<script
+  src>` tags themselves are fine staying where they are — loading the
+  libraries early just means they're ready sooner.
+
+`hljs.highlightAll()` runs once, mutating each `<code>`'s DOM (adds
+classes, wraps tokens in `<span>`s; the copy plugin inserts a button into
+the `<pre>`). That `<pre>` also needs `id={"#{@id}-code"} phx-update="ignore"`
+— without it, the flow is: disconnected HTTP render → browser paints plain
+text → hljs runs and colors it → LiveSocket connects → LiveView's *first*
+connected render has no prior client state to diff against, so it
+re-patches the whole page from the server's (unhighlighted) view of the
+template, wiping hljs's DOM mutations back to plain text a moment after
+they appeared (a visible flash, then revert — the assign-unchanged-means-
+untouched optimization only applies to diffs *after* that first connected
+patch, not to it). `phx-update="ignore"` tells the client to never patch
+that element's subtree at all, at any point, so hljs's mutations are the
+only thing that ever touches it. This is the one place this page reaches
+an external CDN — see the file's header comment.
 
 ## Testing
 

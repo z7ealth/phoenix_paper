@@ -45,6 +45,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.ListSubheader, only: [pp_list_subheader: 1]
       import PhoenixPaper.Navbar, only: [pp_navbar: 1]
       import PhoenixPaper.NumberField, only: [pp_number_field: 1]
+      import PhoenixPaper.Paper, only: [pp_paper: 1]
       import PhoenixPaper.RadioGroup, only: [pp_radio_group: 1]
       import PhoenixPaper.Rating, only: [pp_rating: 1]
       import PhoenixPaper.Select, only: [pp_select: 1]
@@ -52,6 +53,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Stack, only: [pp_stack: 1]
       import PhoenixPaper.Switch, only: [pp_switch: 1]
       import PhoenixPaper.ToggleButton, only: [pp_toggle_button: 1]
+      import PhoenixPaper.Typography, only: [pp_typography: 1]
     end
   end
 end

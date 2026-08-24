@@ -9,6 +9,19 @@ See [`AGENTS.md`](AGENTS.md) for the framework's ground rules — the
 helpers, and the icon strategy (reusing the heroicons every `mix phx.new`
 app already vendors, no extra dependency).
 
+## Try it live
+
+No app, no asset pipeline needed:
+
+```
+elixir dev.exs
+```
+
+This boots a real Phoenix + LiveView server on <http://localhost:4000> with
+a full catalog of every component — a navigation drawer on the left, and
+for each component a live example, its options, and the HEEx snippet that
+produced it.
+
 ## Installation
 
 Add `phoenix_paper` to your `mix.exs` deps:
@@ -93,6 +106,10 @@ And wire up the Tailwind theme in `assets/css/app.css`:
     <.pp_button variant="text">Dismiss</.pp_button>
   </:actions>
 </.pp_card>
+
+<.pp_paper elevation={2} class="p-4">A raised surface — Card is built on this.</.pp_paper>
+<.pp_typography variant="h4">Account settings</.pp_typography>
+<.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
 
 <.pp_input field={@form[:email]} label="Email" />
 <.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />

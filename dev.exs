@@ -16,9 +16,23 @@
 # binary once, then works fully offline). We compile PhoenixPaper's own
 # `priv/static/phoenix_paper.css` plus this project's `lib/`/`dev.exs`
 # straight to a CSS string and embed it, so the browser never has to reach
-# an external CDN. If you add a *new* Tailwind class name to a component,
-# restart this script to pick it up — structural/logic edits still hot
-# reload live via `phoenix_live_reload`.
+# an external CDN for the library's own styling. If you add a *new*
+# Tailwind class name to a component, restart this script to pick it up —
+# structural/logic edits still hot reload live via `phoenix_live_reload`.
+#
+# The one deliberate exception: code snippets are syntax-highlighted via
+# highlight.js + its highlightjs-copy plugin, loaded from cdnjs/jsdelivr —
+# real, established JS libraries rather than a hand-rolled component, so
+# this page needs a network connection to render them with color/copy
+# button (everything else still works offline).
+#
+# NOTE: every code snippet below is defined as its own module attribute
+# (`@buttons_code`, `@card_code`, ...) instead of being written inline as
+# `code={~S"""...""""}` inside the `~H"""..."""` template. Elixir's
+# tokenizer scans for the outer heredoc's closing `"""` at the character
+# level — it isn't sigil-aware — so a `~S"""..."""` nested directly inside
+# an `~H"""..."""` collides with it and breaks the whole file. Pulling each
+# snippet out into a top-level heredoc sidesteps the collision entirely.
 Mix.install(
   [
     {:phoenix_paper, path: Path.dirname(__ENV__.file)},
@@ -62,6 +76,8 @@ defmodule PhoenixPaperDemo.UI do
   """
   use Phoenix.Component
 
+  import PhoenixPaper.ListSubheader, only: [pp_list_subheader: 1]
+
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :description, :string, default: nil
@@ -90,7 +106,20 @@ defmodule PhoenixPaperDemo.UI do
         </dl>
       </div>
 
-      <pre class="mt-4 overflow-x-auto rounded-lg bg-pp-surface-variant p-4 text-xs leading-relaxed"><code>{@code}</code></pre>
+      <div class="mt-4">
+        <input type="checkbox" id={"#{@id}-code-toggle"} class="peer sr-only" />
+        <label
+          for={"#{@id}-code-toggle"}
+          class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-pp-outline px-3 py-1 text-xs font-medium text-pp-on-surface transition-colors hover:bg-pp-on-surface/10 peer-checked:[&>.pp-show-code]:hidden peer-checked:[&>.pp-hide-code]:inline"
+        >
+          <span class="pp-show-code">▸ Show code</span>
+          <span class="pp-hide-code hidden">▾ Hide code</span>
+        </label>
+
+        <div class="hidden peer-checked:mt-3 peer-checked:block">
+          <pre id={"#{@id}-code"} phx-update="ignore" class="overflow-x-auto rounded-lg text-sm"><code class="language-elixir">{@code}</code></pre>
+        </div>
+      </div>
     </section>
     """
   end
@@ -156,15 +185,274 @@ defmodule PhoenixPaperDemo do
   # dropped in with `raw/1` as a single opaque HTML fragment instead.
   @style_tag raw("<style type=\"text/css\">" <> @pp_css <> @demo_icon_css <> "</style>")
 
+  # Code snippets are syntax-highlighted by highlight.js + its official
+  # highlightjs-copy plugin (adds the copy button), loaded from cdnjs/
+  # jsdelivr — see the file header for why this is the one place this page
+  # reaches an external CDN.
+  #
+  # This tag is emitted near the *top* of the body (next to @style_tag),
+  # before any `<pre><code>` markup exists in the DOM yet — a classic
+  # (non-async/defer) `<script>` pauses the HTML parser and runs
+  # immediately at that point in the document, so calling
+  # `hljs.highlightAll()` directly here would always find zero elements
+  # (it doesn't matter that the whole HTML response already arrived; the
+  # parser still processes it as a left-to-right token stream and hasn't
+  # built the later DOM nodes yet). Wrapping the call in a
+  # `DOMContentLoaded` listener defers it until the parser has finished the
+  # whole document, so it actually finds the code blocks. The `<script
+  # src>` tags themselves are fine where they are — loading the libraries
+  # early just means they're ready sooner.
+  #
+  # Language is `elixir`, not `xml`/`html`, even though these snippets are
+  # HEEx templates that look tag-shaped: HEEx's function-component syntax
+  # (`<.pp_button ...>`) is not valid XML — a tag name can't start with
+  # `.` — and highlight.js's strict XML/HTML grammar throws on it. hljs
+  # catches that per-element and silently falls back to *plain,
+  # uncolored* text (marks `data-highlighted="yes"`, adds the `hljs`
+  # class, but wraps nothing) — no visible error, just dead-looking output
+  # for almost every snippet on this page (only the couple using bare
+  # `<div>`/`<button>` escaped it). `highlight.min.js`'s bundled core only
+  # ships xml/html/css/js; elixir isn't in it, so its grammar is loaded
+  # separately from `/languages/elixir.min.js`. Elixir's regex-based
+  # lexer doesn't choke on the leading dot (or on `<`/`>` generally — it
+  # just treats them as punctuation), so every snippet highlights safely;
+  # it won't color the tags themselves as HTML tags (there's no dedicated
+  # HEEx grammar to reach for), but strings/atoms/keywords/numbers do.
+  @hljs_assets raw("""
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/languages/elixir.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      hljs.addPlugin(new CopyButtonPlugin());
+      hljs.highlightAll();
+    });
+  </script>
+  """)
+
   # Small placeholder "photos" for the ImageList demo — inline SVG data URIs
   # (same raw, unencoded approach as the icon masks above) so the page stays
-  # fully offline, no network image fetch required. HEEx HTML-escapes this
-  # string automatically when it lands in `src={...}` below, and the browser
-  # un-escapes it back before treating it as a URL, so no manual encoding
-  # is needed for the characters this particular SVG uses.
+  # fully offline, no network image fetch required.
   @photo_1 ~s(data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#3f51b5"/></svg>)
   @photo_2 ~s(data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#ff4081"/></svg>)
   @photo_3 ~s(data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#009688"/></svg>)
+
+  # --- code snippets shown under each live example (see the note at the top
+  # of this file for why these live here instead of inline in the template) ---
+
+  @buttons_code ~S"""
+  <.pp_button color="primary">Save</.pp_button>
+  <.pp_button variant="outlined" color="secondary">Outlined</.pp_button>
+  <.pp_button variant="text">Text</.pp_button>
+  <.pp_button ripple={false}>No ripple</.pp_button>
+  <.pp_button paperize={false} class="border-4 border-dashed border-fuchsia-500 px-3 py-1 font-mono text-fuchsia-700">
+    paperize: false
+  </.pp_button>
+  """
+
+  @button_group_code ~S"""
+  <.pp_button_group>
+    <.pp_button variant="outlined">Day</.pp_button>
+    <.pp_button variant="outlined">Week</.pp_button>
+    <.pp_button variant="outlined">Month</.pp_button>
+  </.pp_button_group>
+  """
+
+  @fab_code ~S"""
+  <.pp_fab><.pp_icon name="hero-star" /></.pp_fab>
+  <.pp_fab extended color="primary">
+    <.pp_icon name="hero-star" /> Create
+  </.pp_fab>
+  """
+
+  @toggle_button_code ~S"""
+  <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
+    Bold
+  </.pp_toggle_button>
+  """
+
+  @text_field_code ~S"""
+  <.pp_input label="Outlined (default)" name="outlined_demo" />
+  <.pp_input variant="filled" label="Filled" name="filled_demo" />
+  <.pp_input label="With an error" name="error_demo" value="not-an-email" errors={["is not a valid email"]} />
+  """
+
+  @select_code ~S"""
+  <.pp_select
+    label="Country"
+    name="country"
+    prompt="Choose one"
+    options={["Canada", "Mexico", "United States"]}
+  />
+  """
+
+  @number_field_code ~S"""
+  <.pp_number_field label="Quantity" name="qty" value={2} min={0} max={10} />
+  """
+
+  @checkbox_code ~S"""
+  <.pp_checkbox label="Paperized (default)" checked={true} />
+  <.pp_checkbox paperize={false} label="paperize: false" />
+  """
+
+  @switch_code ~S"""
+  <.pp_switch label="Notifications" checked={true} name="notifications" />
+  """
+
+  @radio_group_code ~S"""
+  <.pp_radio_group
+    label="Size"
+    name="size"
+    value="md"
+    options={[{"Small", "sm"}, {"Medium", "md"}, {"Large", "lg"}]}
+  />
+  """
+
+  @slider_code ~S"""
+  <.pp_slider name="volume" label="Volume" value={60} color="secondary" />
+  """
+
+  @rating_code ~S"""
+  <.pp_rating id="stars" name="stars" value={3} />
+  <.pp_rating readonly value={4} />
+  """
+
+  @autocomplete_code ~S"""
+  <.live_component
+    module={PhoenixPaper.Autocomplete}
+    id="country"
+    name="country"
+    label="Country"
+    placeholder="Start typing..."
+    options={["Canada", "Mexico", "United States", "United Kingdom", "Uruguay"]}
+  />
+  """
+
+  @transfer_list_code ~S"""
+  <.live_component
+    module={PhoenixPaper.TransferList}
+    id="permissions"
+    items={["Read", "Write", "Admin", "Billing"]}
+  />
+  """
+
+  @navbar_code ~S"""
+  <.pp_navbar position="sticky">
+    <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
+    My App
+    <:actions>
+      <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
+    </:actions>
+  </.pp_navbar>
+  """
+
+  @drawer_code ~S"""
+  <.pp_navbar>
+    <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
+    My App
+  </.pp_navbar>
+
+  <.pp_drawer id="app-drawer">
+    <:header>My App</:header>
+    <.pp_list>
+      <.pp_list_item href="/" active={@current_path == "/"}>Home</.pp_list_item>
+    </.pp_list>
+  </.pp_drawer>
+  """
+
+  @list_code ~S"""
+  <.pp_list>
+    <.pp_list_subheader>Main</.pp_list_subheader>
+    <.pp_list_item href="/" active>
+      <:leading><.pp_icon name="hero-home" /></:leading>
+      Home
+      <:secondary>Overview</:secondary>
+    </.pp_list_item>
+    <.pp_divider inset />
+    <.pp_list_item disabled>Locked</.pp_list_item>
+  </.pp_list>
+  """
+
+  @box_code ~S"""
+  <.pp_box class="rounded-lg bg-pp-surface-variant p-4">Just a div with a class.</.pp_box>
+  """
+
+  @container_code ~S"""
+  <.pp_container max_width="sm">
+    Narrower content.
+  </.pp_container>
+  """
+
+  @stack_code ~S"""
+  <.pp_stack direction="row" spacing={:sm}>
+    <.pp_button>Save</.pp_button>
+    <.pp_button variant="outlined">Cancel</.pp_button>
+  </.pp_stack>
+  """
+
+  @grid_code ~S"""
+  <.pp_grid>
+    <.pp_grid_item span={12} md={4}>Sidebar</.pp_grid_item>
+    <.pp_grid_item span={12} md={8}>Content</.pp_grid_item>
+  </.pp_grid>
+  """
+
+  @divider_code ~S"""
+  <.pp_divider />
+  <.pp_divider inset />
+  """
+
+  @card_code ~S"""
+  <.pp_card>
+    <:title>Account</:title>
+    You have no pending invoices.
+    <:actions>
+      <.pp_button variant="text">Dismiss</.pp_button>
+    </:actions>
+  </.pp_card>
+  """
+
+  @icon_code ~S"""
+  <.pp_icon name="hero-check" class="text-pp-tertiary" />
+  """
+
+  @image_list_code ~S"""
+  <.pp_image_list cols={3}>
+    <.pp_image_list_item src="/images/1.jpg" title="Breakfast" />
+    <.pp_image_list_item src="/images/2.jpg" title="Burger" subtitle="Restaurant" />
+  </.pp_image_list>
+  """
+
+  @paper_code ~S"""
+  <.pp_paper elevation={4} class="p-4">A raised surface — Card is built on this.</.pp_paper>
+  """
+
+  @typography_code ~S"""
+  <.pp_typography variant="h4">Account settings</.pp_typography>
+  <.pp_typography variant="body1">Manage your profile, notifications, and billing.</.pp_typography>
+  <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
+  <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
+  """
+
+  @ripple_code ~S"""
+  <.pp_button>Ripples (default)</.pp_button>
+  <.pp_button ripple={false}>No ripple</.pp_button>
+  """
+
+  @elevation_code ~S"""
+  <div class={["rounded-lg bg-pp-surface p-4", PhoenixPaper.Elevation.class(8)]}>8dp</div>
+  """
+
+  @shape_code ~S"""
+  <div class={["size-14 border-2 border-pp-primary", PhoenixPaper.Shape.class(:lg)]} />
+  """
+
+  @theming_code ~S"""
+  <button phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}>Dark</button>
+  <button phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}>Teal</button>
+  """
 
   def mount(_params, _session, socket) do
     {:ok, assign(socket, page_title: "PhoenixPaper catalog", bold_pressed: false)}
@@ -175,12 +463,51 @@ defmodule PhoenixPaperDemo do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, style_tag: @style_tag, photo_1: @photo_1, photo_2: @photo_2, photo_3: @photo_3)
+    assigns =
+      assign(assigns,
+        style_tag: @style_tag,
+        hljs_assets: @hljs_assets,
+        photo_1: @photo_1,
+        photo_2: @photo_2,
+        photo_3: @photo_3,
+        buttons_code: @buttons_code,
+        button_group_code: @button_group_code,
+        fab_code: @fab_code,
+        toggle_button_code: @toggle_button_code,
+        text_field_code: @text_field_code,
+        select_code: @select_code,
+        number_field_code: @number_field_code,
+        checkbox_code: @checkbox_code,
+        switch_code: @switch_code,
+        radio_group_code: @radio_group_code,
+        slider_code: @slider_code,
+        rating_code: @rating_code,
+        autocomplete_code: @autocomplete_code,
+        transfer_list_code: @transfer_list_code,
+        navbar_code: @navbar_code,
+        drawer_code: @drawer_code,
+        list_code: @list_code,
+        box_code: @box_code,
+        container_code: @container_code,
+        stack_code: @stack_code,
+        grid_code: @grid_code,
+        divider_code: @divider_code,
+        card_code: @card_code,
+        icon_code: @icon_code,
+        image_list_code: @image_list_code,
+        paper_code: @paper_code,
+        typography_code: @typography_code,
+        ripple_code: @ripple_code,
+        elevation_code: @elevation_code,
+        shape_code: @shape_code,
+        theming_code: @theming_code
+      )
 
     ~H"""
     {@style_tag}
+    {@hljs_assets}
 
-    <div class="min-h-screen bg-pp-surface-variant text-pp-on-surface lg:pl-64">
+    <div class="min-h-screen bg-pp-surface-variant text-pp-on-surface lg:flex">
       <.pp_drawer id="app-drawer">
         <:header>PhoenixPaper</:header>
         <.pp_list>
@@ -219,6 +546,10 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#icon">Icon</.pp_list_item>
             <.pp_list_item href="#image-list">Image List</.pp_list_item>
           </.nav_group>
+          <.nav_group label="Surfaces">
+            <.pp_list_item href="#paper">Paper</.pp_list_item>
+            <.pp_list_item href="#typography">Typography</.pp_list_item>
+          </.nav_group>
           <.nav_group label="Helpers">
             <.pp_list_item href="#ripple">Ripple</.pp_list_item>
             <.pp_list_item href="#elevation">Elevation</.pp_list_item>
@@ -228,18 +559,19 @@ defmodule PhoenixPaperDemo do
         </.pp_list>
       </.pp_drawer>
 
-      <.pp_navbar position="sticky">
-        <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
-        PhoenixPaper
-        <:actions>
-          <.pp_button variant="text" phx-click={JS.remove_attribute("data-pp-theme", to: "html")}>Indigo</.pp_button>
-          <.pp_button variant="text" phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}>Teal</.pp_button>
-          <.pp_button variant="outlined" phx-click={JS.remove_attribute("data-theme", to: "html")}>Light</.pp_button>
-          <.pp_button variant="outlined" phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}>Dark</.pp_button>
-        </:actions>
-      </.pp_navbar>
+      <div class="min-w-0 flex-1">
+        <.pp_navbar position="sticky">
+          <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
+          PhoenixPaper
+          <:actions>
+            <.pp_button variant="text" phx-click={JS.remove_attribute("data-pp-theme", to: "html")}>Indigo</.pp_button>
+            <.pp_button variant="text" phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}>Teal</.pp_button>
+            <.pp_button variant="outlined" phx-click={JS.remove_attribute("data-theme", to: "html")}>Light</.pp_button>
+            <.pp_button variant="outlined" phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}>Dark</.pp_button>
+          </:actions>
+        </.pp_navbar>
 
-      <.pp_container max_width="lg" class="py-8">
+        <.pp_container max_width="lg" class="py-8">
         <.demo_section
           id="buttons"
           title="Button"
@@ -255,15 +587,7 @@ defmodule PhoenixPaperDemo do
             {"paperize", "boolean — apply PhoenixPaper's classes at all (default: true)"},
             {"class", "merged on top via Tails"}
           ]}
-          code={~S"""
-          <.pp_button color="primary">Save</.pp_button>
-          <.pp_button variant="outlined" color="secondary">Outlined</.pp_button>
-          <.pp_button variant="text">Text</.pp_button>
-          <.pp_button ripple={false}>No ripple</.pp_button>
-          <.pp_button paperize={false} class="border-4 border-dashed border-fuchsia-500 px-3 py-1 font-mono text-fuchsia-700">
-            paperize: false
-          </.pp_button>
-          """}
+          code={@buttons_code}
         >
           <div class="flex flex-col gap-4">
             <div :for={variant <- ~w(raised flat outlined text icon)} class="flex flex-wrap items-center gap-3">
@@ -291,13 +615,7 @@ defmodule PhoenixPaperDemo do
             {"paperize", "boolean (default: true)"},
             {"class", "merged on top via Tails"}
           ]}
-          code={~S"""
-          <.pp_button_group>
-            <.pp_button variant="outlined">Day</.pp_button>
-            <.pp_button variant="outlined">Week</.pp_button>
-            <.pp_button variant="outlined">Month</.pp_button>
-          </.pp_button_group>
-          """}
+          code={@button_group_code}
         >
           <.pp_button_group>
             <.pp_button variant="outlined">Day</.pp_button>
@@ -318,12 +636,7 @@ defmodule PhoenixPaperDemo do
             {"disabled", "boolean (default: false)"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={~S"""
-          <.pp_fab><.pp_icon name="hero-star" /></.pp_fab>
-          <.pp_fab extended color="primary">
-            <.pp_icon name="hero-star" /> Create
-          </.pp_fab>
-          """}
+          code={@fab_code}
         >
           <div class="flex items-center gap-4">
             <.pp_fab><span class="hero-star" /></.pp_fab>
@@ -344,11 +657,7 @@ defmodule PhoenixPaperDemo do
             {"ripple", "boolean (default: true)"},
             {"disabled", "boolean (default: false)"}
           ]}
-          code={~S"""
-          <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
-            Bold
-          </.pp_toggle_button>
-          """}
+          code={@toggle_button_code}
         >
           <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
             Bold
@@ -370,11 +679,7 @@ defmodule PhoenixPaperDemo do
             {"disabled", "boolean (default: false)"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={~S"""
-          <.pp_input label="Outlined (default)" name="outlined_demo" />
-          <.pp_input variant="filled" label="Filled" name="filled_demo" />
-          <.pp_input label="With an error" name="error_demo" value="not-an-email" errors={["is not a valid email"]} />
-          """}
+          code={@text_field_code}
         >
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <.pp_input label="Outlined (default)" name="outlined_demo" />
@@ -389,7 +694,7 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="select"
           title="Select"
-          description="A native <select> styled to match Text Field's outlined/filled variants."
+          description="A native select element styled to match Text Field's outlined/filled variants."
           props={[
             {"options", "list of {label, value} tuples, or plain values"},
             {"prompt", "an empty/placeholder option's label"},
@@ -397,14 +702,7 @@ defmodule PhoenixPaperDemo do
             {"field / errors / helper_text", "same as Text Field"},
             {"disabled", "boolean (default: false)"}
           ]}
-          code={~S"""
-          <.pp_select
-            label="Country"
-            name="country"
-            prompt="Choose one"
-            options={["Canada", "Mexico", "United States"]}
-          />
-          """}
+          code={@select_code}
         >
           <.pp_select label="Country" name="country_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
         </.demo_section>
@@ -418,9 +716,7 @@ defmodule PhoenixPaperDemo do
             {"variant / shape / field / errors / helper_text", "same as Text Field"},
             {"disabled", "boolean (default: false)"}
           ]}
-          code={~S"""
-          <.pp_number_field label="Quantity" name="qty" value={2} min={0} max={10} />
-          """}
+          code={@number_field_code}
         >
           <.pp_number_field label="Quantity" name="qty_demo" value={2} min={0} max={10} />
         </.demo_section>
@@ -436,10 +732,7 @@ defmodule PhoenixPaperDemo do
             {"disabled", "boolean (default: false)"},
             {"paperize", "false renders a bare native checkbox, no hidden input"}
           ]}
-          code={~S"""
-          <.pp_checkbox label="Paperized (default)" checked={true} />
-          <.pp_checkbox paperize={false} label="paperize: false" />
-          """}
+          code={@checkbox_code}
         >
           <div class="flex flex-col gap-3">
             <.pp_checkbox label="Paperized (default)" checked={true} />
@@ -452,12 +745,8 @@ defmodule PhoenixPaperDemo do
           id="switch"
           title="Switch"
           description="An on/off toggle, structured like Checkbox but rendered as a sliding track/thumb."
-          props={[
-            {"checked / field / label / disabled / paperize", "same shape as Checkbox"}
-          ]}
-          code={~S"""
-          <.pp_switch label="Notifications" checked={true} name="notifications" />
-          """}
+          props={[{"checked / field / label / disabled / paperize", "same shape as Checkbox"}]}
+          code={@switch_code}
         >
           <div class="flex flex-col gap-3">
             <.pp_switch label="Paperized (default)" checked={true} name="wifi_demo" />
@@ -476,14 +765,7 @@ defmodule PhoenixPaperDemo do
             {"label", "the group's legend"},
             {"field / disabled / paperize", "same as other form controls"}
           ]}
-          code={~S"""
-          <.pp_radio_group
-            label="Size"
-            name="size"
-            value="md"
-            options={[{"Small", "sm"}, {"Medium", "md"}, {"Large", "lg"}]}
-          />
-          """}
+          code={@radio_group_code}
         >
           <.pp_radio_group label="Size" name="size_demo" value="md" options={[{"Small", "sm"}, {"Medium", "md"}, {"Large", "lg"}]} />
         </.demo_section>
@@ -491,16 +773,14 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="slider"
           title="Slider"
-          description="A native <input type=\"range\"> colored via CSS accent-color — no ::-webkit-slider-thumb hacks."
+          description="A native range input colored via CSS accent-color — no ::-webkit-slider-thumb hacks."
           props={[
             {"min / max / step", "default 0 / 100 / 1"},
             {"color", "primary | secondary | tertiary | error (default: primary)"},
             {"label", "shown above the slider with the current value"},
             {"field / disabled / paperize", "same as other form controls"}
           ]}
-          code={~S"""
-          <.pp_slider name="volume" label="Volume" value={60} color="secondary" />
-          """}
+          code={@slider_code}
         >
           <.pp_slider name="volume_demo" label="Volume" value={60} color="secondary" />
         </.demo_section>
@@ -515,10 +795,7 @@ defmodule PhoenixPaperDemo do
             {"readonly", "boolean — renders fixed filled/unfilled spans instead of inputs (default: false)"},
             {"field / disabled / paperize", "same as other form controls"}
           ]}
-          code={~S"""
-          <.pp_rating id="stars" name="stars" value={3} />
-          <.pp_rating readonly value={4} />
-          """}
+          code={@rating_code}
         >
           <div class="flex flex-col gap-4">
             <div>
@@ -541,16 +818,7 @@ defmodule PhoenixPaperDemo do
             {"value / name / label / placeholder", "same intent as Text Field"},
             {"shape / paperize", "same as other form controls"}
           ]}
-          code={~S"""
-          <.live_component
-            module={PhoenixPaper.Autocomplete}
-            id="country"
-            name="country"
-            label="Country"
-            placeholder="Start typing..."
-            options={["Canada", "Mexico", "United States", "United Kingdom", "Uruguay"]}
-          />
-          """}
+          code={@autocomplete_code}
         >
           <.live_component
             module={PhoenixPaper.Autocomplete}
@@ -570,13 +838,7 @@ defmodule PhoenixPaperDemo do
             {"items", "the starting list — everything begins on the left"},
             {"left_label / right_label", "column headers (default: \"Available\" / \"Selected\")"}
           ]}
-          code={~S"""
-          <.live_component
-            module={PhoenixPaper.TransferList}
-            id="permissions"
-            items={["Read", "Write", "Admin", "Billing"]}
-          />
-          """}
+          code={@transfer_list_code}
         >
           <.live_component module={PhoenixPaper.TransferList} id="permissions_demo" items={["Read", "Write", "Admin", "Billing"]} />
         </.demo_section>
@@ -591,15 +853,7 @@ defmodule PhoenixPaperDemo do
             {"position", "static | sticky | fixed (default: static)"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={~S"""
-          <.pp_navbar position="sticky">
-            <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
-            My App
-            <:actions>
-              <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
-            </:actions>
-          </.pp_navbar>
-          """}
+          code={@navbar_code}
         >
           <.pp_navbar class="!static" color="surface">
             My App
@@ -618,19 +872,7 @@ defmodule PhoenixPaperDemo do
             {"paperize", "boolean (default: true)"},
             {"pp_drawer_toggle for=", "a hamburger <label> pointing at the given drawer's id — works from anywhere on the page, not just inside the drawer"}
           ]}
-          code={~S"""
-          <.pp_navbar>
-            <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
-            My App
-          </.pp_navbar>
-
-          <.pp_drawer id="app-drawer">
-            <:header>My App</:header>
-            <.pp_list>
-              <.pp_list_item href="/" active={@current_path == "/"}>Home</.pp_list_item>
-            </.pp_list>
-          </.pp_drawer>
-          """}
+          code={@drawer_code}
         >
           <p class="text-sm opacity-70">See the left edge of this page — that's this exact component, live.</p>
         </.demo_section>
@@ -646,18 +888,7 @@ defmodule PhoenixPaperDemo do
             {"pp_list_subheader", "a small uppercase section label"},
             {"pp_divider inset", "boolean — indent past a leading icon column instead of spanning full width"}
           ]}
-          code={~S"""
-          <.pp_list>
-            <.pp_list_subheader>Main</.pp_list_subheader>
-            <.pp_list_item href="/" active>
-              <:leading><.pp_icon name="hero-home" /></:leading>
-              Home
-              <:secondary>Overview</:secondary>
-            </.pp_list_item>
-            <.pp_divider inset />
-            <.pp_list_item disabled>Locked</.pp_list_item>
-          </.pp_list>
-          """}
+          code={@list_code}
         >
           <.pp_list>
             <.pp_list_subheader>Main</.pp_list_subheader>
@@ -681,13 +912,9 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="box"
           title="Box"
-          description="A bare div (or span via tag=\"span\") — no paperize attr at all, since there's no default visual style to strip."
-          props={[
-            {"tag", "div | span (default: div)"}
-          ]}
-          code={~S"""
-          <.pp_box class="rounded-lg bg-pp-surface-variant p-4">Just a div with a class.</.pp_box>
-          """}
+          description="A bare div (or span via tag='span') — no paperize attr at all, since there's no default visual style to strip."
+          props={[{"tag", "div | span (default: div)"}]}
+          code={@box_code}
         >
           <.pp_box class="rounded-lg bg-pp-surface-variant p-4">Just a div with a class.</.pp_box>
         </.demo_section>
@@ -700,11 +927,7 @@ defmodule PhoenixPaperDemo do
             {"max_width", "sm | md | lg | xl | 2xl | full (default: lg)"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={~S"""
-          <.pp_container max_width="sm">
-            Narrower content.
-          </.pp_container>
-          """}
+          code={@container_code}
         >
           <.pp_container max_width="sm" class="!mx-0 rounded-lg bg-pp-surface-variant">
             This box is a Container with max_width="sm".
@@ -714,18 +937,13 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="stack"
           title="Stack"
-          description="A one-dimensional flex layout with consistent spacing between children. No auto-divider — add <.pp_divider /> between children yourself."
+          description="A one-dimensional flex layout with consistent spacing between children. No auto-divider — add a Divider between children yourself."
           props={[
             {"direction", "row | column (default: column)"},
             {"spacing", "a Spacing token, :none | :xs | :sm | :md | :lg | :xl | :2xl (default: :md)"},
             {"wrap", "boolean (default: false)"}
           ]}
-          code={~S"""
-          <.pp_stack direction="row" spacing={:sm}>
-            <.pp_button>Save</.pp_button>
-            <.pp_button variant="outlined">Cancel</.pp_button>
-          </.pp_stack>
-          """}
+          code={@stack_code}
         >
           <.pp_stack direction="row" spacing={:sm}>
             <.pp_button>Save</.pp_button>
@@ -742,12 +960,7 @@ defmodule PhoenixPaperDemo do
             {"pp_grid_item span", "1-12 (default: 12)"},
             {"pp_grid_item md", "1-12, overrides span at md: and up (default: nil, no override)"}
           ]}
-          code={~S"""
-          <.pp_grid>
-            <.pp_grid_item span={12} md={4}>Sidebar</.pp_grid_item>
-            <.pp_grid_item span={12} md={8}>Content</.pp_grid_item>
-          </.pp_grid>
-          """}
+          code={@grid_code}
         >
           <.pp_grid>
             <.pp_grid_item span={12} md={4} class="rounded-lg bg-pp-surface-variant p-4 text-center text-sm">Sidebar</.pp_grid_item>
@@ -759,13 +972,8 @@ defmodule PhoenixPaperDemo do
           id="divider"
           title="Divider"
           description="A thin separator line, most often between sections of a List."
-          props={[
-            {"inset", "boolean — indent past a leading icon/avatar column instead of spanning full width (default: false)"}
-          ]}
-          code={~S"""
-          <.pp_divider />
-          <.pp_divider inset />
-          """}
+          props={[{"inset", "boolean — indent past a leading icon/avatar column instead of spanning full width (default: false)"}]}
+          code={@divider_code}
         >
           <div class="flex flex-col gap-2">
             <span class="text-sm">Above</span>
@@ -784,15 +992,7 @@ defmodule PhoenixPaperDemo do
             {"shape", "corner radius token (default: :lg)"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={~S"""
-          <.pp_card>
-            <:title>Account</:title>
-            You have no pending invoices.
-            <:actions>
-              <.pp_button variant="text">Dismiss</.pp_button>
-            </:actions>
-          </.pp_card>
-          """}
+          code={@card_code}
         >
           <.pp_card class="max-w-sm">
             <:title>Account</:title>
@@ -811,9 +1011,7 @@ defmodule PhoenixPaperDemo do
             {"name", "a heroicon class, e.g. \"hero-check\" (required)"},
             {"paperize", "boolean — only affects default sizing, not which icon shows (default: true)"}
           ]}
-          code={~S"""
-          <.pp_icon name="hero-check" class="text-pp-tertiary" />
-          """}
+          code={@icon_code}
         >
           <div class="flex items-center gap-4">
             <.pp_icon name="hero-check" class="text-pp-tertiary" />
@@ -832,12 +1030,7 @@ defmodule PhoenixPaperDemo do
             {"pp_image_list_item src / alt", "the image"},
             {"pp_image_list_item title / subtitle", "an overlay bar along the bottom edge, omitted if no title"}
           ]}
-          code={~S"""
-          <.pp_image_list cols={3}>
-            <.pp_image_list_item src="/images/1.jpg" title="Breakfast" />
-            <.pp_image_list_item src="/images/2.jpg" title="Burger" subtitle="Restaurant" />
-          </.pp_image_list>
-          """}
+          code={@image_list_code}
         >
           <.pp_image_list cols={3}>
             <.pp_image_list_item src={@photo_1} title="Breakfast" />
@@ -847,18 +1040,48 @@ defmodule PhoenixPaperDemo do
         </.demo_section>
 
         <.demo_section
+          id="paper"
+          title="Paper"
+          description="The base surface — a background, an elevation shadow, and rounded corners. No padding, no slots. Card is built by composing this instead of duplicating its classes."
+          props={[
+            {"elevation", "resting elevation, 0-24 (default: 1)"},
+            {"shape", "corner radius token (default: :lg)"},
+            {"component", "overrides the data-pp-component marker — used by components like Card (default: \"paper\")"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@paper_code}
+        >
+          <.pp_paper elevation={4} class="p-4">A raised surface — Card is built on this.</.pp_paper>
+        </.demo_section>
+
+        <.demo_section
+          id="typography"
+          title="Typography"
+          description="variant picks both the rendered tag and the text classes together — h1..h6, subtitle1/2, body1/2, caption, overline, button, code."
+          props={[
+            {"variant", "h1..h6 | subtitle1 | subtitle2 | body1 | body2 | caption | overline | button | code (default: body1)"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@typography_code}
+        >
+          <div class="flex flex-col gap-2">
+            <.pp_typography variant="h4">Account settings</.pp_typography>
+            <.pp_typography variant="body1">Manage your profile, notifications, and billing.</.pp_typography>
+            <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
+            <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
+          </div>
+        </.demo_section>
+
+        <.demo_section
           id="ripple"
           title="Ripple (helper)"
           description="The Material ripple effect — a circle that expands from the click point and fades out. Vanilla inline onclick, no JS hook/bundler. Try clicking the buttons above."
           props={[
-            {"ripple", "the boolean prop on Button, Fab, ToggleButton, and a linked ListItem — default true"},
+            {"ripple", "the boolean prop on Button, Fab, ToggleButton, and a linked ListItem — default true, and always off when paperize is false"},
             {"PhoenixPaper.Ripple.on_click/1", "returns the script, or nil when disabled (so the attribute is dropped entirely)"},
             {"PhoenixPaper.Ripple.container_classes/1", "the \"relative overflow-hidden\" the ripple needs to stay clipped"}
           ]}
-          code={~S"""
-          <.pp_button>Ripples (default)</.pp_button>
-          <.pp_button ripple={false}>No ripple</.pp_button>
-          """}
+          code={@ripple_code}
         >
           <div class="flex items-center gap-4">
             <.pp_button>Ripples (default)</.pp_button>
@@ -870,12 +1093,8 @@ defmodule PhoenixPaperDemo do
           id="elevation"
           title="Elevation (helper)"
           description="PhoenixPaper.Elevation.class/1 maps a Material dp level (0-24, clamped) to a pp-elevation-N class — a two-layer shadow approximating Google's official table."
-          props={[
-            {"Elevation.class(level)", "returns the literal \"pp-elevation-N\" class name"}
-          ]}
-          code={~S"""
-          <div class={["rounded-lg bg-pp-surface p-4", PhoenixPaper.Elevation.class(8)]}>8dp</div>
-          """}
+          props={[{"Elevation.class(level)", "returns the literal \"pp-elevation-N\" class name"}]}
+          code={@elevation_code}
         >
           <div class="flex flex-wrap gap-6">
             <div :for={level <- [0, 1, 2, 4, 8, 16, 24]} class={["flex size-16 items-center justify-center rounded-lg bg-pp-surface text-xs", PhoenixPaper.Elevation.class(level)]}>
@@ -892,9 +1111,7 @@ defmodule PhoenixPaperDemo do
             {"Shape.class(token)", "all four corners"},
             {"Shape.class(token, :top | :bottom)", "only those two corners"}
           ]}
-          code={~S"""
-          <div class={["size-14 border-2 border-pp-primary", PhoenixPaper.Shape.class(:lg)]} />
-          """}
+          code={@shape_code}
         >
           <div class="flex flex-wrap items-end gap-6">
             <div :for={token <- ~w(none xs sm md lg xl full)a} class="flex flex-col items-center gap-2">
@@ -907,23 +1124,21 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="theming"
           title="Theming"
-          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal/Light/Dark buttons in the navbar above — no page reload, just flipping data-theme/data-pp-theme on <html>."
+          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal/Light/Dark buttons in the navbar above — no page reload, just flipping data-theme/data-pp-theme on the root html element."
           props={[
             {"data-theme=\"dark\"", "on any ancestor — the same attribute daisyUI/Phoenix 1.8's generated app.css already use"},
             {"data-pp-theme=\"teal\"", "opts into the bundled alternate palette"},
             {"custom theme", "override the --color-pp-* variables from your own stylesheet — no build step, no JS config"}
           ]}
-          code={~S"""
-          <button phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}>Dark</button>
-          <button phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}>Teal</button>
-          """}
+          code={@theming_code}
         >
           <p class="text-sm opacity-70">Use the theme buttons in the navbar — this section is just documentation.</p>
         </.demo_section>
-      </.pp_container>
+        </.pp_container>
+      </div>
     </div>
     """
   end
 end
 
-PhoenixPlayground.start(live: PhoenixPaperDemo, open_browser: false, port: 4001)
+PhoenixPlayground.start(live: PhoenixPaperDemo, open_browser: false)

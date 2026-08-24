@@ -29,6 +29,12 @@ defmodule PhoenixPaper.ButtonTest do
     assert html =~ "Save"
   end
 
+  test "paperize={false}: ripple is off too, even though ripple defaults true — nothing left to size/clip its span" do
+    html = render_component(&bare/1)
+
+    refute html =~ "onclick="
+  end
+
   defp bare(assigns) do
     ~H"""
     <.pp_button paperize={false} class="my-custom-class">Save</.pp_button>

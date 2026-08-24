@@ -44,4 +44,15 @@ defmodule PhoenixPaper.FabTest do
     <.pp_fab ripple={false}>+</.pp_fab>
     """
   end
+
+  test "paperize={false} drops the click handler too, even with ripple defaulting true" do
+    html = render_component(&bare/1)
+    refute html =~ "onclick="
+  end
+
+  defp bare(assigns) do
+    ~H"""
+    <.pp_fab paperize={false}>+</.pp_fab>
+    """
+  end
 end

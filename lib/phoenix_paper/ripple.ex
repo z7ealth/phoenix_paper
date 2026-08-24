@@ -26,9 +26,15 @@ defmodule PhoenixPaper.Ripple do
   hidden` one, so the component needs both for the ripple to render inside
   its own bounds instead of spilling out or floating relative to some other
   ancestor. Those classes live in `paper_classes`, so — like the rest of a
-  component's styling — `paperize={false}` strips them too; add them back
-  yourself via `class` if you turn off `paperize` but still want `ripple` to
-  look right.
+  component's styling — `paperize={false}` strips them too. Because of
+  that, every ripple-capable component computes its *effective* ripple
+  state as `ripple and paperize` (e.g. `assign(:ripple?, assigns.ripple and
+  assigns.paperize)`) rather than using the caller's `ripple` value
+  directly — `paperize={false}` always turns ripple off too, regardless of
+  `ripple`, so there's no positioning-context footgun by default. There's
+  no attr combination that brings it back; a caller who wants a ripple
+  without PhoenixPaper's other styling needs to keep `paperize={true}` and
+  override the unwanted classes individually via `class` instead.
 
   Two non-obvious things about the script itself, both worth knowing before
   touching it:

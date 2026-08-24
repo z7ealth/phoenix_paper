@@ -1,9 +1,11 @@
 defmodule PhoenixPaper.Drawer do
   @moduledoc """
   A Material Design navigation drawer (`pp_drawer/1`) — a vertical panel,
-  persistent on large screens (`lg:` and up) and toggled by a mobile drawer
-  below that breakpoint. Compose it with `PhoenixPaper.List` /
-  `PhoenixPaper.ListItem` for its contents.
+  persistent on large screens (`lg:` and up, pinned via `sticky` so it stays
+  in place as the page scrolls, with its own internal scroll if its content
+  is taller than the viewport) and toggled by a mobile drawer below that
+  breakpoint. Compose it with `PhoenixPaper.List` / `PhoenixPaper.ListItem`
+  for its contents.
 
   The mobile toggle is pure CSS, no JS/LiveView required: `pp_drawer/1`
   renders a visually hidden checkbox, and both the drawer panel and its
@@ -98,7 +100,7 @@ defmodule PhoenixPaper.Drawer do
 
   defp paper_classes do
     [
-      "fixed inset-y-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto bg-pp-surface text-pp-on-surface transition-transform peer-checked:translate-x-0 lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0",
+      "fixed inset-y-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto bg-pp-surface text-pp-on-surface transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0",
       Elevation.class(2)
     ]
   end

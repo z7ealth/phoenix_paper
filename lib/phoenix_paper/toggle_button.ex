@@ -18,7 +18,11 @@ defmodule PhoenixPaper.ToggleButton do
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
-  attr(:ripple, :boolean, default: true, doc: "the Material ripple effect on click/tap")
+  attr(:ripple, :boolean,
+    default: true,
+    doc: "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:disabled, :boolean, default: false)
   attr(:type, :string, default: "button", values: ~w(button submit reset))
   attr(:paperize, :boolean, default: true)
@@ -29,14 +33,16 @@ defmodule PhoenixPaper.ToggleButton do
 
   @doc "Renders a toggle button. See the module doc."
   def pp_toggle_button(assigns) do
+    assigns = assign(assigns, :ripple?, assigns.ripple and assigns.paperize)
+
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
       aria-pressed={to_string(@pressed)}
       data-pp-component="toggle-button"
-      class={Helpers.classes(@paperize, paper_classes(@pressed, @color, @shape, @ripple), @class)}
-      onclick={Ripple.on_click(@ripple)}
+      class={Helpers.classes(@paperize, paper_classes(@pressed, @color, @shape, @ripple?), @class)}
+      onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
       {render_slot(@inner_block)}

@@ -31,4 +31,17 @@ defmodule PhoenixPaper.BoxTest do
     <.pp_box tag="span">Content</.pp_box>
     """
   end
+
+  test "tag=\"pre\" renders a pre instead" do
+    html = render_component(&pre_box/1)
+
+    assert html =~ "<pre"
+    refute html =~ "<div"
+  end
+
+  defp pre_box(assigns) do
+    ~H"""
+    <.pp_box tag="pre">Content</.pp_box>
+    """
+  end
 end

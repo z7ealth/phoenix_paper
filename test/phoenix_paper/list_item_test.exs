@@ -92,6 +92,17 @@ defmodule PhoenixPaper.ListItemTest do
     """
   end
 
+  test "paperize={false} drops the click handler on a linked item too, even with ripple defaulting true" do
+    html = render_component(&bare_linked/1)
+    refute html =~ "onclick="
+  end
+
+  defp bare_linked(assigns) do
+    ~H"""
+    <.pp_list_item href="/settings" paperize={false}>Settings</.pp_list_item>
+    """
+  end
+
   test "a linked item shows a pointer cursor; a static item doesn't (there's nothing to click)" do
     assert render_component(&linked/1) =~ "cursor-pointer"
     refute render_component(&static/1) =~ "cursor-pointer"

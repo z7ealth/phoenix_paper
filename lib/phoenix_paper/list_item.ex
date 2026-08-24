@@ -23,7 +23,11 @@ defmodule PhoenixPaper.ListItem do
   attr(:navigate, :any, default: nil)
   attr(:patch, :any, default: nil)
   attr(:active, :boolean, default: false)
-  attr(:ripple, :boolean, default: true, doc: "the Material ripple effect on click/tap")
+  attr(:ripple, :boolean,
+    default: true,
+    doc: "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:disabled, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
@@ -43,7 +47,7 @@ defmodule PhoenixPaper.ListItem do
     assigns =
       assigns
       |> assign(:linked?, linked?)
-      |> assign(:ripple?, linked? and assigns.ripple)
+      |> assign(:ripple?, linked? and assigns.ripple and assigns.paperize)
 
     ~H"""
     <.link

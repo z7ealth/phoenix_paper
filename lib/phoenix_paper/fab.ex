@@ -12,7 +12,11 @@ defmodule PhoenixPaper.Fab do
   attr(:color, :string, default: "secondary", values: ~w(primary secondary tertiary error))
   attr(:size, :string, default: "md", values: ~w(sm md lg))
   attr(:extended, :boolean, default: false)
-  attr(:ripple, :boolean, default: true, doc: "the Material ripple effect on click/tap")
+  attr(:ripple, :boolean,
+    default: true,
+    doc: "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:disabled, :boolean, default: false)
   attr(:type, :string, default: "button", values: ~w(button submit reset))
   attr(:paperize, :boolean, default: true)
@@ -23,13 +27,15 @@ defmodule PhoenixPaper.Fab do
 
   @doc "Renders a floating action button. See the module doc."
   def pp_fab(assigns) do
+    assigns = assign(assigns, :ripple?, assigns.ripple and assigns.paperize)
+
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
       data-pp-component="fab"
-      class={Helpers.classes(@paperize, paper_classes(@color, @size, @extended, @ripple), @class)}
-      onclick={Ripple.on_click(@ripple)}
+      class={Helpers.classes(@paperize, paper_classes(@color, @size, @extended, @ripple?), @class)}
+      onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
       {render_slot(@inner_block)}

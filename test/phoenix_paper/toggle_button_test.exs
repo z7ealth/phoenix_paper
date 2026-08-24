@@ -43,6 +43,17 @@ defmodule PhoenixPaper.ToggleButtonTest do
     """
   end
 
+  test "paperize={false} drops the click handler too, even with ripple defaulting true" do
+    html = render_component(&bare/1)
+    refute html =~ "onclick="
+  end
+
+  defp bare(assigns) do
+    ~H"""
+    <.pp_toggle_button paperize={false}>Bold</.pp_toggle_button>
+    """
+  end
+
   test "shows a pointer cursor on hover" do
     html = render_component(&unpressed/1)
     assert html =~ "cursor-pointer"
