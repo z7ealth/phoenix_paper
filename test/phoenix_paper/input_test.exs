@@ -166,6 +166,12 @@ defmodule PhoenixPaper.InputTest do
     assert html =~ "Email"
   end
 
+  test "the closed legend has no resting padding — max-width alone can't shrink an element below its own padding" do
+    html = render_component(&outlined/1)
+    assert html =~ ~r/<legend[^>]*class="[^"]*\bpx-0\b[^"]*"/
+    refute html =~ ~r/<legend[^>]*class="[^"]*\bpx-1\b[^"]*"/
+  end
+
   test "the notch opens on focus or once the input has content, scoped to the actual input tag" do
     html = render_component(&outlined/1)
 

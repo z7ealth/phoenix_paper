@@ -51,7 +51,15 @@ defmodule PhoenixPaper.Input do
   rest so the border stays intact, transitioning to the label's natural
   content width in the outlined-and-focused/outlined-and-filled state, the
   same trigger conditions the real label's own `top-2`/`text-xs` shrink
-  already uses.
+  already uses. Critically, the legend has **zero horizontal padding at
+  rest** (`px-1` only applies alongside that same open-state
+  `max-width:full`, not unconditionally) — `max-width` can shrink an
+  element's *content* toward nothing, but never below its own `padding`
+  (a real CSS box-model rule, not a bug to work around some other way);
+  an earlier version had `px-1` always on, which left a small permanent
+  gap in the resting, unfocused border exactly the width of that padding
+  — caught from a screenshot of the supposedly-closed state showing a
+  sliver of open border where there should have been none.
 
   The `<fieldset>` is a *sibling* of the input (both descend from the same
   wrapper `<div>`, absolutely positioned over it), not an ancestor of it —
@@ -185,7 +193,9 @@ defmodule PhoenixPaper.Input do
   defp wrapper_classes("outlined", color, _shape, errors) do
     [
       "relative flex items-stretch transition-colors",
-      "has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full focus-within:[&>fieldset>legend]:max-w-full",
+      "has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
+      "has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
+      "focus-within:[&>fieldset>legend]:max-w-full focus-within:[&>fieldset>legend]:px-1",
       outlined_focus_border_classes(color, errors)
     ]
   end
@@ -227,7 +237,7 @@ defmodule PhoenixPaper.Input do
   end
 
   defp legend_classes do
-    "invisible ml-2 max-w-0 overflow-hidden whitespace-nowrap px-1 text-sm transition-[max-width] duration-150"
+    "invisible ml-2 max-w-0 overflow-hidden whitespace-nowrap px-0 text-sm transition-[max-width] duration-150"
   end
 
   defp base_wrapper_classes("filled"),

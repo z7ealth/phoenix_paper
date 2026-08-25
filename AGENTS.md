@@ -760,6 +760,19 @@ that isn't a form control does), so the notch would stay permanently
 open regardless of the input's actual state — caught by working through
 what the selector matches before shipping it, not from a failing test.
 
+**Follow-up bug, caught from a user screenshot of the supposedly-closed
+state**: the legend's `px-1` was originally unconditional, which left a
+small permanent gap in the resting (unfocused, empty) border exactly the
+width of that padding. Real CSS box-model rule, not a framework quirk:
+`max-width` can shrink an element's content toward nothing, but it can
+never shrink the element below its own `padding` — a padded box has a
+hard floor at `padding-left + padding-right` regardless of how small
+`max-width` is set. Fixed by making `px-1` conditional, applied by the
+exact same `has-[input:not(:placeholder-shown)]`/`focus-within` triggers
+that open `max-width`, so the resting legend has **zero** padding (a true
+zero-width box, not just visually small) and the border stays completely
+unbroken until the notch actually needs to open.
+
 ## Data display: the Table family (`Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`)
 
 Modeled on MUI's Table components — one small function component per table
