@@ -34,8 +34,21 @@ defmodule PhoenixPaper.Chip do
   chip's layout). A small `onkeydown` snippet (Enter/Space triggers a
   synthetic click, same "small vanilla snippet, no hook" precedent as
   `PhoenixPaper.Ripple`) keeps it keyboard-operable despite not being a real
-  button, and its `onclick` calls `event.stopPropagation()` so clicking
-  delete on a `clickable` chip doesn't also fire the chip's own click.
+  button.
+
+  **Does not call `event.stopPropagation()`** — an earlier version did, to
+  stop clicking delete on a `clickable` chip from also firing the chip's own
+  click, but that broke `on_delete` entirely: LiveView's `phx-click` binding
+  is one delegated `window`-level listener (bound during the bubble phase),
+  so `stopPropagation()` on the delete span prevented the click from ever
+  reaching it, and the delete control silently did nothing. Confirmed with a
+  real click in a real browser, not just a static render — the rendered
+  markup and `phx-click` attribute both looked correct in isolation.
+  Unnecessary anyway: LiveView resolves a click to the *nearest*
+  `phx-click`-bearing ancestor-or-self via `closestPhxBinding` (starting
+  from the actual event target and walking up), so a click on the delete
+  span already resolves to the delete span's own `phx-click`, never the
+  outer button's — no manual propagation-stopping needed for that.
 
   `disabled` dims and disables **both** the root (when `clickable`, a real
   `disabled` attribute; when not, `pointer-events-none` — a plain `<div>`
@@ -151,7 +164,6 @@ defmodule PhoenixPaper.Chip do
       aria-disabled={to_string(@disabled)}
       data-pp-component="chip-delete"
       class={Helpers.classes(@paperize, delete_classes(@size, @disabled), nil)}
-      onclick="event.stopPropagation();"
       onkeydown={keydown_activate_script()}
       phx-click={@on_delete}
     >

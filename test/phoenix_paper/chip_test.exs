@@ -83,7 +83,16 @@ defmodule PhoenixPaper.ChipTest do
     assert html =~ "chip-delete"
     assert html =~ ~s(role="button")
     assert html =~ "remove_tag"
-    assert html =~ "event.stopPropagation()"
+
+    # No event.stopPropagation() here -- LiveView's phx-click binding is one
+    # delegated window-level listener bound during the bubble phase, so
+    # stopPropagation() on this element would prevent the click from ever
+    # reaching it and on_delete would silently never fire (confirmed with a
+    # real click in a real browser). It's also unnecessary: LiveView already
+    # resolves a click to the nearest phx-click-bearing ancestor-or-self via
+    # closestPhxBinding, so a click here never falls through to a
+    # `clickable` chip's own phx-click on the outer <button>.
+    refute html =~ "stopPropagation"
   end
 
   defp deletable(assigns) do
