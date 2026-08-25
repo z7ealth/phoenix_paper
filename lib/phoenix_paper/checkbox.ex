@@ -14,8 +14,11 @@ defmodule PhoenixPaper.Checkbox do
   `PhoenixPaper.Helpers.toggle_label_classes/1`), so e.g.
   `class="size-5"` sizes the checkbox itself as expected.
 
-  Ripples on click by default, wired to the small box rather than the whole
-  label — see `PhoenixPaper.Ripple`.
+  `ripple={true}` adds the Material ripple effect on click/tap, wired to
+  the small box rather than the whole label — off by default (unlike
+  `Button`/`Fab`/`ToggleButton`), since a checkbox's own instant
+  fill/border-color change already reads as clear feedback on a target
+  this small — see `PhoenixPaper.Ripple`.
   """
   use Phoenix.Component
 
@@ -30,9 +33,8 @@ defmodule PhoenixPaper.Checkbox do
   attr(:paperize, :boolean, default: true)
 
   attr(:ripple, :boolean,
-    default: true,
-    doc:
-      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+    default: false,
+    doc: "the Material ripple effect on click/tap (default: false) — see PhoenixPaper.Ripple"
   )
 
   attr(:disabled, :boolean, default: false)

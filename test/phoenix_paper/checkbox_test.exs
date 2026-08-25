@@ -51,25 +51,31 @@ defmodule PhoenixPaper.CheckboxTest do
     """
   end
 
-  test "ripple (default): wires the click handler on the box" do
+  test "ripple (default): no click handler — off by default, unlike Button/Fab" do
     html = render_component(&checked/1)
+    refute html =~ "onclick="
+  end
+
+  test "ripple={true}: wires the click handler on the box" do
+    html = render_component(&with_ripple/1)
     assert html =~ "onclick="
   end
 
-  test "ripple={false}: no click handler" do
-    html = render_component(&no_ripple/1)
-    refute html =~ "onclick="
-  end
-
-  defp no_ripple(assigns) do
+  defp with_ripple(assigns) do
     ~H"""
-    <.pp_checkbox ripple={false} />
+    <.pp_checkbox ripple={true} checked={true} label="Accept terms" />
     """
   end
 
-  test "paperize={false}: no click handler either, even though ripple defaults true" do
-    html = render_component(&bare/1)
+  test "paperize={false}: no click handler either, even with ripple={true}" do
+    html = render_component(&bare_with_ripple/1)
     refute html =~ "onclick="
+  end
+
+  defp bare_with_ripple(assigns) do
+    ~H"""
+    <.pp_checkbox paperize={false} ripple={true} label="Bare" />
+    """
   end
 
   test "paperize={false}: class sizes the bare input, not the label, and the label keeps its flex layout" do

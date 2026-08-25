@@ -5,14 +5,14 @@ defmodule PhoenixPaper.ThemeToggleTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.ThemeToggle
 
-  test "renders a switch wired to toggle data-theme on html by default" do
+  test "renders a switch that computes the effective theme and flips to the opposite, explicitly" do
     html = render_component(&basic/1)
 
     assert html =~ "Dark mode"
-    assert html =~ "toggle_attr"
-    assert html =~ "data-theme"
-    assert html =~ "dark"
-    assert html =~ "html"
+    assert html =~ "querySelector(&quot;html&quot;)"
+    assert html =~ "setAttribute(&#39;data-theme&#39;"
+    assert html =~ "matchMedia(&#39;(prefers-color-scheme: dark)&#39;)"
+    assert html =~ "isDark?&#39;light&#39;:&#39;dark&#39;"
   end
 
   defp basic(assigns) do
@@ -55,10 +55,10 @@ defmodule PhoenixPaper.ThemeToggleTest do
     """
   end
 
-  test "on_toggle's JS commands run before the built-in data-theme flip" do
+  test "on_toggle's JS commands are wired as phx-click, independent of the onclick data-theme flip" do
     html = render_component(&with_on_toggle/1)
     assert html =~ "save_theme_preference"
-    assert html =~ "toggle_attr"
+    assert html =~ "setAttribute(&#39;data-theme&#39;"
   end
 
   defp with_on_toggle(assigns) do
@@ -76,5 +76,27 @@ defmodule PhoenixPaper.ThemeToggleTest do
     ~H"""
     <.pp_theme_toggle paperize={false} />
     """
+  end
+
+  test "renders a sun icon and a moon icon inside the thumb" do
+    html = render_component(&basic/1)
+
+    assert html =~ "hero-sun-mini"
+    assert html =~ "hero-moon-mini"
+  end
+
+  test "the icon size override uses !important — Tails doesn't recognize size-* as a conflict group" do
+    html = render_component(&basic/1)
+    assert html =~ "!size-3"
+  end
+
+  test "renders no inline <script> — the first-paint system sync is pure CSS, not JS" do
+    html = render_component(&basic/1)
+    refute html =~ "<script>"
+  end
+
+  test "the click handler never reads the checkbox's own checked property to decide direction" do
+    html = render_component(&basic/1)
+    refute html =~ "this.checked"
   end
 end

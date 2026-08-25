@@ -888,12 +888,98 @@ in `priv/static/phoenix_paper.css`:
 - Dark mode keys off `[data-theme="dark"]` — the same attribute daisyUI and
   Phoenix 1.8's generated `app.css` already use — so PhoenixPaper flips with
   the app's existing toggle instead of adding a second one.
+- **"System" default**: when `data-theme` isn't set at all, a
+  `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ... } }`
+  block (mirroring `[data-theme="dark"]`'s own values) makes the page follow
+  the OS/browser preference automatically — `dev.exs` and any consuming app
+  get a correctly-themed first paint with zero clicks. An explicit
+  `data-theme="dark"` or `data-theme="light"` always wins over the system
+  preference in either direction; the media query is purely the fallback for
+  "no explicit choice made yet." `PhoenixPaper.ThemeToggle` (below) is built
+  around this: it never forces `data-theme` on mount, only on click.
 - A second bundled palette (`teal`/`amber`) is opt-in via
   `data-pp-theme="teal"` on any ancestor element (typically `<html>`).
 - **Custom themes**: don't fork the CSS file. Override the `--color-pp-*`
   variables from the consuming app's own stylesheet, after importing
   `phoenix_paper.css`. That's the entire theming API — no build step, no
   JS config.
+
+## `PhoenixPaper.ThemeToggle`, and a `PhoenixPaper.Tails` gap it exposed
+
+Rewritten from a thin `PhoenixPaper.Switch` wrapper to its own markup so a
+sun/moon icon could live *inside* the sliding thumb (swapped via a
+`peer-checked:` compound selector reaching into the thumb's own children —
+`Switch` itself has no attr for that). Two things worth knowing:
+
+- **Deliberately no `pp-*` brand color anywhere in it** (thumb fixed
+  white, track a neutral translucent gray) even though `Switch`'s own
+  thumb/track go `pp-primary` when checked. A theme toggle's single most
+  common home is an `AppBar` header, which is itself very often
+  `pp-primary` by default — a `bg-pp-primary` thumb there is the same
+  "same color layered on itself" invisibility bug already hit for
+  `Drawer`'s colored variants and for buttons dropped into a colored
+  `AppBar`. Rather than fix it per-placement (there's no `class` override
+  path into `Switch`'s internals anyway), the toggle just never uses a
+  color that could plausibly match its own container.
+- **Found a real gap in the vendored `Tails`**: passing `class="size-3"`
+  to override `PhoenixPaper.Icon`'s default `size-5` left **both** classes
+  in the merged output (verified directly: `Tails.classes("size-5
+  size-3")` returns `"size-3 size-5"`, not just `"size-3"`) — this
+  version of `Tails`'s conflict-resolution ruleset doesn't know about
+  Tailwind's `size-*` shorthand (a newer utility; the ruleset predates
+  it), so it doesn't treat two `size-*` classes as conflicting the way it
+  does e.g. two `text-*` or `bg-*` classes. With both classes present,
+  which one actually wins is down to Tailwind's own internal utility
+  ordering in the generated stylesheet — not something to rely on. Fixed
+  the same way `TableRow`'s `selected` state already does for its own
+  specificity fight: `class="!size-3"` (Tailwind's `!important` prefix),
+  which wins regardless of generation order. If you hit visibly-wrong
+  sizing after overriding an `Icon`'s (or any component's) default size
+  via `class`, check whether this is why — `Tails` silently keeping both
+  classes doesn't error or warn, it just produces an ambiguous class list.
+- **First version's `<script>`-based system-preference sync looked right
+  and wasn't** — worth knowing in detail since it's the kind of bug that
+  only shows up on a real dark-OS machine, never in a static render or a
+  test. It set the checkbox's `checked` *property* to match
+  `matchMedia('(prefers-color-scheme: dark)')` on mount (the same "small
+  vanilla snippet, no hook" precedent `Ripple`/`NumberField` use). That
+  script itself ran fine — but Phoenix LiveView's connected-mount
+  hydration re-renders and morphdom-patches the page shortly after the
+  dead-rendered first paint, and that patch can replace the checkbox
+  element with a fresh one built from the *server's* render (which has no
+  way to know the client's OS preference and always has
+  `default_checked`), silently discarding the script's mutation. Visible
+  symptom on an actual dark-OS machine: the page renders correctly dark
+  (the CSS fallback is unaffected by any of this), but the toggle *looks*
+  set to light — and because the original click handler read the
+  (silently-reset) `checked` property to decide `"dark"` vs `"light"`, the
+  first click just reasserted "dark" (a no-op the user couldn't see,
+  since the page was already dark via the system fallback), so it took
+  *two* clicks to actually reach light.
+
+  Fixed at both ends, neither depending on the other:
+  1. The click handler now **computes the effective theme itself** —
+     `data-theme` if set, else `matchMedia` — and flips to the opposite,
+     rather than ever trusting the checkbox's own `checked` property. This
+     alone fixes the double-click bug regardless of whether anything
+     synced the checkbox's visual state correctly.
+  2. The toggle's *first-paint appearance* now syncs via a `@media
+     (prefers-color-scheme: dark)` block in `priv/static/phoenix_paper.css`
+     that fakes the "checked" look (track color, thumb position, icon
+     swap) directly in CSS, scoped to `html:not([data-theme])` — CSS has
+     no hydration race to lose, so this can't be silently undone the way
+     the script's property mutation could. It's purely cosmetic (the
+     underlying checkbox is never actually "checked" until a real click
+     happens), which is fine because (1) no longer depends on it being
+     accurate.
+
+  One HEEx fact learned along the way, now moot but worth remembering for
+  next time: `~H` does **not** parse `{...}` interpolation inside a
+  `<script>` tag's body at all — it's treated as raw text, same as a
+  browser's own HTML parser treats `<script>`/`<style>` content. A
+  `{some_function()}` call inside `<script>...</script>` compiled with an
+  "unused function" warning, meaning it was silently never invoked — the
+  script body has to be written as literal text directly in the template.
 
 ## Elevation
 
@@ -1010,6 +1096,19 @@ show up; structural/logic edits still hot-reload live via
 `phoenix_live_reload`. When adding a component, add a section for it here
 in the same change — a demo, its `props` list, and a `@<name>_code` module
 attribute with the snippet — so the catalog stays complete.
+
+**`hero-*` icon names used anywhere in this file must also be added to
+`@demo_icon_css`** (a small hand-rolled `mask-image` rule per icon, right
+above `@style_tag` — this script has no real asset pipeline, so it can't
+get `hero-*` classes for free from `mix phx.new`'s vendored heroicons the
+way a real consuming app does). Forgetting this doesn't error or warn
+anywhere — `<.pp_icon name="hero-whatever">` renders a perfectly valid,
+empty `<span class="hero-whatever">` with no visual definition at all, so
+the icon is just silently invisible. This has happened more than once
+(`hero-chevron-right`, `hero-user`, `hero-sun-mini`, `hero-moon-mini` were
+all added to component demos before being added here, and stayed
+invisible until a user reported it) — when adding a demo that uses an
+icon name not already in that list, check it first.
 
 Each section's snippet is hidden behind a "Show code"/"Hide code" toggle
 (matching MUI's docs-site pattern), implemented the same CSS-only way as

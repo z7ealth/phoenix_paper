@@ -73,6 +73,46 @@
 }
 
 /*
+ * "System" default: follow the OS/browser's own `prefers-color-scheme`
+ * when the app hasn't set `data-theme` at all (no explicit choice made
+ * yet, e.g. before `PhoenixPaper.ThemeToggle`'s first click, or for an app
+ * that never wires up a toggle at all) — the same values as
+ * `[data-theme="dark"]` above, just gated by the media query instead of
+ * the attribute, and only while there's no *explicit* `data-theme="light"`
+ * override (an explicit choice always wins over the system preference, in
+ * either direction — `[data-theme="dark"]` above already wins unconditionally
+ * regardless of the system preference for the opposite case). This is the
+ * same "media query is the fallback, an explicit attribute overrides it"
+ * pattern daisyUI/Phoenix 1.8's own generated `app.css` uses for its own
+ * dark mode, so a real app adding this library on top of that existing
+ * toggle gets the same layered behavior for free, not a second competing
+ * system.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-pp-primary: #7986cb;
+    --color-pp-on-primary: #0a0e1f;
+    --color-pp-secondary: #ff80ab;
+    --color-pp-on-secondary: #1a0511;
+    --color-pp-tertiary: #4db6ac;
+    --color-pp-on-tertiary: #04211d;
+    --color-pp-error: #ef9a9a;
+    --color-pp-on-error: #370505;
+    --color-pp-surface: #121212;
+    --color-pp-on-surface: #e6e6e6;
+    --color-pp-surface-variant: #1e1e1e;
+    --color-pp-outline: #938f99;
+
+    --color-pp-success: #81c995;
+    --color-pp-on-success: #0a2e0f;
+    --color-pp-warning: #ffb74d;
+    --color-pp-on-warning: #2b1500;
+    --color-pp-info: #81d4fa;
+    --color-pp-on-info: #01324a;
+  }
+}
+
+/*
  * Alternate default palette (teal / amber). Opt in with
  * `<html data-pp-theme="teal">` (or any ancestor element).
  * To build a fully custom theme, don't fork this file — override the
@@ -94,6 +134,65 @@
   --color-pp-on-secondary: #2b1a00;
   --color-pp-tertiary: #8c9eff;
   --color-pp-on-tertiary: #0a0e3d;
+}
+
+/* Same "system" fallback as above, for the teal palette. */
+@media (prefers-color-scheme: dark) {
+  [data-pp-theme="teal"]:not([data-theme="light"]) {
+    --color-pp-primary: #4db6ac;
+    --color-pp-on-primary: #04211d;
+    --color-pp-secondary: #ffca80;
+    --color-pp-on-secondary: #2b1a00;
+    --color-pp-tertiary: #8c9eff;
+    --color-pp-on-tertiary: #0a0e3d;
+  }
+}
+
+/*
+ * `PhoenixPaper.ThemeToggle`'s own first-paint sync to the system
+ * preference — purely cosmetic (it fakes the "checked" look without the
+ * underlying checkbox actually being checked), needed because a plain
+ * inline `<script>` doing this via the `checked` *property* turned out to
+ * be unreliable: Phoenix LiveView's connected-mount hydration can
+ * re-render and morphdom-patch the page shortly after the dead-rendered
+ * first paint, replacing the checkbox element with a fresh one built from
+ * the server's own render (which has no way to know the client's OS
+ * preference) and silently discarding the script's mutation — see
+ * `PhoenixPaper.ThemeToggle`'s moduledoc for the full story, including why
+ * the actual click-driven light/dark decision *doesn't* depend on this
+ * (it recomputes the effective theme itself every time, so this block only
+ * ever affects the very first, pre-click paint). Scoped to
+ * `html:not([data-theme])` — absence only, not `:not([data-theme="light"])`
+ * like the color tokens above — because the moment there's *any* explicit
+ * `data-theme` (including an explicit `"dark"` from a previous click),
+ * the toggle's own real `peer-checked:` styling takes over identically,
+ * and this block should get out of the way entirely rather than overlap
+ * with it.
+ */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) [data-pp-component="theme-toggle"] span:has(> input[type="checkbox"]) {
+    background-color: color-mix(in srgb, #6b7280 70%, transparent);
+  }
+
+  html:not([data-theme]) [data-pp-component="theme-toggle"] span:has(> input[type="checkbox"]) > span {
+    transform: translateX(1rem);
+  }
+
+  html:not([data-theme])
+    [data-pp-component="theme-toggle"]
+    span:has(> input[type="checkbox"])
+    > span
+    > span:first-child {
+    opacity: 0;
+  }
+
+  html:not([data-theme])
+    [data-pp-component="theme-toggle"]
+    span:has(> input[type="checkbox"])
+    > span
+    > span:last-child {
+    opacity: 1;
+  }
 }
 
 /*

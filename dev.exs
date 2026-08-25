@@ -78,13 +78,13 @@ defmodule PhoenixPaperDemo.UI do
 
   import PhoenixPaper.ListSubheader, only: [pp_list_subheader: 1]
 
-  attr :id, :string, required: true
-  attr :title, :string, required: true
-  attr :description, :string, default: nil
-  attr :props, :list, default: [], doc: "list of {name, description} tuples"
-  attr :code, :string, required: true
+  attr(:id, :string, required: true)
+  attr(:title, :string, required: true)
+  attr(:description, :string, default: nil)
+  attr(:props, :list, default: [], doc: "list of {name, description} tuples")
+  attr(:code, :string, required: true)
 
-  slot :inner_block, required: true
+  slot(:inner_block, required: true)
 
   def demo_section(assigns) do
     ~H"""
@@ -124,8 +124,8 @@ defmodule PhoenixPaperDemo.UI do
     """
   end
 
-  attr :label, :string, required: true
-  slot :inner_block, required: true
+  attr(:label, :string, required: true)
+  slot(:inner_block, required: true)
 
   def nav_group(assigns) do
     ~H"""
@@ -151,7 +151,8 @@ defmodule PhoenixPaperDemo do
   # generic glyphs (not Heroicons' actual paths) to prove icon-accepting
   # components work the same way once those classes exist for real.
   @demo_icon_css """
-  .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell, .hero-trash {
+  .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell, .hero-trash,
+  .hero-chevron-right, .hero-user, .hero-sun-mini, .hero-moon-mini {
     display: inline-block; width: 1em; height: 1em; background-color: currentColor;
     mask-size: contain; -webkit-mask-size: contain;
     mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat;
@@ -180,6 +181,22 @@ defmodule PhoenixPaperDemo do
   .hero-trash {
     mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13"/></svg>');
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13"/></svg>');
+  }
+  .hero-chevron-right {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>');
+  }
+  .hero-user {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>');
+  }
+  .hero-sun-mini {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" stroke="black" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" stroke="black" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>');
+  }
+  .hero-moon-mini {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 14.5A8.5 8.5 0 1110.2 4.3 7 7 0 0020 14.5z"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 14.5A8.5 8.5 0 1110.2 4.3 7 7 0 0020 14.5z"/></svg>');
   }
   """
 
@@ -223,18 +240,18 @@ defmodule PhoenixPaperDemo do
   # it won't color the tags themselves as HTML tags (there's no dedicated
   # HEEx grammar to reach for), but strings/atoms/keywords/numbers do.
   @hljs_assets raw("""
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/languages/elixir.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      hljs.addPlugin(new CopyButtonPlugin());
-      hljs.highlightAll();
-    });
-  </script>
-  """)
+               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
+               <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.css">
+               <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+               <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/languages/elixir.min.js"></script>
+               <script src="https://cdn.jsdelivr.net/npm/highlightjs-copy@1.0.6/dist/highlightjs-copy.min.js"></script>
+               <script>
+                 document.addEventListener("DOMContentLoaded", function () {
+                   hljs.addPlugin(new CopyButtonPlugin());
+                   hljs.highlightAll();
+                 });
+               </script>
+               """)
 
   # Small placeholder "photos" for the ImageList demo — inline SVG data URIs
   # (same raw, unencoded approach as the icon masks above) so the page stays
@@ -956,20 +973,7 @@ defmodule PhoenixPaperDemo do
             >
               Teal
             </.pp_button>
-            <.pp_button
-              variant="outlined"
-              class="border-pp-on-primary text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
-              phx-click={JS.remove_attribute("data-theme", to: "html")}
-            >
-              Light
-            </.pp_button>
-            <.pp_button
-              variant="outlined"
-              class="border-pp-on-primary text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
-              phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}
-            >
-              Dark
-            </.pp_button>
+            <.pp_theme_toggle label={nil} />
           </:actions>
         </.pp_app_bar>
 
@@ -1195,13 +1199,13 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="checkbox"
           title="Checkbox"
-          description="Includes the hidden-input trick so an unchecked box still submits false. Ripples on click by default — see Helpers below."
+          description="Includes the hidden-input trick so an unchecked box still submits false."
           props={[
             {"checked", "boolean (default: nil, meaning unchecked)"},
             {"field", "a Phoenix.HTML.FormField — sets name/id/checked for you"},
             {"label", "text next to the box"},
             {"disabled", "boolean (default: false)"},
-            {"ripple", "boolean — the ripple effect on click/tap (default: true)"},
+            {"ripple", "boolean — the ripple effect on click/tap (default: false)"},
             {"paperize", "false renders a bare native checkbox, no hidden input"}
           ]}
           code={@checkbox_code}
@@ -1246,12 +1250,13 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="radio-group"
           title="Radio Group"
-          description="A labeled set of mutually exclusive radio buttons sharing one name. Ripples on click by default — see Helpers below."
+          description="A labeled set of mutually exclusive radio buttons sharing one name."
           props={[
             {"options", "list of {label, value} tuples, or plain values"},
             {"value", "the currently selected value"},
             {"label", "the group's legend"},
-            {"field / disabled / ripple / paperize", "same as other form controls"}
+            {"ripple", "boolean — the ripple effect on click/tap (default: false)"},
+            {"field / disabled / paperize", "same as other form controls"}
           ]}
           code={@radio_group_code}
         >
@@ -2052,7 +2057,7 @@ defmodule PhoenixPaperDemo do
           title="Ripple (helper)"
           description="The Material ripple effect — a circle that expands from the click point and fades out. Vanilla inline onclick, no JS hook/bundler. Try clicking the buttons above."
           props={[
-            {"ripple", "the boolean prop on Button, Fab, ToggleButton, Switch, Checkbox, RadioGroup, and a linked ListItem — default true, and always off when paperize is false"},
+            {"ripple", "the boolean prop on Button, Fab, ToggleButton, Switch, Checkbox, RadioGroup, and a linked ListItem — default true, except Checkbox/RadioGroup (default false; their own instant fill/border change already reads as feedback on a target that small); always off when paperize is false"},
             {"PhoenixPaper.Ripple.on_click/1", "returns the script, or nil when disabled (so the attribute is dropped entirely)"},
             {"PhoenixPaper.Ripple.container_classes/1", "the \"relative overflow-hidden\" the ripple needs to stay clipped"}
           ]}
@@ -2099,7 +2104,7 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="theming"
           title="Theming"
-          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal/Light/Dark buttons in the app bar above — no page reload, just flipping data-theme/data-pp-theme on the root html element."
+          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal buttons and the theme toggle in the app bar above — no page reload, just flipping data-theme/data-pp-theme on the root html element."
           props={[
             {"data-theme=\"dark\"", "on any ancestor — the same attribute daisyUI/Phoenix 1.8's generated app.css already use"},
             {"data-pp-theme=\"teal\"", "opts into the bundled alternate palette"},
@@ -2107,7 +2112,7 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@theming_code}
         >
-          <p class="text-sm opacity-70">Use the theme buttons in the app bar — this section is just documentation.</p>
+          <p class="text-sm opacity-70">Use the theme buttons/toggle in the app bar — this section is just documentation.</p>
         </.demo_section>
         </.pp_container>
       </div>

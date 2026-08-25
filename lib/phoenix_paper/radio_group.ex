@@ -6,8 +6,11 @@ defmodule PhoenixPaper.RadioGroup do
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
 
-  Ripples on click by default, wired to each option's small box rather than
-  its whole label — see `PhoenixPaper.Ripple`.
+  `ripple={true}` adds the Material ripple effect on click/tap, wired to
+  each option's small box rather than its whole label — off by default
+  (unlike `Button`/`Fab`/`ToggleButton`), since a radio's own instant
+  fill/border-color change already reads as clear feedback on a target
+  this small — see `PhoenixPaper.Ripple`.
   """
   use Phoenix.Component
 
@@ -23,9 +26,8 @@ defmodule PhoenixPaper.RadioGroup do
   attr(:paperize, :boolean, default: true)
 
   attr(:ripple, :boolean,
-    default: true,
-    doc:
-      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+    default: false,
+    doc: "the Material ripple effect on click/tap (default: false) — see PhoenixPaper.Ripple"
   )
 
   attr(:class, :any, default: nil)
