@@ -68,6 +68,25 @@ defmodule PhoenixPaper.ThemeToggle do
   should only affect a scoped preview area instead of the whole page works
   too: `target="#preview"`.
 
+  ## Multiple instances stay in sync — scoped by `target`
+
+  A page can have more than one `pp_theme_toggle` (e.g. one in an `AppBar`
+  and another in a dedicated settings section) and clicking either one keeps
+  them all visually in sync: alongside setting `data-theme`, the `onclick`
+  also runs `document.querySelectorAll` for every
+  `[data-pp-component="theme-toggle"][data-pp-target="..."]` checkbox and
+  sets its `checked` property to match. This is plain DOM querying done at
+  click time — no JS hooks, no PubSub, no LiveView involved — so it works
+  across LiveViews on the same page just as well as within one.
+
+  The sync is scoped to toggles sharing the *same* `target`, not every
+  toggle on the page unconditionally: a toggle scoped to `target="#preview"`
+  and one bound to `target="html"` represent two independent pieces of
+  state (a live preview area's theme vs. the whole page's), so syncing them
+  together would be wrong even though both are `pp_theme_toggle`s. Two
+  toggles that both default to `target="html"` (the common case) sync with
+  each other automatically, with no extra configuration needed.
+
   `on_toggle` (default `%JS{}`) is wired as a plain `phx-click`, running
   independently alongside the `onclick` above — for a caller that also
   wants to persist the choice server-side, e.g.
@@ -137,7 +156,11 @@ defmodule PhoenixPaper.ThemeToggle do
     assigns = assign(assigns, :ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
-    <label data-pp-component="theme-toggle" class={Helpers.toggle_label_classes(if @paperize, do: @class)}>
+    <label
+      data-pp-component="theme-toggle"
+      data-pp-target={@target}
+      class={Helpers.toggle_label_classes(if @paperize, do: @class)}
+    >
       <span class={Helpers.classes(@paperize, track_classes(), nil)}>
         <input
           type="checkbox"
@@ -162,12 +185,15 @@ defmodule PhoenixPaper.ThemeToggle do
   end
 
   defp onclick_script(ripple?, target) do
+    sync_selector =
+      "[data-pp-component=\"theme-toggle\"][data-pp-target=\"#{target}\"] input[type=checkbox]"
+
     toggle = """
     (function(cb){\
     var isDark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.hasAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme: dark)').matches);\
     var next=isDark?'light':'dark';\
     document.querySelector(#{inspect(target)}).setAttribute('data-theme',next);\
-    cb.checked=(next==='dark');\
+    document.querySelectorAll(#{inspect(sync_selector)}).forEach(function(other){other.checked=(next==='dark');});\
     })(this);\
     """
 

@@ -99,4 +99,28 @@ defmodule PhoenixPaper.ThemeToggleTest do
     html = render_component(&basic/1)
     refute html =~ "this.checked"
   end
+
+  test "renders a data-pp-target attribute matching target, for cross-instance sync scoping" do
+    html = render_component(&basic/1)
+    assert html =~ "data-pp-target=\"html\""
+
+    scoped_html = render_component(&scoped/1)
+    assert scoped_html =~ "data-pp-target=\"#preview\""
+  end
+
+  test "the click handler syncs every other same-target toggle's checked property" do
+    html = render_component(&basic/1)
+
+    assert html =~
+             "querySelectorAll(&quot;[data-pp-component=\\&quot;theme-toggle\\&quot;][data-pp-target=\\&quot;html\\&quot;] input[type=checkbox]&quot;)"
+
+    assert html =~ "other.checked=(next==="
+  end
+
+  test "the sync query is scoped by target, so a scoped toggle doesn't reference the default html selector" do
+    html = render_component(&scoped/1)
+
+    assert html =~ "data-pp-target=\\&quot;#preview\\&quot;"
+    refute html =~ "data-pp-target=\\&quot;html\\&quot;"
+  end
 end

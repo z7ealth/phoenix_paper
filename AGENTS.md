@@ -980,6 +980,23 @@ sun/moon icon could live *inside* the sliding thumb (swapped via a
   `{some_function()}` call inside `<script>...</script>` compiled with an
   "unused function" warning, meaning it was silently never invoked — the
   script body has to be written as literal text directly in the template.
+- **Multiple instances now stay in sync, scoped by `target`**: a page with
+  more than one `pp_theme_toggle` (e.g. one in an `AppBar`, another in a
+  settings panel) used to leave the other one visually stale after a
+  click, since each toggle's `onclick` only ever touched its own checkbox.
+  Fixed by giving the outer `<label>` a `data-pp-target={@target}`
+  attribute and having the click handler, right after computing `next`,
+  run `document.querySelectorAll('[data-pp-component="theme-toggle"]
+  [data-pp-target="..."] input[type=checkbox]')` and set every match's
+  `checked` property (the clicked checkbox matches its own query too, so
+  there's no separate `cb.checked = ...` line anymore — one code path
+  covers both "self" and "siblings"). Scoped to matching `target`, not
+  every toggle on the page unconditionally: a toggle bound to
+  `target="#preview"` and one bound to the default `target="html"`
+  represent two independently-meaningful pieces of state, so syncing them
+  together would be wrong even though both are `pp_theme_toggle`s. Pure
+  `querySelectorAll` at click time — no hooks, no PubSub, works across
+  LiveViews on the same page just as well as within one.
 
 ## Elevation
 
