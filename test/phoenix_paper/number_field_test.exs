@@ -5,6 +5,24 @@ defmodule PhoenixPaper.NumberFieldTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.NumberField
 
+  test "field= populates name/id/value from the form field" do
+    html = render_component(&with_form_field/1)
+
+    assert html =~ ~s(id="user_qty")
+    assert html =~ ~s(name="user[qty]")
+    assert html =~ ~s(value="3")
+  end
+
+  defp with_form_field(assigns) do
+    form = Phoenix.Component.to_form(%{"qty" => "3"}, as: :user)
+
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_number_field field={@form[:qty]} label="Quantity" />
+    """
+  end
+
   test "renders stepper buttons wired to the input's id via stepUp/stepDown" do
     html = render_component(&field/1)
 

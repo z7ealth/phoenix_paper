@@ -57,10 +57,10 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 ## Usage
 
 ```heex
-<.pp_navbar position="sticky">
+<.pp_app_bar position="sticky">
   <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
   My App
-</.pp_navbar>
+</.pp_app_bar>
 
 <.pp_drawer id="app-drawer">
   <:header>My App</:header>

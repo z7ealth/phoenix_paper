@@ -8,7 +8,7 @@
 # It boots a real Phoenix + LiveView server (via `phoenix_playground`) with
 # `phoenix_paper` loaded straight from this checkout (`path: "."`), and
 # renders a docs-site-style page: a left `PhoenixPaper.Drawer` for
-# navigation, a sticky `PhoenixPaper.Navbar`, and one section per component
+# navigation, a sticky `PhoenixPaper.AppBar`, and one section per component
 # with a live example, its options, and the HEEx snippet that produced it.
 #
 # Styling runs through the real Tailwind v4 CLI (via the `tailwind` hex
@@ -309,9 +309,19 @@ defmodule PhoenixPaperDemo do
   """
 
   @text_field_code ~S"""
-  <.pp_input label="Outlined (default)" name="outlined_demo" />
+  <.pp_input variant="outlined" label="Outlined (default)" name="outlined_demo" />
   <.pp_input variant="filled" label="Filled" name="filled_demo" />
+  <.pp_input variant="standard" label="Standard" name="standard_demo" />
   <.pp_input label="With an error" name="error_demo" value="not-an-email" errors={["is not a valid email"]} />
+  <.pp_input color="secondary" label="Secondary" name="color_secondary_demo" />
+  <.pp_input size="small" label="Small" name="size_small_demo" />
+
+  <.pp_input label="Amount" name="amount_demo" value="42.00">
+    <:start_adornment>$</:start_adornment>
+    <:end_adornment>USD</:end_adornment>
+  </.pp_input>
+
+  <.pp_input multiline rows={3} label="Bio" name="bio_demo" />
   """
 
   @select_code ~S"""
@@ -344,6 +354,18 @@ defmodule PhoenixPaperDemo do
   <.pp_switch label="Notifications" checked={true} name="notifications" />
   """
 
+  @theme_toggle_code ~S"""
+  <.pp_theme_toggle />
+
+  <%!-- accurate initial state, a scoped target, and persisting the choice server-side --%>
+  <.pp_theme_toggle
+    label="Dark mode"
+    default_checked={@dark_mode?}
+    target="#preview"
+    on_toggle={JS.push("save_theme_preference")}
+  />
+  """
+
   @radio_group_code ~S"""
   <.pp_radio_group
     label="Size"
@@ -354,9 +376,38 @@ defmodule PhoenixPaperDemo do
   """
 
   @slider_code ~S"""
-  <.pp_slider name="volume" label="Volume" value={60} color="secondary" />
+  <.pp_slider name="volume" label="Volume" value={60} />
 
+  <%!-- size --%>
+  <.pp_slider name="volume_small" label="Small" value={60} size="small" />
+
+  <%!-- colors --%>
   <.pp_slider :for={color <- ~w(primary secondary tertiary error)} name={"volume_#{color}"} label={color} value={60} color={color} />
+
+  <%!-- track modes --%>
+  <.pp_slider name="volume_no_track" label="track: none" value={60} track="none" />
+  <.pp_slider name="volume_inverted" label="track: inverted" value={60} track="inverted" />
+
+  <%!-- discrete marks, evenly spaced --%>
+  <.pp_slider name="volume_marks" label="Discrete (marks)" value={40} step={20} marks={true} />
+
+  <%!-- custom labeled marks --%>
+  <.pp_slider
+    name="temperature"
+    label="Temperature"
+    value={30}
+    min={0}
+    max={100}
+    marks={[{0, "0°C"}, {30, "30°C"}, {60, "60°C"}, {100, "100°C"}]}
+  />
+
+  <%!-- range slider: a {low, high} tuple instead of a single number --%>
+  <.pp_slider name="price" label="Price range" value={{20, 80}} />
+
+  <%!-- vertical --%>
+  <.pp_slider name="volume_vertical" orientation="vertical" value={60} />
+
+  <.pp_slider name="volume_disabled" label="Disabled" value={30} disabled />
   """
 
   @rating_code ~S"""
@@ -383,35 +434,63 @@ defmodule PhoenixPaperDemo do
   />
   """
 
-  @navbar_code ~S"""
-  <.pp_navbar position="sticky">
+  @app_bar_code ~S"""
+  <.pp_app_bar position="sticky">
     <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
     My App
     <:actions>
       <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
     </:actions>
-  </.pp_navbar>
+  </.pp_app_bar>
 
-  <.pp_navbar :for={color <- ~w(primary secondary tertiary surface)} color={color} class="!static">
+  <.pp_app_bar :for={color <- ~w(primary secondary tertiary surface transparent)} color={color} class="!static">
     {color}
     <:actions>
       <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
     </:actions>
-  </.pp_navbar>
+  </.pp_app_bar>
+
+  <.pp_app_bar variant="dense" class="!static">
+    Dense variant
+  </.pp_app_bar>
   """
 
   @drawer_code ~S"""
-  <.pp_navbar>
+  <.pp_app_bar>
     <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
     My App
-  </.pp_navbar>
+  </.pp_app_bar>
 
-  <.pp_drawer id="app-drawer">
+  <.pp_drawer id="app-drawer" color="primary">
     <:header>My App</:header>
     <.pp_list>
       <.pp_list_item href="/" active={@current_path == "/"}>Home</.pp_list_item>
     </.pp_list>
   </.pp_drawer>
+  """
+
+  @tabs_code ~S"""
+  <.pp_tabs id="demo-tabs">
+    <.pp_tab id="demo-tabs" value="one" default_selected>One</.pp_tab>
+    <.pp_tab id="demo-tabs" value="two">Two</.pp_tab>
+    <.pp_tab id="demo-tabs" value="three" disabled>Three (disabled)</.pp_tab>
+  </.pp_tabs>
+
+  <.pp_tab_panel id="demo-tabs" value="one" default_selected>Content one.</.pp_tab_panel>
+  <.pp_tab_panel id="demo-tabs" value="two">Content two.</.pp_tab_panel>
+  <.pp_tab_panel id="demo-tabs" value="three">Content three.</.pp_tab_panel>
+
+  <%!-- with icons, secondary color, vertical orientation --%>
+  <.pp_tabs id="vertical-tabs" orientation="vertical">
+    <.pp_tab id="vertical-tabs" value="a" orientation="vertical" color="secondary" default_selected>
+      <:icon><.pp_icon name="hero-home" /></:icon>
+      Home
+    </.pp_tab>
+    <.pp_tab id="vertical-tabs" value="b" orientation="vertical" color="secondary">
+      <:icon><.pp_icon name="hero-user" /></:icon>
+      Profile
+    </.pp_tab>
+  </.pp_tabs>
   """
 
   @list_code ~S"""
@@ -425,6 +504,31 @@ defmodule PhoenixPaperDemo do
     <.pp_divider inset />
     <.pp_list_item disabled>Locked</.pp_list_item>
   </.pp_list>
+  """
+
+  @breadcrumbs_code ~S"""
+  <.pp_breadcrumbs>
+    <:item navigate="/">Home</:item>
+    <:item navigate="/catalog">Catalog</:item>
+    <:item>Current product</:item>
+  </.pp_breadcrumbs>
+
+  <%!-- custom separator slot, e.g. an icon --%>
+  <.pp_breadcrumbs>
+    <:separator><.pp_icon name="hero-chevron-right" class="size-4" /></:separator>
+    <:item navigate="/">Home</:item>
+    <:item navigate="/settings">Settings</:item>
+    <:item>Profile</:item>
+  </.pp_breadcrumbs>
+
+  <%!-- beyond max_items, collapses with a clickable ellipsis (pure CSS) --%>
+  <.pp_breadcrumbs max_items={3}>
+    <:item navigate="/one">One</:item>
+    <:item navigate="/two">Two</:item>
+    <:item navigate="/three">Three</:item>
+    <:item navigate="/four">Four</:item>
+    <:item>Five</:item>
+  </.pp_breadcrumbs>
   """
 
   @box_code ~S"""
@@ -729,14 +833,17 @@ defmodule PhoenixPaperDemo do
         number_field_code: @number_field_code,
         checkbox_code: @checkbox_code,
         switch_code: @switch_code,
+        theme_toggle_code: @theme_toggle_code,
         radio_group_code: @radio_group_code,
         slider_code: @slider_code,
         rating_code: @rating_code,
         autocomplete_code: @autocomplete_code,
         transfer_list_code: @transfer_list_code,
-        navbar_code: @navbar_code,
+        app_bar_code: @app_bar_code,
         drawer_code: @drawer_code,
+        tabs_code: @tabs_code,
         list_code: @list_code,
+        breadcrumbs_code: @breadcrumbs_code,
         box_code: @box_code,
         container_code: @container_code,
         stack_code: @stack_code,
@@ -781,6 +888,7 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#number-field">Number Field</.pp_list_item>
             <.pp_list_item href="#checkbox">Checkbox</.pp_list_item>
             <.pp_list_item href="#switch">Switch</.pp_list_item>
+            <.pp_list_item href="#theme-toggle">Theme Toggle</.pp_list_item>
             <.pp_list_item href="#radio-group">Radio Group</.pp_list_item>
             <.pp_list_item href="#slider">Slider</.pp_list_item>
             <.pp_list_item href="#rating">Rating</.pp_list_item>
@@ -788,8 +896,10 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#transfer-list">Transfer List</.pp_list_item>
           </.nav_group>
           <.nav_group label="Navigation">
-            <.pp_list_item href="#navbar">Navbar</.pp_list_item>
+            <.pp_list_item href="#app-bar">App Bar</.pp_list_item>
             <.pp_list_item href="#drawer">Drawer</.pp_list_item>
+            <.pp_list_item href="#tabs">Tabs</.pp_list_item>
+            <.pp_list_item href="#breadcrumbs">Breadcrumbs</.pp_list_item>
             <.pp_list_item href="#list">List</.pp_list_item>
           </.nav_group>
           <.nav_group label="Layout">
@@ -828,16 +938,40 @@ defmodule PhoenixPaperDemo do
       </.pp_drawer>
 
       <div class="min-w-0 flex-1">
-        <.pp_navbar position="sticky">
+        <.pp_app_bar position="sticky">
           <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
           PhoenixPaper
           <:actions>
-            <.pp_button variant="text" phx-click={JS.remove_attribute("data-pp-theme", to: "html")}>Indigo</.pp_button>
-            <.pp_button variant="text" phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}>Teal</.pp_button>
-            <.pp_button variant="outlined" phx-click={JS.remove_attribute("data-theme", to: "html")}>Light</.pp_button>
-            <.pp_button variant="outlined" phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}>Dark</.pp_button>
+            <.pp_button
+              variant="text"
+              class="text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
+              phx-click={JS.remove_attribute("data-pp-theme", to: "html")}
+            >
+              Indigo
+            </.pp_button>
+            <.pp_button
+              variant="text"
+              class="text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
+              phx-click={JS.set_attribute({"data-pp-theme", "teal"}, to: "html")}
+            >
+              Teal
+            </.pp_button>
+            <.pp_button
+              variant="outlined"
+              class="border-pp-on-primary text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
+              phx-click={JS.remove_attribute("data-theme", to: "html")}
+            >
+              Light
+            </.pp_button>
+            <.pp_button
+              variant="outlined"
+              class="border-pp-on-primary text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"
+              phx-click={JS.set_attribute({"data-theme", "dark"}, to: "html")}
+            >
+              Dark
+            </.pp_button>
           </:actions>
-        </.pp_navbar>
+        </.pp_app_bar>
 
         <.pp_container max_width="lg" class="py-8">
         <.demo_section
@@ -983,12 +1117,16 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="text-field"
           title="Text Field"
-          description="A floating-label text field — pure CSS, no JS. outlined (bordered box) or filled (filled background)."
+          description="A floating-label text field — pure CSS, no JS. outlined (bordered box), filled (filled background), or standard (underline only)."
           props={[
             {"label / value / name / id", "standard text field attrs"},
             {"type", "any input type, e.g. text | email | password (default: text)"},
-            {"variant", "outlined | filled (default: outlined)"},
-            {"shape", "corner radius token (default: :sm)"},
+            {"variant", "outlined | filled | standard (default: outlined)"},
+            {"color", "primary | secondary | tertiary | error (default: primary) — focus/label accent"},
+            {"size", "medium | small (default: medium)"},
+            {"shape", "corner radius token (default: :sm) — ignored for variant=\"standard\""},
+            {"multiline / rows", "renders a <textarea rows={@rows}> instead of <input>"},
+            {"start_adornment / end_adornment", "slots for prefix/suffix content, e.g. an icon or unit"},
             {"field", "a Phoenix.HTML.FormField from to_form/2 — sets name/id/value for you"},
             {"errors", "list of error strings — switches to the error color and hides helper_text"},
             {"helper_text", "shown below the field when there are no errors"},
@@ -998,11 +1136,22 @@ defmodule PhoenixPaperDemo do
           code={@text_field_code}
         >
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <.pp_input label="Outlined (default)" name="outlined_demo" />
+            <.pp_input variant="outlined" label="Outlined (default)" name="outlined_demo" />
             <.pp_input variant="filled" label="Filled" name="filled_demo" />
+            <.pp_input variant="standard" label="Standard" name="standard_demo" />
             <.pp_input label="With helper text" name="helper_demo" helper_text="We'll never share your email." />
             <.pp_input label="With an error" name="error_demo" value="not-an-email" errors={["is not a valid email"]} />
             <.pp_input label="Disabled" name="disabled_demo" value="Can't touch this" disabled />
+            <.pp_input color="primary" label="Primary" name="color_primary_demo" />
+            <.pp_input color="secondary" label="Secondary" name="color_secondary_demo" />
+            <.pp_input color="tertiary" label="Tertiary" name="color_tertiary_demo" />
+            <.pp_input size="medium" label="Medium (default)" name="size_medium_demo" />
+            <.pp_input size="small" label="Small" name="size_small_demo" />
+            <.pp_input label="Amount" name="amount_demo" value="42.00">
+              <:start_adornment>$</:start_adornment>
+              <:end_adornment>USD</:end_adornment>
+            </.pp_input>
+            <.pp_input multiline rows={3} label="Bio" name="bio_demo" value="A short bio, spanning a couple lines of text." class="sm:col-span-2" />
             <.pp_input paperize={false} label="paperize: false" name="bare_input_demo" class="border-b border-fuchsia-500 px-1 py-1 font-mono text-fuchsia-700" />
           </div>
         </.demo_section>
@@ -1079,6 +1228,22 @@ defmodule PhoenixPaperDemo do
         </.demo_section>
 
         <.demo_section
+          id="theme-toggle"
+          title="Theme Toggle"
+          description="A light/dark mode toggle built on Switch, wired with Phoenix.LiveView.JS.toggle_attribute/1,2 to flip a data-theme attribute on the target element — pure JS command, no server round-trip."
+          props={[
+            {"label", "text next to the switch (default: \"Dark mode\")"},
+            {"default_checked", "boolean — initial visual state, uncontrolled (default: false)"},
+            {"target", "CSS selector for the element to toggle data-theme on (default: \"html\")"},
+            {"on_toggle", "extra Phoenix.LiveView.JS commands run before the built-in flip, e.g. to persist the choice server-side"},
+            {"ripple / paperize", "same as Switch"}
+          ]}
+          code={@theme_toggle_code}
+        >
+          <.pp_theme_toggle />
+        </.demo_section>
+
+        <.demo_section
           id="radio-group"
           title="Radio Group"
           description="A labeled set of mutually exclusive radio buttons sharing one name. Ripples on click by default — see Helpers below."
@@ -1096,16 +1261,24 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="slider"
           title="Slider"
-          description="A native range input colored via CSS accent-color — no ::-webkit-slider-thumb hacks."
+          description="A native range input, fully re-skinned via ::-webkit-slider-thumb/::-moz-range-progress rather than CSS accent-color alone — see AGENTS.md for why accent-color can't give the unfilled part of the track a controlled color."
           props={[
             {"min / max / step", "default 0 / 100 / 1"},
+            {"value", "a number, or a {low, high} tuple for a range slider (two thumbs)"},
             {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"size", "medium | small (default: medium)"},
+            {"orientation", "horizontal | vertical (default: horizontal)"},
+            {"track", "normal | none | inverted (default: normal) — ignored for range sliders"},
+            {"marks", "true (tick every step), a list of values, or a list of {value, label} tuples"},
             {"label", "shown above the slider with the current value"},
             {"field / disabled / paperize", "same as other form controls"}
           ]}
           code={@slider_code}
         >
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+            <.pp_slider name="volume_demo" label="Volume" value={60} />
+            <.pp_slider name="volume_small_demo" label="Small" value={60} size="small" />
+
             <.pp_slider
               :for={color <- ~w(primary secondary tertiary error)}
               name={"volume_#{color}_demo"}
@@ -1113,6 +1286,33 @@ defmodule PhoenixPaperDemo do
               value={60}
               color={color}
             />
+
+            <.pp_slider name="volume_no_track_demo" label="track: none" value={60} track="none" />
+            <.pp_slider name="volume_inverted_demo" label="track: inverted" value={60} track="inverted" />
+
+            <.pp_slider name="volume_marks_demo" label="Discrete (marks)" value={40} step={20} marks={true} />
+            <.pp_slider
+              name="temperature_demo"
+              label="Custom labeled marks"
+              value={30}
+              min={0}
+              max={100}
+              marks={[{0, "0°C"}, {30, "30°C"}, {60, "60°C"}, {100, "100°C"}]}
+            />
+
+            <.pp_slider name="price_demo" label="Range slider" value={{20, 80}} />
+            <.pp_slider name="volume_disabled_demo" label="Disabled" value={30} disabled />
+          </div>
+
+          <div class="mt-8 flex items-center gap-12">
+            <div>
+              <p class="mb-2 text-sm opacity-70">orientation="vertical"</p>
+              <.pp_slider name="volume_vertical_demo" value={60} orientation="vertical" />
+            </div>
+            <div>
+              <p class="mb-2 text-sm opacity-70">vertical + small</p>
+              <.pp_slider name="volume_vertical_small_demo" value={60} orientation="vertical" size="small" color="secondary" />
+            </div>
           </div>
         </.demo_section>
 
@@ -1175,39 +1375,159 @@ defmodule PhoenixPaperDemo do
         </.demo_section>
 
         <.demo_section
-          id="navbar"
-          title="Navbar"
-          description="A horizontal app bar with a leading slot, a title, and trailing actions. The one at the top of this page is a live sticky instance — the fixed position isn't demoed inline since it would overlay the rest of this page."
+          id="app-bar"
+          title="App Bar"
+          description="A horizontal app bar with a leading slot, a title, and trailing actions. The one at the top of this page is a live sticky instance — fixed/absolute aren't demoed inline since they'd overlay the rest of this page."
           props={[
-            {"color", "primary | secondary | tertiary | surface (default: primary)"},
-            {"elevation", "resting elevation, 0-24 (default: 4)"},
-            {"position", "static | sticky | fixed (default: static)"},
+            {"color", "primary | secondary | tertiary | surface | transparent (default: primary)"},
+            {"elevation", "resting elevation, 0-24 (default: 4) — ignored for color=\"transparent\""},
+            {"position", "static | relative | sticky | fixed | absolute (default: static)"},
+            {"variant", "regular | dense (default: regular) — dense shrinks the toolbar row"},
             {"paperize", "boolean (default: true)"}
           ]}
-          code={@navbar_code}
+          code={@app_bar_code}
         >
           <div class="flex flex-col gap-3">
-            <.pp_navbar :for={color <- ~w(primary secondary tertiary surface)} class="!static" color={color}>
+            <.pp_app_bar :for={color <- ~w(primary secondary tertiary surface transparent)} class="!static" color={color}>
               {color}
               <:actions>
                 <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
               </:actions>
-            </.pp_navbar>
+            </.pp_app_bar>
+            <.pp_app_bar variant="dense" class="!static">
+              dense variant
+              <:actions>
+                <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
+              </:actions>
+            </.pp_app_bar>
           </div>
         </.demo_section>
 
         <.demo_section
           id="drawer"
           title="Drawer"
-          description="A navigation drawer, persistent on large screens and toggled by a hamburger button below that breakpoint — pure CSS via a hidden checkbox, no JS. The drawer on the left of this page is a live instance; try shrinking your window."
+          description="A navigation drawer, persistent on large screens and toggled by a hamburger button below that breakpoint — pure CSS via a hidden checkbox, no JS. The drawer on the left of this page is a live, primary-colored instance; try shrinking your window."
           props={[
             {"id", "required — builds the mobile toggle checkbox's id as \"\#{id}-toggle\""},
+            {"color", "primary | secondary | tertiary | surface (default: surface) — also restyles nested List/ListItem for contrast"},
             {"paperize", "boolean (default: true)"},
             {"pp_drawer_toggle for=", "a hamburger <label> pointing at the given drawer's id — works from anywhere on the page, not just inside the drawer"}
           ]}
           code={@drawer_code}
         >
           <p class="text-sm opacity-70">See the left edge of this page — that's this exact component, live.</p>
+        </.demo_section>
+
+        <.demo_section
+          id="tabs"
+          title="Tabs"
+          description="Tabs/Tab/TabPanel switch entirely client-side via Phoenix.LiveView.JS commands (add_class/remove_class/set_attribute/show/hide) fired on click — no server round-trip, no sliding indicator animation (that needs a real layout measurement, which JS commands can't do). id must match across every Tab/TabPanel in a group; value must be unique within it."
+          props={[
+            {"pp_tabs id", "required — shared with every Tab/TabPanel in the group"},
+            {"pp_tabs orientation", "horizontal | vertical (default: horizontal)"},
+            {"pp_tabs variant", "standard | scrollable | full_width (default: standard) — horizontal only"},
+            {"pp_tabs centered", "boolean — horizontal + variant=\"standard\" only"},
+            {"pp_tab id / value", "id matches the parent Tabs; value must be unique within the group"},
+            {"pp_tab default_selected", "boolean — initial selection, uncontrolled (default: false)"},
+            {"pp_tab color", "primary | secondary | tertiary | error (default: primary) — doesn't cascade from Tabs, set per Tab"},
+            {"pp_tab orientation", "must match the parent Tabs' own orientation"},
+            {"pp_tab :icon", "optional leading icon slot"},
+            {"pp_tab disabled / ripple / paperize", "same as Button"},
+            {"pp_tab_panel id / value", "must match the corresponding Tab exactly"},
+            {"pp_tab_panel default_selected", "boolean — must match its Tab's own default_selected"}
+          ]}
+          code={@tabs_code}
+        >
+          <div class="flex flex-col gap-8">
+            <div>
+              <.pp_tabs id="demo-tabs">
+                <.pp_tab id="demo-tabs" value="one" default_selected>One</.pp_tab>
+                <.pp_tab id="demo-tabs" value="two">Two</.pp_tab>
+                <.pp_tab id="demo-tabs" value="three" disabled>Three (disabled)</.pp_tab>
+              </.pp_tabs>
+              <.pp_tab_panel id="demo-tabs" value="one" default_selected>Content one.</.pp_tab_panel>
+              <.pp_tab_panel id="demo-tabs" value="two">Content two.</.pp_tab_panel>
+              <.pp_tab_panel id="demo-tabs" value="three">Content three.</.pp_tab_panel>
+            </div>
+
+            <div class="border-t border-pp-outline/20 pt-4">
+              <p class="mb-2 text-sm opacity-70">colors:</p>
+              <.pp_tabs id="color-tabs">
+                <.pp_tab id="color-tabs" value="primary" default_selected color="primary">Primary</.pp_tab>
+                <.pp_tab id="color-tabs" value="secondary" color="secondary">Secondary</.pp_tab>
+                <.pp_tab id="color-tabs" value="tertiary" color="tertiary">Tertiary</.pp_tab>
+                <.pp_tab id="color-tabs" value="error" color="error">Error</.pp_tab>
+              </.pp_tabs>
+              <.pp_tab_panel id="color-tabs" value="primary" default_selected>Primary content.</.pp_tab_panel>
+              <.pp_tab_panel id="color-tabs" value="secondary">Secondary content.</.pp_tab_panel>
+              <.pp_tab_panel id="color-tabs" value="tertiary">Tertiary content.</.pp_tab_panel>
+              <.pp_tab_panel id="color-tabs" value="error">Error content.</.pp_tab_panel>
+            </div>
+
+            <div class="border-t border-pp-outline/20 pt-4">
+              <p class="mb-2 text-sm opacity-70">variant="full_width":</p>
+              <.pp_tabs id="full-width-tabs" variant="full_width">
+                <.pp_tab id="full-width-tabs" value="one" default_selected>One</.pp_tab>
+                <.pp_tab id="full-width-tabs" value="two">Two</.pp_tab>
+                <.pp_tab id="full-width-tabs" value="three">Three</.pp_tab>
+              </.pp_tabs>
+            </div>
+
+            <div class="border-t border-pp-outline/20 pt-4">
+              <p class="mb-2 text-sm opacity-70">orientation="vertical", with icons:</p>
+              <.pp_tabs id="vertical-tabs" orientation="vertical" class="max-w-xs">
+                <.pp_tab id="vertical-tabs" value="a" orientation="vertical" color="secondary" default_selected>
+                  <:icon><.pp_icon name="hero-home" /></:icon>
+                  Home
+                </.pp_tab>
+                <.pp_tab id="vertical-tabs" value="b" orientation="vertical" color="secondary">
+                  <:icon><.pp_icon name="hero-user" /></:icon>
+                  Profile
+                </.pp_tab>
+              </.pp_tabs>
+            </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="breadcrumbs"
+          title="Breadcrumbs"
+          description="A breadcrumb trail with a separator auto-inserted between :item slots. An item renders as a link when it has href/navigate/patch, or plain current-page text otherwise (with an aria-current attribute) — whichever item you leave without a link is the current page, same convention as ListItem."
+          props={[
+            {"pp_breadcrumbs :item href/navigate/patch", "makes that item a link; omit all three for the current page"},
+            {"pp_breadcrumbs :separator", "a slot, not a string — can hold an icon; defaults to \"/\""},
+            {"max_items", "collapse into an expandable ellipsis beyond this many items (default: 8)"},
+            {"items_before_collapse / items_after_collapse", "collapsed slice sizes (default: 1 / 1)"},
+            {"expand_text", "aria-label for the ellipsis expand control (default: \"Show path\")"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@breadcrumbs_code}
+        >
+          <div class="flex flex-col gap-4">
+            <.pp_breadcrumbs>
+              <:item navigate="/">Home</:item>
+              <:item navigate="/catalog">Catalog</:item>
+              <:item>Current product</:item>
+            </.pp_breadcrumbs>
+
+            <.pp_breadcrumbs>
+              <:separator><.pp_icon name="hero-chevron-right" class="size-4" /></:separator>
+              <:item navigate="/">Home</:item>
+              <:item navigate="/settings">Settings</:item>
+              <:item>Profile</:item>
+            </.pp_breadcrumbs>
+
+            <div>
+              <p class="mb-1 text-sm opacity-70">max_items=3 — click the ellipsis to expand:</p>
+              <.pp_breadcrumbs max_items={3}>
+                <:item navigate="/one">One</:item>
+                <:item navigate="/two">Two</:item>
+                <:item navigate="/three">Three</:item>
+                <:item navigate="/four">Four</:item>
+                <:item>Five</:item>
+              </.pp_breadcrumbs>
+            </div>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -1779,7 +2099,7 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="theming"
           title="Theming"
-          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal/Light/Dark buttons in the navbar above — no page reload, just flipping data-theme/data-pp-theme on the root html element."
+          description="Colors are Tailwind v4 theme tokens backed by CSS custom properties, namespaced pp- so they never collide with daisyUI. Try the Indigo/Teal/Light/Dark buttons in the app bar above — no page reload, just flipping data-theme/data-pp-theme on the root html element."
           props={[
             {"data-theme=\"dark\"", "on any ancestor — the same attribute daisyUI/Phoenix 1.8's generated app.css already use"},
             {"data-pp-theme=\"teal\"", "opts into the bundled alternate palette"},
@@ -1787,7 +2107,7 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@theming_code}
         >
-          <p class="text-sm opacity-70">Use the theme buttons in the navbar — this section is just documentation.</p>
+          <p class="text-sm opacity-70">Use the theme buttons in the app bar — this section is just documentation.</p>
         </.demo_section>
         </.pp_container>
       </div>

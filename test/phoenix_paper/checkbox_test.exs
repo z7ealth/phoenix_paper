@@ -5,6 +5,24 @@ defmodule PhoenixPaper.CheckboxTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Checkbox
 
+  test "field= populates name/id/checked from the form field" do
+    html = render_component(&with_field/1)
+
+    assert html =~ ~s(id="user_accepted")
+    assert html =~ ~s(name="user[accepted]")
+    assert html =~ "checked"
+  end
+
+  defp with_field(assigns) do
+    form = Phoenix.Component.to_form(%{"accepted" => "true"}, as: :user)
+
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_checkbox field={@form[:accepted]} label="Accept" />
+    """
+  end
+
   test "renders the hidden-input trick and the checked box when true" do
     html = render_component(&checked/1)
 
@@ -52,5 +70,19 @@ defmodule PhoenixPaper.CheckboxTest do
   test "paperize={false}: no click handler either, even though ripple defaults true" do
     html = render_component(&bare/1)
     refute html =~ "onclick="
+  end
+
+  test "paperize={false}: class sizes the bare input, not the label, and the label keeps its flex layout" do
+    html = render_component(&bare_sized/1)
+
+    assert html =~ ~r/<label[^>]*class="[^"]*inline-flex[^"]*items-center[^"]*"/
+    assert html =~ ~r/<input[^>]*class="size-5"/
+    refute html =~ ~r/<label[^>]*class="size-5"/
+  end
+
+  defp bare_sized(assigns) do
+    ~H"""
+    <.pp_checkbox paperize={false} label="Bare" class="size-5" />
+    """
   end
 end

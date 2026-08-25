@@ -11,6 +11,12 @@ defmodule PhoenixPaper.ListItem do
   knowledge of the current request) — the caller passes `active` based on
   its own route, e.g. `active={@current_path == "/settings"}`.
 
+  `active` also sets `aria-current="page"` — besides being the correct
+  ARIA for "this is the current page in a navigation list" on its own,
+  `PhoenixPaper.Drawer`'s colored variants key off this exact attribute to
+  restyle the active item's highlight for contrast against a colored
+  drawer background (see its moduledoc).
+
   Ripples on click/tap by default when it's a link (see
   `PhoenixPaper.Ripple`) — `ripple` has no effect on a non-link item, since
   there's nothing to click.
@@ -59,6 +65,7 @@ defmodule PhoenixPaper.ListItem do
       patch={@patch}
       role="listitem"
       aria-disabled={to_string(@disabled)}
+      aria-current={@active && "page"}
       data-pp-component="list-item"
       class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true), @class)}
       onclick={Ripple.on_click(@ripple?)}
@@ -70,6 +77,7 @@ defmodule PhoenixPaper.ListItem do
       :if={!@linked?}
       role="listitem"
       aria-disabled={to_string(@disabled)}
+      aria-current={@active && "page"}
       data-pp-component="list-item"
       class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false), @class)}
       {@rest}

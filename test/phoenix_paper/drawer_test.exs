@@ -46,4 +46,30 @@ defmodule PhoenixPaper.DrawerTest do
     <.pp_drawer id="app-drawer" paperize={false} class="my-drawer">Home</.pp_drawer>
     """
   end
+
+  test "color defaults to surface, unchanged from before the attr existed" do
+    html = render_component(&drawer/1)
+    assert html =~ "bg-pp-surface"
+    assert html =~ "text-pp-on-surface"
+  end
+
+  test "color=\"primary\" paints the panel and restyles nested list-item/list-subheader/divider contrast" do
+    html = render_component(&colored/1)
+
+    assert html =~ "bg-pp-primary"
+    assert html =~ "text-pp-on-primary"
+    assert html =~ "[data-pp-component=list-subheader]]:text-pp-on-primary/70"
+    assert html =~ "[data-pp-component=divider]]:border-pp-on-primary/20"
+    assert html =~ "[data-pp-component=list-item]]:text-pp-on-primary"
+    assert html =~ "[data-pp-component=list-item][aria-current=page]]:bg-pp-on-primary/15"
+  end
+
+  defp colored(assigns) do
+    ~H"""
+    <.pp_drawer id="app-drawer" color="primary">
+      <:header>My App</:header>
+      Home
+    </.pp_drawer>
+    """
+  end
 end

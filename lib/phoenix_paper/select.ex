@@ -37,9 +37,9 @@ defmodule PhoenixPaper.Select do
 
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> field.name end)
-    |> assign_new(:id, fn -> field.id end)
-    |> assign_new(:value, fn -> field.value end)
+    |> assign(:name, assigns.name || field.name)
+    |> assign(:id, assigns.id || field.id)
+    |> assign(:value, assigns.value || field.value)
     |> assign(:errors, Enum.map(errors, &Helpers.translate_error/1))
     |> pp_select()
   end

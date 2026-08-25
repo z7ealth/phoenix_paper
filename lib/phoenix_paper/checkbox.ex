@@ -8,7 +8,11 @@ defmodule PhoenixPaper.Checkbox do
 
   When `paperize` is `false` this renders a bare native `<input
   type="checkbox">` (no hidden-input trick, no custom box) so it never fights
-  a caller's own CSS.
+  a caller's own CSS — `class` targets that bare input directly in this
+  case (not the wrapping `<label>`, which keeps its own unconditional
+  layout classes regardless of `paperize`; see
+  `PhoenixPaper.Helpers.toggle_label_classes/1`), so e.g.
+  `class="size-5"` sizes the checkbox itself as expected.
 
   Ripples on click by default, wired to the small box rather than the whole
   label — see `PhoenixPaper.Ripple`.
@@ -38,20 +42,26 @@ defmodule PhoenixPaper.Checkbox do
   def pp_checkbox(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> field.name end)
-    |> assign_new(:id, fn -> field.id end)
-    |> assign_new(:checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", field.value) end)
+    |> assign(:name, assigns.name || field.name)
+    |> assign(:id, assigns.id || field.id)
+    |> assign(
+      :checked,
+      if(is_nil(assigns.checked),
+        do: Phoenix.HTML.Form.normalize_value("checkbox", field.value),
+        else: assigns.checked
+      )
+    )
     |> pp_checkbox()
   end
 
   def pp_checkbox(assigns) do
     assigns =
       assigns
-      |> assign_new(:checked, fn -> false end)
+      |> assign(:checked, assigns.checked || false)
       |> assign(:ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
-    <label data-pp-component="checkbox" class={Helpers.classes(@paperize, "inline-flex items-center gap-2 cursor-pointer select-none", @class)}>
+    <label data-pp-component="checkbox" class={Helpers.toggle_label_classes(if @paperize, do: @class)}>
       <input :if={@paperize} type="hidden" name={@name} value="false" disabled={@disabled} />
 
       <span
@@ -85,6 +95,7 @@ defmodule PhoenixPaper.Checkbox do
         value={@value}
         checked={@checked}
         disabled={@disabled}
+        class={@class}
         {@rest}
       />
 

@@ -32,9 +32,12 @@ defmodule PhoenixPaper.Rating do
   def pp_rating(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> field.name end)
-    |> assign_new(:id, fn -> field.id end)
-    |> assign_new(:value, fn -> normalize_value(field.value) end)
+    |> assign(:name, assigns.name || field.name)
+    |> assign(:id, assigns.id || field.id)
+    |> assign(
+      :value,
+      if(assigns.value == 0, do: normalize_value(field.value), else: assigns.value)
+    )
     |> pp_rating()
   end
 

@@ -34,9 +34,9 @@ defmodule PhoenixPaper.RadioGroup do
   def pp_radio_group(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> field.name end)
-    |> assign_new(:id, fn -> field.id end)
-    |> assign_new(:value, fn -> field.value end)
+    |> assign(:name, assigns.name || field.name)
+    |> assign(:id, assigns.id || field.id)
+    |> assign(:value, assigns.value || field.value)
     |> pp_radio_group()
   end
 
@@ -53,10 +53,7 @@ defmodule PhoenixPaper.RadioGroup do
     >
       <legend :if={@label} class="mb-1 p-0 text-sm font-medium text-pp-on-surface">{@label}</legend>
 
-      <label
-        :for={{opt_label, opt_value} <- @normalized_options}
-        class={Helpers.classes(@paperize, "inline-flex items-center gap-2 cursor-pointer select-none", nil)}
-      >
+      <label :for={{opt_label, opt_value} <- @normalized_options} class={Helpers.toggle_label_classes(nil)}>
         <span
           :if={@paperize}
           class="has-[:checked]:border-pp-primary has-[:disabled]:opacity-40 relative inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-pp-outline transition-colors"

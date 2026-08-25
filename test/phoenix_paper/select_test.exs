@@ -5,6 +5,24 @@ defmodule PhoenixPaper.SelectTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Select
 
+  test "field= populates name/id/value from the form field" do
+    html = render_component(&with_field/1)
+
+    assert html =~ ~s(id="user_country")
+    assert html =~ ~s(name="user[country]")
+    assert html =~ ~s(value="mx" selected)
+  end
+
+  defp with_field(assigns) do
+    form = Phoenix.Component.to_form(%{"country" => "mx"}, as: :user)
+
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_select field={@form[:country]} label="Country" options={[{"Canada", "ca"}, {"Mexico", "mx"}]} />
+    """
+  end
+
   test "renders options and selects the matching value" do
     html = render_component(&select/1)
 

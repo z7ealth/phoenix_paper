@@ -43,6 +43,14 @@ defmodule PhoenixPaper.ListItemTest do
     assert html =~ "Badge"
   end
 
+  test "active sets aria-current=\"page\"; inactive items have no aria-current at all" do
+    html = render_component(&full/1)
+    assert html =~ ~s(aria-current="page")
+
+    html = render_component(&linked/1)
+    refute html =~ "aria-current"
+  end
+
   defp full(assigns) do
     ~H"""
     <.pp_list_item href="/" active>

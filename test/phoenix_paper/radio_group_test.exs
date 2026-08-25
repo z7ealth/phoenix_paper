@@ -5,6 +5,23 @@ defmodule PhoenixPaper.RadioGroupTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.RadioGroup
 
+  test "field= populates name/value from the form field" do
+    html = render_component(&with_field/1)
+
+    assert html =~ ~s(name="user[size]")
+    assert html =~ "checked"
+  end
+
+  defp with_field(assigns) do
+    form = Phoenix.Component.to_form(%{"size" => "md"}, as: :user)
+
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_radio_group field={@form[:size]} options={["sm", "md", "lg"]} />
+    """
+  end
+
   test "renders one radio per option and checks the matching value" do
     html = render_component(&group/1)
 

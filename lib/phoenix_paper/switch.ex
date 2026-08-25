@@ -5,6 +5,11 @@ defmodule PhoenixPaper.Switch do
 
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`checked` attrs.
+
+  When `paperize` is `false` this renders a bare native `<input
+  type="checkbox">` (no hidden-input trick, no custom track/thumb) —
+  `class` targets that bare input directly in this case, same as
+  `PhoenixPaper.Checkbox`.
   """
   use Phoenix.Component
 
@@ -31,23 +36,26 @@ defmodule PhoenixPaper.Switch do
   def pp_switch(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> field.name end)
-    |> assign_new(:id, fn -> field.id end)
-    |> assign_new(:checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", field.value) end)
+    |> assign(:name, assigns.name || field.name)
+    |> assign(:id, assigns.id || field.id)
+    |> assign(
+      :checked,
+      if(is_nil(assigns.checked),
+        do: Phoenix.HTML.Form.normalize_value("checkbox", field.value),
+        else: assigns.checked
+      )
+    )
     |> pp_switch()
   end
 
   def pp_switch(assigns) do
     assigns =
       assigns
-      |> assign_new(:checked, fn -> false end)
+      |> assign(:checked, assigns.checked || false)
       |> assign(:ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
-    <label
-      data-pp-component="switch"
-      class={Helpers.classes(@paperize, "inline-flex items-center gap-2 cursor-pointer select-none", @class)}
-    >
+    <label data-pp-component="switch" class={Helpers.toggle_label_classes(if @paperize, do: @class)}>
       <input :if={@paperize} type="hidden" name={@name} value="false" disabled={@disabled} />
 
       <span
@@ -76,6 +84,7 @@ defmodule PhoenixPaper.Switch do
         value={@value}
         checked={@checked}
         disabled={@disabled}
+        class={@class}
         {@rest}
       />
 

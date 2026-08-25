@@ -15,12 +15,12 @@ defmodule PhoenixPaper.Drawer do
   drawer don't need to be DOM siblings, unlike most of this library's other
   `peer-*`/`has-[:checked]:` tricks (see AGENTS.md).
 
-      <.pp_navbar>
+      <.pp_app_bar>
         <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
         My App
-      </.pp_navbar>
+      </.pp_app_bar>
 
-      <.pp_drawer id="app-drawer">
+      <.pp_drawer id="app-drawer" color="primary">
         <:header>My App</:header>
         <.pp_list>
           <.pp_list_item navigate={~p"/"} active={@current_path == "/"}>
@@ -37,6 +37,32 @@ defmodule PhoenixPaper.Drawer do
   `pp_drawer_toggle/1` lives here rather than its own module because it only
   makes sense paired with a `pp_drawer/1` (see AGENTS.md, "Component
   conventions").
+
+  ## `color`
+
+  Defaults to `"surface"` (the original plain white/dark-surface look,
+  unchanged from before this attr existed). `"primary"`/`"secondary"`/
+  `"tertiary"` paint the whole panel that brand color — including its
+  nested `PhoenixPaper.List`/`PhoenixPaper.ListItem`/
+  `PhoenixPaper.ListSubheader`/`PhoenixPaper.Divider` content, which are
+  normally styled for a neutral surface background. There's no prop on
+  those components for "the color of my container" (same "no cascading"
+  limitation `ButtonGroup`/`Tabs`/`AppBar` already document), so instead
+  `pp_drawer/1` reaches into them with a handful of `[&_[data-pp-component=...]]`
+  compound selectors — the same technique (and the same `data-pp-component`
+  attribute) `Tabs`'s `variant="full_width"` already uses to reach its
+  child `Tab`s, just applied to more targets here. This is a real,
+  intentional exception to "components don't reach into each other" for
+  the one specific case where getting it wrong isn't a style mismatch but
+  actual illegibility: `ListItem`'s active-item highlight
+  (`bg-pp-primary/10`) mixed with a `color="primary"` drawer background is
+  the *exact same color layered on itself*, which is mathematically
+  invisible, not just low-contrast — found and fixed by actually
+  screenshotting a colored drawer with an active nav item, not by
+  reasoning about it in the abstract. `ListItem`'s `active` attr sets
+  `aria-current="page"` specifically so this selector has something stable
+  to target (see its moduledoc) — without that attribute there'd be no way
+  to tell an active item from an inactive one from CSS alone.
   """
   use Phoenix.Component
 
@@ -45,6 +71,13 @@ defmodule PhoenixPaper.Drawer do
   attr(:id, :string,
     required: true,
     doc: ~s(builds the mobile toggle checkbox's id as "\#{id}-toggle")
+  )
+
+  attr(:color, :string,
+    default: "surface",
+    values: ~w(primary secondary tertiary surface),
+    doc:
+      "surface (default) is the original plain look; the others also restyle nested List/ListItem content for contrast"
   )
 
   attr(:paperize, :boolean, default: true)
@@ -66,7 +99,7 @@ defmodule PhoenixPaper.Drawer do
     <aside
       id={@id}
       data-pp-component="drawer"
-      class={Helpers.classes(@paperize, paper_classes(), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@color), @class)}
       {@rest}
     >
       <div :if={@header != []} class="flex h-16 items-center px-4 text-lg font-medium">
@@ -98,10 +131,49 @@ defmodule PhoenixPaper.Drawer do
 
   defp toggle_id(id), do: "#{id}-toggle"
 
-  defp paper_classes do
+  defp paper_classes(color) do
     [
-      "fixed inset-y-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto bg-pp-surface text-pp-on-surface transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0",
+      "fixed inset-y-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0",
+      color_classes(color),
       Elevation.class(2)
+    ]
+  end
+
+  defp color_classes("surface"), do: "bg-pp-surface text-pp-on-surface"
+
+  defp color_classes("primary") do
+    [
+      "bg-pp-primary text-pp-on-primary",
+      "[&_[data-pp-component=list-subheader]]:text-pp-on-primary/70",
+      "[&_[data-pp-component=divider]]:border-pp-on-primary/20",
+      "[&_[data-pp-component=list-item]]:text-pp-on-primary",
+      "[&_[data-pp-component=list-item]:not([aria-current=page]):hover]:bg-pp-on-primary/10",
+      "[&_[data-pp-component=list-item][aria-current=page]]:bg-pp-on-primary/15",
+      "[&_[data-pp-component=list-item][aria-current=page]]:text-pp-on-primary"
+    ]
+  end
+
+  defp color_classes("secondary") do
+    [
+      "bg-pp-secondary text-pp-on-secondary",
+      "[&_[data-pp-component=list-subheader]]:text-pp-on-secondary/70",
+      "[&_[data-pp-component=divider]]:border-pp-on-secondary/20",
+      "[&_[data-pp-component=list-item]]:text-pp-on-secondary",
+      "[&_[data-pp-component=list-item]:not([aria-current=page]):hover]:bg-pp-on-secondary/10",
+      "[&_[data-pp-component=list-item][aria-current=page]]:bg-pp-on-secondary/15",
+      "[&_[data-pp-component=list-item][aria-current=page]]:text-pp-on-secondary"
+    ]
+  end
+
+  defp color_classes("tertiary") do
+    [
+      "bg-pp-tertiary text-pp-on-tertiary",
+      "[&_[data-pp-component=list-subheader]]:text-pp-on-tertiary/70",
+      "[&_[data-pp-component=divider]]:border-pp-on-tertiary/20",
+      "[&_[data-pp-component=list-item]]:text-pp-on-tertiary",
+      "[&_[data-pp-component=list-item]:not([aria-current=page]):hover]:bg-pp-on-tertiary/10",
+      "[&_[data-pp-component=list-item][aria-current=page]]:bg-pp-on-tertiary/15",
+      "[&_[data-pp-component=list-item][aria-current=page]]:text-pp-on-tertiary"
     ]
   end
 end
