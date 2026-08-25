@@ -22,4 +22,38 @@ defmodule PhoenixPaper.ButtonGroupTest do
     </.pp_button_group>
     """
   end
+
+  test "orientation=\"vertical\" rounds top/bottom instead of left/right and collapses top borders" do
+    html = render_component(&vertical/1)
+
+    assert html =~ "first-child]:rounded-t-md"
+    assert html =~ "last-child]:rounded-b-md"
+    assert html =~ "not(:first-child)]:-mt-px"
+    refute html =~ "rounded-l-md"
+    refute html =~ "rounded-r-md"
+  end
+
+  defp vertical(assigns) do
+    ~H"""
+    <.pp_button_group orientation="vertical">
+      <.pp_button variant="outlined">Top</.pp_button>
+      <.pp_button variant="outlined">Bottom</.pp_button>
+    </.pp_button_group>
+    """
+  end
+
+  test "disable_elevation forces every child's elevation shadow to 0" do
+    html = render_component(&disable_elevation/1)
+
+    assert html =~ "*]:pp-elevation-0"
+  end
+
+  defp disable_elevation(assigns) do
+    ~H"""
+    <.pp_button_group disable_elevation>
+      <.pp_button>Left</.pp_button>
+      <.pp_button>Right</.pp_button>
+    </.pp_button_group>
+    """
+  end
 end

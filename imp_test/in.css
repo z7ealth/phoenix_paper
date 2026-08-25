@@ -1,0 +1,187 @@
+@import "tailwindcss";
+@source "./test.html";
+/*
+ * PhoenixPaper — Tailwind v4 theme.
+ *
+ * Import this file from your app's `app.css`, after `@import "tailwindcss"`:
+ *
+ *   @import "tailwindcss";
+ *   @import "../../deps/phoenix_paper/priv/static/phoenix_paper.css";
+ *
+ * Also make sure Tailwind's source scanner covers this hex dependency so
+ * the utility classes PhoenixPaper's `.ex` files emit (bg-pp-primary,
+ * pp-elevation-4, ...) are actually generated:
+ *
+ *   @source "../../deps/phoenix_paper/lib";
+ *
+ * All tokens below are namespaced `pp-` so they never collide with daisyUI's
+ * own `primary`/`secondary`/`base-100`/... theme colors when both are
+ * installed in the same app. See AGENTS.md, "Theming", for the full picture.
+ */
+
+@theme {
+  /* Default palette: classic Material indigo / pink, light scheme. */
+  --color-pp-primary: #3f51b5;
+  --color-pp-on-primary: #ffffff;
+  --color-pp-secondary: #ff4081;
+  --color-pp-on-secondary: #000000;
+  --color-pp-tertiary: #009688;
+  --color-pp-on-tertiary: #ffffff;
+  --color-pp-error: #d32f2f;
+  --color-pp-on-error: #ffffff;
+  --color-pp-surface: #ffffff;
+  --color-pp-on-surface: #1f1f1f;
+  --color-pp-surface-variant: #f5f5f5;
+  --color-pp-outline: #79747e;
+}
+
+/*
+ * Dark scheme. Keyed off `[data-theme="dark"]` — the same attribute daisyUI
+ * (and Phoenix 1.8's default generated app.css) already toggles for its own
+ * dark mode, so PhoenixPaper flips with the app's existing switch instead of
+ * needing a second one.
+ */
+[data-theme="dark"] {
+  --color-pp-primary: #7986cb;
+  --color-pp-on-primary: #0a0e1f;
+  --color-pp-secondary: #ff80ab;
+  --color-pp-on-secondary: #1a0511;
+  --color-pp-tertiary: #4db6ac;
+  --color-pp-on-tertiary: #04211d;
+  --color-pp-error: #ef9a9a;
+  --color-pp-on-error: #370505;
+  --color-pp-surface: #121212;
+  --color-pp-on-surface: #e6e6e6;
+  --color-pp-surface-variant: #1e1e1e;
+  --color-pp-outline: #938f99;
+}
+
+/*
+ * Alternate default palette (teal / amber). Opt in with
+ * `<html data-pp-theme="teal">` (or any ancestor element).
+ * To build a fully custom theme, don't fork this file — override the
+ * `--color-pp-*` variables from your own app.css instead (see AGENTS.md).
+ */
+[data-pp-theme="teal"] {
+  --color-pp-primary: #00695c;
+  --color-pp-on-primary: #ffffff;
+  --color-pp-secondary: #ff8f00;
+  --color-pp-on-secondary: #1f1300;
+  --color-pp-tertiary: #5c6bc0;
+  --color-pp-on-tertiary: #ffffff;
+}
+
+[data-pp-theme="teal"][data-theme="dark"] {
+  --color-pp-primary: #4db6ac;
+  --color-pp-on-primary: #04211d;
+  --color-pp-secondary: #ffca80;
+  --color-pp-on-secondary: #2b1a00;
+  --color-pp-tertiary: #8c9eff;
+  --color-pp-on-tertiary: #0a0e3d;
+}
+
+/*
+ * Elevation — approximates Material Design's 0-24dp shadow scale with a
+ * two-layer shadow. See `PhoenixPaper.Elevation` for the Elixir-side class
+ * helper. These are static utilities (not a wildcard `pp-elevation-*`
+ * matcher) because the shadow values aren't derivable from the number alone.
+ */
+@utility pp-elevation-0 {
+  box-shadow: none;
+}
+
+@utility pp-elevation-1 {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.16), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-2 {
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-3 {
+  box-shadow: 0 3px 9px 0 rgba(0, 0, 0, 0.16), 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-4 {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.16), 0 2px 6px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-5 {
+  box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.16), 0 2px 8px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-6 {
+  box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.16), 0 3px 9px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-7 {
+  box-shadow: 0 7px 21px 0 rgba(0, 0, 0, 0.16), 0 4px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-8 {
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.16), 0 4px 12px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-9 {
+  box-shadow: 0 9px 27px 0 rgba(0, 0, 0, 0.16), 0 4px 14px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-10 {
+  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.16), 0 5px 15px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-11 {
+  box-shadow: 0 11px 33px 0 rgba(0, 0, 0, 0.16), 0 6px 16px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-12 {
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.16), 0 6px 18px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-13 {
+  box-shadow: 0 13px 39px 0 rgba(0, 0, 0, 0.16), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-14 {
+  box-shadow: 0 14px 42px 0 rgba(0, 0, 0, 0.16), 0 7px 21px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-15 {
+  box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.16), 0 8px 22px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-16 {
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.16), 0 8px 24px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-17 {
+  box-shadow: 0 17px 51px 0 rgba(0, 0, 0, 0.16), 0 8px 26px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-18 {
+  box-shadow: 0 18px 54px 0 rgba(0, 0, 0, 0.16), 0 9px 27px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-19 {
+  box-shadow: 0 19px 57px 0 rgba(0, 0, 0, 0.16), 0 10px 28px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-20 {
+  box-shadow: 0 20px 60px 0 rgba(0, 0, 0, 0.16), 0 10px 30px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-21 {
+  box-shadow: 0 21px 63px 0 rgba(0, 0, 0, 0.16), 0 10px 32px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-22 {
+  box-shadow: 0 22px 66px 0 rgba(0, 0, 0, 0.16), 0 11px 33px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-23 {
+  box-shadow: 0 23px 69px 0 rgba(0, 0, 0, 0.16), 0 12px 34px 0 rgba(0, 0, 0, 0.12);
+}
+
+@utility pp-elevation-24 {
+  box-shadow: 0 24px 72px 0 rgba(0, 0, 0, 0.16), 0 12px 36px 0 rgba(0, 0, 0, 0.12);
+}

@@ -151,7 +151,7 @@ defmodule PhoenixPaperDemo do
   # generic glyphs (not Heroicons' actual paths) to prove icon-accepting
   # components work the same way once those classes exist for real.
   @demo_icon_css """
-  .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell {
+  .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell, .hero-trash {
     display: inline-block; width: 1em; height: 1em; background-color: currentColor;
     mask-size: contain; -webkit-mask-size: contain;
     mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat;
@@ -176,6 +176,10 @@ defmodule PhoenixPaperDemo do
   .hero-bell {
     mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M12 2a5 5 0 00-5 5v3.586l-1.707 1.707A1 1 0 006 14h12a1 1 0 00.707-1.707L17 10.586V7a5 5 0 00-5-5zm0 20a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0012 22z"/></svg>');
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M12 2a5 5 0 00-5 5v3.586l-1.707 1.707A1 1 0 006 14h12a1 1 0 00.707-1.707L17 10.586V7a5 5 0 00-5-5zm0 20a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0012 22z"/></svg>');
+  }
+  .hero-trash {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m-8 0l1 13a2 2 0 002 2h4a2 2 0 002-2l1-13"/></svg>');
   }
   """
 
@@ -250,6 +254,19 @@ defmodule PhoenixPaperDemo do
   <.pp_button paperize={false} class="border-4 border-dashed border-fuchsia-500 px-3 py-1 font-mono text-fuchsia-700">
     paperize: false
   </.pp_button>
+
+  <.pp_button variant="outlined">
+    <:start_icon><.pp_icon name="hero-trash" /></:start_icon>
+    Delete
+  </.pp_button>
+  <.pp_button>
+    Send
+    <:end_icon><.pp_icon name="hero-check" /></:end_icon>
+  </.pp_button>
+  <.pp_button loading>
+    <:start_icon><.pp_icon name="hero-trash" /></:start_icon>
+    Delete
+  </.pp_button>
   """
 
   @button_group_code ~S"""
@@ -258,10 +275,24 @@ defmodule PhoenixPaperDemo do
     <.pp_button variant="outlined">Week</.pp_button>
     <.pp_button variant="outlined">Month</.pp_button>
   </.pp_button_group>
+
+  <.pp_button_group orientation="vertical">
+    <.pp_button variant="outlined">Day</.pp_button>
+    <.pp_button variant="outlined">Week</.pp_button>
+    <.pp_button variant="outlined">Month</.pp_button>
+  </.pp_button_group>
+
+  <.pp_button_group disable_elevation>
+    <.pp_button>Save</.pp_button>
+    <.pp_button>Cancel</.pp_button>
+  </.pp_button_group>
   """
 
   @fab_code ~S"""
-  <.pp_fab><.pp_icon name="hero-star" /></.pp_fab>
+  <.pp_fab :for={size <- ~w(sm md lg)} size={size}><.pp_icon name="hero-star" /></.pp_fab>
+  <.pp_fab :for={color <- ~w(primary secondary tertiary error)} color={color}>
+    <.pp_icon name="hero-star" />
+  </.pp_fab>
   <.pp_fab extended color="primary">
     <.pp_icon name="hero-star" /> Create
   </.pp_fab>
@@ -270,6 +301,10 @@ defmodule PhoenixPaperDemo do
   @toggle_button_code ~S"""
   <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
     Bold
+  </.pp_toggle_button>
+
+  <.pp_toggle_button :for={color <- ~w(primary secondary tertiary error)} pressed color={color}>
+    {color}
   </.pp_toggle_button>
   """
 
@@ -286,10 +321,18 @@ defmodule PhoenixPaperDemo do
     prompt="Choose one"
     options={["Canada", "Mexico", "United States"]}
   />
+  <.pp_select
+    variant="filled"
+    label="Country"
+    name="country_filled"
+    prompt="Choose one"
+    options={["Canada", "Mexico", "United States"]}
+  />
   """
 
   @number_field_code ~S"""
   <.pp_number_field label="Quantity" name="qty" value={2} min={0} max={10} />
+  <.pp_number_field variant="filled" label="Quantity" name="qty_filled" value={2} min={0} max={10} />
   """
 
   @checkbox_code ~S"""
@@ -312,6 +355,8 @@ defmodule PhoenixPaperDemo do
 
   @slider_code ~S"""
   <.pp_slider name="volume" label="Volume" value={60} color="secondary" />
+
+  <.pp_slider :for={color <- ~w(primary secondary tertiary error)} name={"volume_#{color}"} label={color} value={60} color={color} />
   """
 
   @rating_code ~S"""
@@ -346,6 +391,13 @@ defmodule PhoenixPaperDemo do
       <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
     </:actions>
   </.pp_navbar>
+
+  <.pp_navbar :for={color <- ~w(primary secondary tertiary surface)} color={color} class="!static">
+    {color}
+    <:actions>
+      <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
+    </:actions>
+  </.pp_navbar>
   """
 
   @drawer_code ~S"""
@@ -376,17 +428,28 @@ defmodule PhoenixPaperDemo do
   """
 
   @box_code ~S"""
-  <.pp_box class="rounded-lg bg-pp-surface-variant p-4">Just a div with a class.</.pp_box>
+  <.pp_box class="rounded-lg bg-pp-surface-variant p-4">A div (default).</.pp_box>
+  <.pp_box tag="span" class="rounded bg-pp-surface-variant px-2 py-1">A span.</.pp_box>
+  <.pp_box tag="pre" class="rounded-lg bg-pp-surface-variant p-4">A pre, whitespace preserved.</.pp_box>
   """
 
   @container_code ~S"""
   <.pp_container max_width="sm">
     Narrower content.
   </.pp_container>
+
+  <.pp_container :for={width <- ~w(sm md lg xl 2xl full)} max_width={width} class="mb-2">
+    {width}
+  </.pp_container>
   """
 
   @stack_code ~S"""
   <.pp_stack direction="row" spacing={:sm}>
+    <.pp_button>Save</.pp_button>
+    <.pp_button variant="outlined">Cancel</.pp_button>
+  </.pp_stack>
+
+  <.pp_stack direction="column" spacing={:sm}>
     <.pp_button>Save</.pp_button>
     <.pp_button variant="outlined">Cancel</.pp_button>
   </.pp_stack>
@@ -412,6 +475,10 @@ defmodule PhoenixPaperDemo do
       <.pp_button variant="text">Dismiss</.pp_button>
     </:actions>
   </.pp_card>
+
+  <.pp_card :for={padding <- ~w(none xs sm md lg xl 2xl)a} padding={padding}>
+    padding: {padding}
+  </.pp_card>
   """
 
   @icon_code ~S"""
@@ -425,14 +492,74 @@ defmodule PhoenixPaperDemo do
   </.pp_image_list>
   """
 
+  @table_code ~S"""
+  <.pp_table_container>
+    <.pp_table>
+      <.pp_table_head>
+        <.pp_table_row>
+          <.pp_table_cell variant="head" sortable sort_direction="asc" phx-click="sort">Dessert</.pp_table_cell>
+          <.pp_table_cell variant="head" align="right" sortable phx-click="sort">Calories</.pp_table_cell>
+          <.pp_table_cell variant="head" align="right">Fat (g)</.pp_table_cell>
+        </.pp_table_row>
+      </.pp_table_head>
+      <.pp_table_body striped>
+        <.pp_table_row>
+          <.pp_table_cell>Frozen yoghurt</.pp_table_cell>
+          <.pp_table_cell align="right">159</.pp_table_cell>
+          <.pp_table_cell align="right">6.0</.pp_table_cell>
+        </.pp_table_row>
+        <.pp_table_row selected>
+          <.pp_table_cell>Ice cream sandwich</.pp_table_cell>
+          <.pp_table_cell align="right">237</.pp_table_cell>
+          <.pp_table_cell align="right">9.0</.pp_table_cell>
+        </.pp_table_row>
+      </.pp_table_body>
+      <.pp_table_footer>
+        <.pp_table_row>
+          <.pp_table_cell>Total</.pp_table_cell>
+          <.pp_table_cell align="right">396</.pp_table_cell>
+          <.pp_table_cell align="right">15.0</.pp_table_cell>
+        </.pp_table_row>
+      </.pp_table_footer>
+    </.pp_table>
+  </.pp_table_container>
+
+  <.pp_table_container class="max-h-40 overflow-y-auto">
+    <.pp_table dense sticky_header>
+      <.pp_table_head>
+        <.pp_table_row>
+          <.pp_table_cell variant="head">Dessert</.pp_table_cell>
+          <.pp_table_cell variant="head" align="right">Calories</.pp_table_cell>
+        </.pp_table_row>
+      </.pp_table_head>
+      <.pp_table_body>
+        <.pp_table_row :for={{name, cal} <- [{"Frozen yoghurt", 159}, {"Ice cream sandwich", 237}, {"Eclair", 262}, {"Cupcake", 305}]}>
+          <.pp_table_cell>{name}</.pp_table_cell>
+          <.pp_table_cell align="right">{cal}</.pp_table_cell>
+        </.pp_table_row>
+      </.pp_table_body>
+    </.pp_table>
+  </.pp_table_container>
+  """
+
   @paper_code ~S"""
   <.pp_paper elevation={4} class="p-4">A raised surface — Card is built on this.</.pp_paper>
   """
 
   @typography_code ~S"""
-  <.pp_typography variant="h4">Account settings</.pp_typography>
-  <.pp_typography variant="body1">Manage your profile, notifications, and billing.</.pp_typography>
-  <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
+  <.pp_typography variant="h1">h1. Heading</.pp_typography>
+  <.pp_typography variant="h2">h2. Heading</.pp_typography>
+  <.pp_typography variant="h3">h3. Heading</.pp_typography>
+  <.pp_typography variant="h4">h4. Heading</.pp_typography>
+  <.pp_typography variant="h5">h5. Heading</.pp_typography>
+  <.pp_typography variant="h6">h6. Heading</.pp_typography>
+  <.pp_typography variant="subtitle1">subtitle1. Manage your profile, notifications, and billing.</.pp_typography>
+  <.pp_typography variant="subtitle2">subtitle2. Manage your profile, notifications, and billing.</.pp_typography>
+  <.pp_typography variant="body1">body1. Manage your profile, notifications, and billing.</.pp_typography>
+  <.pp_typography variant="body2">body2. Manage your profile, notifications, and billing.</.pp_typography>
+  <.pp_typography variant="caption">caption. Last updated 2 minutes ago</.pp_typography>
+  <.pp_typography variant="overline">overline. New</.pp_typography>
+  <.pp_typography variant="button">button. Save changes</.pp_typography>
   <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
   """
 
@@ -460,6 +587,14 @@ defmodule PhoenixPaperDemo do
 
   def handle_event("toggle_bold", _params, socket) do
     {:noreply, update(socket, :bold_pressed, &(!&1))}
+  end
+
+  # Table's sortable header cells are presentation-only (see TableCell's
+  # moduledoc) — this demo doesn't actually reorder the rows, just proves
+  # the click reaches the LiveView instead of crashing it (a real app would
+  # re-query/re-sort its data and re-render here).
+  def handle_event("sort", _params, socket) do
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -495,6 +630,7 @@ defmodule PhoenixPaperDemo do
         card_code: @card_code,
         icon_code: @icon_code,
         image_list_code: @image_list_code,
+        table_code: @table_code,
         paper_code: @paper_code,
         typography_code: @typography_code,
         ripple_code: @ripple_code,
@@ -545,6 +681,7 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#card">Card</.pp_list_item>
             <.pp_list_item href="#icon">Icon</.pp_list_item>
             <.pp_list_item href="#image-list">Image List</.pp_list_item>
+            <.pp_list_item href="#table">Table</.pp_list_item>
           </.nav_group>
           <.nav_group label="Surfaces">
             <.pp_list_item href="#paper">Paper</.pp_list_item>
@@ -583,6 +720,8 @@ defmodule PhoenixPaperDemo do
             {"shape", ":none | :xs | :sm | :md | :lg | :xl | :full (default: :full, a pill)"},
             {"ripple", "boolean — the ripple effect on click/tap (default: true)"},
             {"disabled", "boolean (default: false)"},
+            {"loading", "boolean — spinner replaces start_icon, disables the button (default: false)"},
+            {":start_icon / :end_icon", "slots — an icon before/after the label"},
             {"type", "button | submit | reset (default: button)"},
             {"paperize", "boolean — apply PhoenixPaper's classes at all (default: true)"},
             {"class", "merged on top via Tails"}
@@ -603,25 +742,52 @@ defmodule PhoenixPaperDemo do
                 paperize: false
               </.pp_button>
             </div>
+            <div class="flex items-center gap-4 border-t border-pp-outline/20 pt-4">
+              <.pp_button variant="outlined">
+                <:start_icon><span class="hero-trash" /></:start_icon>
+                Delete
+              </.pp_button>
+              <.pp_button>
+                Send
+                <:end_icon><span class="hero-check" /></:end_icon>
+              </.pp_button>
+              <.pp_button loading>
+                <:start_icon><span class="hero-trash" /></:start_icon>
+                Delete
+              </.pp_button>
+            </div>
           </div>
         </.demo_section>
 
         <.demo_section
           id="button-group"
           title="Button Group"
-          description="Visually joins a row of buttons into one segmented control by rounding only the outer corners."
+          description="Visually joins a row of buttons into one segmented control by rounding only the outer corners. No group-level variant/color/size that cascades to children like MUI's — HEEx has no context mechanism for that; set each button's own attrs."
           props={[
+            {"orientation", "horizontal | vertical (default: horizontal)"},
             {"shape", "corner radius token for the group's outer corners (default: :md)"},
+            {"disable_elevation", "boolean — zero out every child button's own elevation shadow (default: false)"},
             {"paperize", "boolean (default: true)"},
             {"class", "merged on top via Tails"}
           ]}
           code={@button_group_code}
         >
-          <.pp_button_group>
-            <.pp_button variant="outlined">Day</.pp_button>
-            <.pp_button variant="outlined">Week</.pp_button>
-            <.pp_button variant="outlined">Month</.pp_button>
-          </.pp_button_group>
+          <div class="flex flex-col items-start gap-6">
+            <.pp_button_group>
+              <.pp_button variant="outlined">Day</.pp_button>
+              <.pp_button variant="outlined">Week</.pp_button>
+              <.pp_button variant="outlined">Month</.pp_button>
+            </.pp_button_group>
+            <.pp_button_group orientation="vertical">
+              <.pp_button variant="outlined">Day</.pp_button>
+              <.pp_button variant="outlined">Week</.pp_button>
+              <.pp_button variant="outlined">Month</.pp_button>
+            </.pp_button_group>
+            <.pp_button_group disable_elevation>
+              <.pp_button>Save</.pp_button>
+              <.pp_button>Cancel</.pp_button>
+            </.pp_button_group>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -638,11 +804,22 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@fab_code}
         >
-          <div class="flex items-center gap-4">
-            <.pp_fab><span class="hero-star" /></.pp_fab>
-            <.pp_fab extended color="primary">
-              <span class="hero-star" /> Create
-            </.pp_fab>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-4">
+              <span class="w-16 shrink-0 text-xs uppercase opacity-60">size</span>
+              <.pp_fab :for={size <- ~w(sm md lg)} size={size}><span class="hero-star" /></.pp_fab>
+            </div>
+            <div class="flex flex-wrap items-center gap-4">
+              <span class="w-16 shrink-0 text-xs uppercase opacity-60">color</span>
+              <.pp_fab :for={color <- ~w(primary secondary tertiary error)} color={color}>
+                <span class="hero-star" />
+              </.pp_fab>
+            </div>
+            <div class="flex items-center gap-4 border-t border-pp-outline/20 pt-4">
+              <.pp_fab extended color="primary">
+                <span class="hero-star" /> Create
+              </.pp_fab>
+            </div>
           </div>
         </.demo_section>
 
@@ -659,9 +836,17 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@toggle_button_code}
         >
-          <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
-            Bold
-          </.pp_toggle_button>
+          <div class="flex flex-col gap-4">
+            <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
+              Bold
+            </.pp_toggle_button>
+            <div class="flex flex-wrap items-center gap-3 border-t border-pp-outline/20 pt-4">
+              <span class="w-16 shrink-0 text-xs uppercase opacity-60">pressed</span>
+              <.pp_toggle_button :for={color <- ~w(primary secondary tertiary error)} pressed color={color}>
+                {color}
+              </.pp_toggle_button>
+            </div>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -704,7 +889,10 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@select_code}
         >
-          <.pp_select label="Country" name="country_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <.pp_select label="Country" name="country_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
+            <.pp_select variant="filled" label="Country" name="country_filled_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -718,18 +906,22 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@number_field_code}
         >
-          <.pp_number_field label="Quantity" name="qty_demo" value={2} min={0} max={10} />
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <.pp_number_field label="Quantity" name="qty_demo" value={2} min={0} max={10} />
+            <.pp_number_field variant="filled" label="Quantity" name="qty_filled_demo" value={2} min={0} max={10} />
+          </div>
         </.demo_section>
 
         <.demo_section
           id="checkbox"
           title="Checkbox"
-          description="Includes the hidden-input trick so an unchecked box still submits false."
+          description="Includes the hidden-input trick so an unchecked box still submits false. Ripples on click by default — see Helpers below."
           props={[
             {"checked", "boolean (default: nil, meaning unchecked)"},
             {"field", "a Phoenix.HTML.FormField — sets name/id/checked for you"},
             {"label", "text next to the box"},
             {"disabled", "boolean (default: false)"},
+            {"ripple", "boolean — the ripple effect on click/tap (default: true)"},
             {"paperize", "false renders a bare native checkbox, no hidden input"}
           ]}
           code={@checkbox_code}
@@ -745,7 +937,7 @@ defmodule PhoenixPaperDemo do
           id="switch"
           title="Switch"
           description="An on/off toggle, structured like Checkbox but rendered as a sliding track/thumb."
-          props={[{"checked / field / label / disabled / paperize", "same shape as Checkbox"}]}
+          props={[{"checked / field / label / disabled / ripple / paperize", "same shape as Checkbox"}]}
           code={@switch_code}
         >
           <div class="flex flex-col gap-3">
@@ -758,12 +950,12 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="radio-group"
           title="Radio Group"
-          description="A labeled set of mutually exclusive radio buttons sharing one name."
+          description="A labeled set of mutually exclusive radio buttons sharing one name. Ripples on click by default — see Helpers below."
           props={[
             {"options", "list of {label, value} tuples, or plain values"},
             {"value", "the currently selected value"},
             {"label", "the group's legend"},
-            {"field / disabled / paperize", "same as other form controls"}
+            {"field / disabled / ripple / paperize", "same as other form controls"}
           ]}
           code={@radio_group_code}
         >
@@ -782,7 +974,15 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@slider_code}
         >
-          <.pp_slider name="volume_demo" label="Volume" value={60} color="secondary" />
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <.pp_slider
+              :for={color <- ~w(primary secondary tertiary error)}
+              name={"volume_#{color}_demo"}
+              label={color}
+              value={60}
+              color={color}
+            />
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -846,7 +1046,7 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="navbar"
           title="Navbar"
-          description="A horizontal app bar with a leading slot, a title, and trailing actions. The one at the top of this page is a live instance."
+          description="A horizontal app bar with a leading slot, a title, and trailing actions. The one at the top of this page is a live sticky instance — the fixed position isn't demoed inline since it would overlay the rest of this page."
           props={[
             {"color", "primary | secondary | tertiary | surface (default: primary)"},
             {"elevation", "resting elevation, 0-24 (default: 4)"},
@@ -855,12 +1055,14 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@navbar_code}
         >
-          <.pp_navbar class="!static" color="surface">
-            My App
-            <:actions>
-              <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
-            </:actions>
-          </.pp_navbar>
+          <div class="flex flex-col gap-3">
+            <.pp_navbar :for={color <- ~w(primary secondary tertiary surface)} class="!static" color={color}>
+              {color}
+              <:actions>
+                <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
+              </:actions>
+            </.pp_navbar>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -912,11 +1114,15 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="box"
           title="Box"
-          description="A bare div (or span via tag='span') — no paperize attr at all, since there's no default visual style to strip."
-          props={[{"tag", "div | span (default: div)"}]}
+          description="A bare div/span/pre — no paperize attr at all, since there's no default visual style to strip."
+          props={[{"tag", "div | span | pre (default: div)"}]}
           code={@box_code}
         >
-          <.pp_box class="rounded-lg bg-pp-surface-variant p-4">Just a div with a class.</.pp_box>
+          <div class="flex flex-col items-start gap-3">
+            <.pp_box class="rounded-lg bg-pp-surface-variant p-4">A div (default).</.pp_box>
+            <.pp_box tag="span" class="rounded bg-pp-surface-variant px-2 py-1">A span.</.pp_box>
+            <.pp_box tag="pre" class="rounded-lg bg-pp-surface-variant p-4">A pre, whitespace preserved.</.pp_box>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -929,9 +1135,15 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@container_code}
         >
-          <.pp_container max_width="sm" class="!mx-0 rounded-lg bg-pp-surface-variant">
-            This box is a Container with max_width="sm".
-          </.pp_container>
+          <div class="flex flex-col gap-2">
+            <.pp_container
+              :for={width <- ~w(sm md lg xl 2xl full)}
+              max_width={width}
+              class="!mx-0 rounded-lg bg-pp-surface-variant py-2 text-center text-sm"
+            >
+              max_width="{width}"
+            </.pp_container>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -945,10 +1157,22 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@stack_code}
         >
-          <.pp_stack direction="row" spacing={:sm}>
-            <.pp_button>Save</.pp_button>
-            <.pp_button variant="outlined">Cancel</.pp_button>
-          </.pp_stack>
+          <div class="flex flex-col items-start gap-6">
+            <div>
+              <p class="mb-2 text-sm opacity-70">direction="row":</p>
+              <.pp_stack direction="row" spacing={:sm}>
+                <.pp_button>Save</.pp_button>
+                <.pp_button variant="outlined">Cancel</.pp_button>
+              </.pp_stack>
+            </div>
+            <div>
+              <p class="mb-2 text-sm opacity-70">direction="column":</p>
+              <.pp_stack direction="column" spacing={:sm}>
+                <.pp_button>Save</.pp_button>
+                <.pp_button variant="outlined">Cancel</.pp_button>
+              </.pp_stack>
+            </div>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -980,6 +1204,11 @@ defmodule PhoenixPaperDemo do
             <.pp_divider />
             <span class="text-sm">Below</span>
           </div>
+          <div class="mt-4 flex flex-col gap-2 border-t border-pp-outline/20 pt-4">
+            <span class="pl-10 text-sm">Above (inset)</span>
+            <.pp_divider inset />
+            <span class="pl-10 text-sm">Below (inset)</span>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -994,13 +1223,20 @@ defmodule PhoenixPaperDemo do
           ]}
           code={@card_code}
         >
-          <.pp_card class="max-w-sm">
-            <:title>Account</:title>
-            You have no pending invoices.
-            <:actions>
-              <.pp_button variant="text">Dismiss</.pp_button>
-            </:actions>
-          </.pp_card>
+          <div class="flex flex-col gap-6">
+            <.pp_card class="max-w-sm">
+              <:title>Account</:title>
+              You have no pending invoices.
+              <:actions>
+                <.pp_button variant="text">Dismiss</.pp_button>
+              </:actions>
+            </.pp_card>
+            <div class="flex flex-wrap gap-4 border-t border-pp-outline/20 pt-6">
+              <.pp_card :for={padding <- ~w(none xs sm md lg xl 2xl)a} padding={padding} class="w-32 text-center text-xs">
+                {padding}
+              </.pp_card>
+            </div>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -1040,6 +1276,74 @@ defmodule PhoenixPaperDemo do
         </.demo_section>
 
         <.demo_section
+          id="table"
+          title="Table"
+          description="A family of small components — Table, TableContainer, TableHead, TableBody, TableRow, TableCell, TableFooter — composed by hand like MUI's own Table parts. dense/sticky_header/striped cascade to descendant cells via CSS, not a prop threaded through every cell (see AGENTS.md)."
+          props={[
+            {"pp_table dense / sticky_header", "tighter cell padding / pins the header while scrolling"},
+            {"pp_table_body striped", "alternating row background"},
+            {"pp_table_row selected", "a stronger, persistent highlight"},
+            {"pp_table_cell variant", "\"head\" (th) | \"body\" (td, default)"},
+            {"pp_table_cell align", "left | center | right"},
+            {"pp_table_cell sortable / sort_direction", "a clickable header arrow — wire your own phx-click, this is presentation only"}
+          ]}
+          code={@table_code}
+        >
+          <div class="flex flex-col gap-6">
+            <.pp_table_container>
+              <.pp_table>
+                <.pp_table_head>
+                  <.pp_table_row>
+                    <.pp_table_cell variant="head" sortable sort_direction="asc" phx-click="sort">Dessert</.pp_table_cell>
+                    <.pp_table_cell variant="head" align="right" sortable phx-click="sort">Calories</.pp_table_cell>
+                    <.pp_table_cell variant="head" align="right">Fat (g)</.pp_table_cell>
+                  </.pp_table_row>
+                </.pp_table_head>
+                <.pp_table_body striped>
+                  <.pp_table_row>
+                    <.pp_table_cell>Frozen yoghurt</.pp_table_cell>
+                    <.pp_table_cell align="right">159</.pp_table_cell>
+                    <.pp_table_cell align="right">6.0</.pp_table_cell>
+                  </.pp_table_row>
+                  <.pp_table_row selected>
+                    <.pp_table_cell>Ice cream sandwich</.pp_table_cell>
+                    <.pp_table_cell align="right">237</.pp_table_cell>
+                    <.pp_table_cell align="right">9.0</.pp_table_cell>
+                  </.pp_table_row>
+                </.pp_table_body>
+                <.pp_table_footer>
+                  <.pp_table_row>
+                    <.pp_table_cell>Total</.pp_table_cell>
+                    <.pp_table_cell align="right">396</.pp_table_cell>
+                    <.pp_table_cell align="right">15.0</.pp_table_cell>
+                  </.pp_table_row>
+                </.pp_table_footer>
+              </.pp_table>
+            </.pp_table_container>
+
+            <div>
+              <p class="mb-2 text-sm opacity-70">dense + sticky_header (scroll the box):</p>
+              <.pp_table_container class="max-h-40 overflow-y-auto">
+                <.pp_table dense sticky_header>
+                  <.pp_table_head>
+                    <.pp_table_row>
+                      <.pp_table_cell variant="head">Dessert</.pp_table_cell>
+                      <.pp_table_cell variant="head" align="right">Calories</.pp_table_cell>
+                    </.pp_table_row>
+                  </.pp_table_head>
+                  <.pp_table_body>
+                    <.pp_table_row :for={{name, cal} <- [{"Frozen yoghurt", 159}, {"Ice cream sandwich", 237}, {"Eclair", 262}, {"Cupcake", 305}, {"Gingerbread", 356}]}>
+                      <.pp_table_cell>{name}</.pp_table_cell>
+                      <.pp_table_cell align="right">{cal}</.pp_table_cell>
+                    </.pp_table_row>
+                  </.pp_table_body>
+                </.pp_table>
+              </.pp_table_container>
+            </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
           id="paper"
           title="Paper"
           description="The base surface — a background, an elevation shadow, and rounded corners. No padding, no slots. Card is built by composing this instead of duplicating its classes."
@@ -1065,9 +1369,19 @@ defmodule PhoenixPaperDemo do
           code={@typography_code}
         >
           <div class="flex flex-col gap-2">
-            <.pp_typography variant="h4">Account settings</.pp_typography>
-            <.pp_typography variant="body1">Manage your profile, notifications, and billing.</.pp_typography>
-            <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
+            <.pp_typography variant="h1">h1. Heading</.pp_typography>
+            <.pp_typography variant="h2">h2. Heading</.pp_typography>
+            <.pp_typography variant="h3">h3. Heading</.pp_typography>
+            <.pp_typography variant="h4">h4. Heading</.pp_typography>
+            <.pp_typography variant="h5">h5. Heading</.pp_typography>
+            <.pp_typography variant="h6">h6. Heading</.pp_typography>
+            <.pp_typography variant="subtitle1">subtitle1. Manage your profile, notifications, and billing.</.pp_typography>
+            <.pp_typography variant="subtitle2">subtitle2. Manage your profile, notifications, and billing.</.pp_typography>
+            <.pp_typography variant="body1">body1. Manage your profile, notifications, and billing.</.pp_typography>
+            <.pp_typography variant="body2">body2. Manage your profile, notifications, and billing.</.pp_typography>
+            <.pp_typography variant="caption">caption. Last updated 2 minutes ago</.pp_typography>
+            <.pp_typography variant="overline">overline. New</.pp_typography>
+            <.pp_typography variant="button">button. Save changes</.pp_typography>
             <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
           </div>
         </.demo_section>
@@ -1077,7 +1391,7 @@ defmodule PhoenixPaperDemo do
           title="Ripple (helper)"
           description="The Material ripple effect — a circle that expands from the click point and fades out. Vanilla inline onclick, no JS hook/bundler. Try clicking the buttons above."
           props={[
-            {"ripple", "the boolean prop on Button, Fab, ToggleButton, and a linked ListItem — default true, and always off when paperize is false"},
+            {"ripple", "the boolean prop on Button, Fab, ToggleButton, Switch, Checkbox, RadioGroup, and a linked ListItem — default true, and always off when paperize is false"},
             {"PhoenixPaper.Ripple.on_click/1", "returns the script, or nil when disabled (so the attribute is dropped entirely)"},
             {"PhoenixPaper.Ripple.container_classes/1", "the \"relative overflow-hidden\" the ripple needs to stay clipped"}
           ]}

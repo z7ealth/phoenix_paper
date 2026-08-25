@@ -52,6 +52,13 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Slider, only: [pp_slider: 1]
       import PhoenixPaper.Stack, only: [pp_stack: 1]
       import PhoenixPaper.Switch, only: [pp_switch: 1]
+      import PhoenixPaper.Table, only: [pp_table: 1]
+      import PhoenixPaper.TableBody, only: [pp_table_body: 1]
+      import PhoenixPaper.TableCell, only: [pp_table_cell: 1]
+      import PhoenixPaper.TableContainer, only: [pp_table_container: 1]
+      import PhoenixPaper.TableFooter, only: [pp_table_footer: 1]
+      import PhoenixPaper.TableHead, only: [pp_table_head: 1]
+      import PhoenixPaper.TableRow, only: [pp_table_row: 1]
       import PhoenixPaper.ToggleButton, only: [pp_toggle_button: 1]
       import PhoenixPaper.Typography, only: [pp_typography: 1]
     end

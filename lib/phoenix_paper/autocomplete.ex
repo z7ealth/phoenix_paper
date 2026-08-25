@@ -20,6 +20,14 @@ defmodule PhoenixPaper.Autocomplete do
 
   Filtering runs entirely server-side via `phx-change`/`phx-debounce` on the
   text input — no client JS beyond what LiveView already ships.
+
+  Every `phx-*` binding in the template needs its *own* `phx-target={@myself}`
+  — it isn't inherited from an ancestor element the way `phx-target` on a
+  `<form>` might suggest. A `phx-focus="open"` on the `<input>` without one
+  routes that event to the parent LiveView instead of this component; if the
+  parent has no matching `handle_event/3` clause, the whole LiveView crashes
+  and remounts, which looks like nothing happened at all — the dropdown
+  never had a chance to render before the reset.
   """
   use Phoenix.LiveComponent
 
@@ -62,6 +70,7 @@ defmodule PhoenixPaper.Autocomplete do
             value={@query}
             placeholder={@placeholder}
             phx-focus="open"
+            phx-target={@myself}
             phx-debounce="150"
             name="query"
             class={Helpers.classes(@paperize, input_classes(), nil)}
@@ -140,7 +149,7 @@ defmodule PhoenixPaper.Autocomplete do
   end
 
   defp input_classes do
-    "peer block w-full bg-transparent px-3 pt-5 pb-2 pr-8 text-sm text-pp-on-surface outline-none"
+    "peer block w-full bg-transparent px-3 pt-7 pb-2 pr-8 text-sm text-pp-on-surface outline-none"
   end
 
   defp label_classes do

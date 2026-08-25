@@ -8,7 +8,7 @@ defmodule PhoenixPaper.Switch do
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.Helpers
+  alias PhoenixPaper.{Helpers, Ripple}
 
   attr(:id, :any, default: nil)
   attr(:name, :any, default: nil)
@@ -17,6 +17,13 @@ defmodule PhoenixPaper.Switch do
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:checked, :boolean, default: nil)
   attr(:paperize, :boolean, default: true)
+
+  attr(:ripple, :boolean,
+    default: true,
+    doc:
+      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:disabled, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(form autofocus phx-click))
@@ -31,7 +38,10 @@ defmodule PhoenixPaper.Switch do
   end
 
   def pp_switch(assigns) do
-    assigns = assign_new(assigns, :checked, fn -> false end)
+    assigns =
+      assigns
+      |> assign_new(:checked, fn -> false end)
+      |> assign(:ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
     <label
@@ -43,6 +53,7 @@ defmodule PhoenixPaper.Switch do
       <span
         :if={@paperize}
         class="has-[:checked]:bg-pp-primary/50 has-[:disabled]:opacity-40 relative inline-flex h-6 w-10 shrink-0 items-center rounded-full bg-pp-outline/40 transition-colors"
+        onclick={Ripple.on_click_centered(@ripple?)}
       >
         <input
           type="checkbox"

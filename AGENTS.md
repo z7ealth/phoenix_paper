@@ -16,8 +16,10 @@ adding or changing a component.
   `ButtonGroup`, `ToggleButton`, `Fab`, `Rating`, `Slider`, `NumberField`,
   `Autocomplete`, `TransferList`, `Navbar`, `Drawer`, `List`, `ListItem`,
   `ListSubheader`, `Divider`, `Box`, `Container`, `Stack`, `Grid`,
-  `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, ...),
-  plus `Helpers`, `Elevation`, `Spacing`, `Shape`, `Ripple`.
+  `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, `Table`,
+  `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
+  `TableFooter`, ...), plus `Helpers`, `Elevation`, `Spacing`, `Shape`,
+  `Ripple`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
 - `priv/static/phoenix_paper.css` — the Tailwind v4 theme (color tokens,
@@ -332,6 +334,43 @@ There is no shipped `CodeSnippet` component — `dev.exs`'s catalog is the
 only place PhoenixPaper renders source code, and it does that with
 highlight.js (a real, established syntax highlighter) rather than a
 hand-rolled component; see "Dev / live preview" below.
+
+## Data display: the Table family (`Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`)
+
+Modeled on MUI's Table components — one small function component per table
+part, composed by the caller (see `PhoenixPaper.Table`'s moduledoc for the
+full composition example). No `PhoenixPaper.TablePagination`/
+`TableSortLabel` — `TableCell`'s `sortable`/`sort_direction` attrs give the
+sort-header *look* (a clickable header with a direction arrow), but wiring
+an actual sort click to actual reordered data is the caller's LiveView, same
+as it would be for a hand-rolled `<th>`; a full pagination component wasn't
+built at all (flagged as a bigger, separate addition when this family shipped
+— composable from existing `Select`/`Button` pieces, but a real interactive
+component with its own API decisions, not just another table part).
+
+`dense` (`Table`) and `sticky_header` (`Table`), and `striped` (`TableBody`)
+cascade to every descendant cell via plain CSS descendant selectors
+(`[&_td]:py-1.5`, `[&>tr:nth-child(even)]:bg-...`) rather than an attr
+threaded through every `TableCell` a caller writes — unlike MUI's React
+context, HEEx has no mechanism for a parent to reach into a child
+component's own assigns (the same limitation `ButtonGroup`'s moduledoc
+documents for `color`/`variant`), but a *padding/background* cascade needing
+only one class expressible as a selector works here specifically because CSS
+descendant selectors match on real DOM nesting, not component boundaries —
+`<table>` → `<td>` is real DOM regardless of which function rendered each.
+This trick doesn't generalize to arbitrary-prop cascading like MUI's
+`size`/`color`, only to needs a single compound selector can express.
+
+That same trick is also *why* `TableRow`'s `selected` needs
+`!bg-pp-primary/10` (Tailwind's important modifier) instead of a plain
+`bg-pp-primary/10`: `TableBody`'s `striped` sets its background via
+`[&>tr:nth-child(even)]:bg-...`, a compound selector with higher CSS
+specificity than a bare class on the row itself, so without `!important` a
+selected-and-striped row would silently show the stripe, not the selection
+— found by actually screenshotting a selected+striped row, not by reasoning
+about specificity in the abstract (see "Tailwind class safety" above for
+why every one of these class strings has to be written out literally rather
+than interpolated, same rule as everywhere else).
 
 ## Theming
 

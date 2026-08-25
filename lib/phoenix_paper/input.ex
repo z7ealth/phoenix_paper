@@ -96,14 +96,14 @@ defmodule PhoenixPaper.Input do
   end
 
   defp input_classes(_variant) do
-    "peer block w-full bg-transparent px-3 pt-5 pb-2 text-sm text-pp-on-surface outline-none placeholder:text-transparent disabled:cursor-not-allowed disabled:opacity-40"
+    "peer block w-full bg-transparent px-3 pt-7 pb-2 text-sm text-pp-on-surface outline-none placeholder:text-transparent disabled:cursor-not-allowed disabled:opacity-40"
   end
 
   defp label_classes(_variant, []) do
-    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-outline transition-all peer-focus:top-3 peer-focus:text-xs peer-focus:text-pp-primary peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-xs"
+    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-outline transition-all peer-focus:top-2 peer-focus:text-xs peer-focus:text-pp-primary peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
   end
 
   defp label_classes(_variant, _errors) do
-    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-error transition-all peer-focus:top-3 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:text-xs"
+    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-error transition-all peer-focus:top-2 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
   end
 end

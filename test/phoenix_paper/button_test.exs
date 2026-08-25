@@ -77,4 +77,41 @@ defmodule PhoenixPaper.ButtonTest do
     html = render_component(&raised_primary/1)
     assert html =~ "cursor-pointer"
   end
+
+  test "start_icon and end_icon render around the label" do
+    html = render_component(&with_icons/1)
+
+    assert html =~ "hero-trash"
+    assert html =~ "hero-arrow-right"
+    assert html =~ "Delete"
+  end
+
+  defp with_icons(assigns) do
+    ~H"""
+    <.pp_button>
+      <:start_icon><span class="hero-trash" /></:start_icon>
+      Delete
+      <:end_icon><span class="hero-arrow-right" /></:end_icon>
+    </.pp_button>
+    """
+  end
+
+  test "loading disables the button, drops the ripple handler, and swaps start_icon for a spinner" do
+    html = render_component(&loading/1)
+
+    assert html =~ "disabled"
+    assert html =~ ~s(aria-busy="true")
+    assert html =~ "animate-spin"
+    refute html =~ "onclick="
+    refute html =~ "hero-trash"
+  end
+
+  defp loading(assigns) do
+    ~H"""
+    <.pp_button loading>
+      <:start_icon><span class="hero-trash" /></:start_icon>
+      Delete
+    </.pp_button>
+    """
+  end
 end

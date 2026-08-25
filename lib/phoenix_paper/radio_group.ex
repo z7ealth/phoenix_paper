@@ -5,10 +5,13 @@ defmodule PhoenixPaper.RadioGroup do
 
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
+
+  Ripples on click by default, wired to each option's small box rather than
+  its whole label — see `PhoenixPaper.Ripple`.
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.Helpers
+  alias PhoenixPaper.{Helpers, Ripple}
 
   attr(:id, :any, default: nil)
   attr(:name, :any, default: nil)
@@ -18,6 +21,13 @@ defmodule PhoenixPaper.RadioGroup do
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:disabled, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
+
+  attr(:ripple, :boolean,
+    default: true,
+    doc:
+      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(form autofocus))
 
@@ -31,7 +41,10 @@ defmodule PhoenixPaper.RadioGroup do
   end
 
   def pp_radio_group(assigns) do
-    assigns = assign(assigns, :normalized_options, Enum.map(assigns.options, &normalize_option/1))
+    assigns =
+      assigns
+      |> assign(:normalized_options, Enum.map(assigns.options, &normalize_option/1))
+      |> assign(:ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
     <fieldset
@@ -47,6 +60,7 @@ defmodule PhoenixPaper.RadioGroup do
         <span
           :if={@paperize}
           class="has-[:checked]:border-pp-primary has-[:disabled]:opacity-40 relative inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-pp-outline transition-colors"
+          onclick={Ripple.on_click_centered(@ripple?)}
         >
           <input
             type="radio"

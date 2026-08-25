@@ -20,6 +20,16 @@ defmodule PhoenixPaper.Ripple do
       class={Helpers.classes(@paperize, [..., Ripple.container_classes(@ripple)], @class)}
       onclick={Ripple.on_click(@ripple)}
 
+  `Switch`, `Checkbox`, and `RadioGroup` also support it, but wire
+  `on_click_centered/1` instead of `on_click/1`, and don't use
+  `container_classes/1` at all — their small track/box is already
+  `relative`, and deliberately *without* `overflow-hidden`: Material's
+  ripple on these controls is meant to spill out past the tiny target as a
+  soft halo, not get clipped to it, unlike Button's ripple which stays
+  contained inside the button's own bounds. `on_click_centered/1` is also a
+  visibly *smaller* effect than `on_click/1` — see its own doc for why
+  click-position-based sizing doesn't suit a 20-40px control.
+
   `container_classes/1` adds `relative overflow-hidden` when ripple is on —
   the ripple `<span>` is absolutely positioned relative to the nearest
   `position: relative` ancestor and clipped by the nearest `overflow:
@@ -61,19 +71,45 @@ defmodule PhoenixPaper.Ripple do
 
   @ripple_js "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var x=e.clientX-rect.left;var y=e.clientY-rect.top;var radius=Math.sqrt(Math.pow(Math.max(x,rect.width-x),2)+Math.pow(Math.max(y,rect.height-y),2));var size=radius*2;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(x-radius)+'px;top:'+(y-radius)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.25;pointer-events:none;transform:scale(0);transition:transform .5s cubic-bezier(0,0,.2,1),opacity .7s ease-out;';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
 
+  @ripple_js_centered "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var size=Math.min(rect.width,rect.height)*1.6;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(rect.width/2-size/2)+'px;top:'+(rect.height/2-size/2)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.25;pointer-events:none;transform:scale(0);transition:transform .5s cubic-bezier(0,0,.2,1),opacity .7s ease-out;';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
+
   @doc """
-  The `onclick` attribute value that spawns a ripple on the clicked
-  element, or `nil` when `enabled?` is `false` — HEEx drops an attribute
-  entirely when its value is `nil`, so `onclick={Ripple.on_click(@ripple)}`
-  just renders no attribute at all rather than an empty one.
+  The `onclick` attribute value that spawns a ripple expanding from the
+  click/tap position, or `nil` when `enabled?` is `false` — HEEx drops an
+  attribute entirely when its value is `nil`, so
+  `onclick={Ripple.on_click(@ripple)}` just renders no attribute at all
+  rather than an empty one. Used by `Button`, `Fab`, `ToggleButton`, and
+  `ListItem`; see `on_click_centered/1` for the small-toggle-control
+  variant.
   """
   @spec on_click(boolean()) :: String.t() | nil
   def on_click(false), do: nil
   def on_click(true), do: @ripple_js
 
   @doc """
+  Like `on_click/1`, but the ripple is a fixed size (`1.6×` the element's
+  smaller dimension) centered on the element, ignoring click position —
+  used by `Switch`, `Checkbox`, and `RadioGroup` instead of `on_click/1`.
+
+  Click-position sizing doesn't suit these: `on_click/1`'s radius reaches
+  the *farthest corner* from the click, which on a 20-40px control means
+  almost any click produces a ripple 1.4-2.2× the control's own size — on
+  a button that's invisible against everything else going on, but on a
+  bare checkbox it reads as oversized and, since it tracks click position,
+  inconsistently placed/sized between clicks on the same tiny target.
+  Material's own state-layer treatment for these controls is a fixed-size
+  halo centered on the control regardless of exactly where within it you
+  clicked, which is what this produces.
+  """
+  @spec on_click_centered(boolean()) :: String.t() | nil
+  def on_click_centered(false), do: nil
+  def on_click_centered(true), do: @ripple_js_centered
+
+  @doc """
   The classes a ripple-enabled root element needs so the ripple stays
-  positioned and clipped correctly. Empty when `enabled?` is `false`.
+  positioned and clipped correctly. Empty when `enabled?` is `false`. Only
+  relevant to `on_click/1`'s users — see the moduledoc for why
+  `on_click_centered/1`'s users don't use this.
   """
   @spec container_classes(boolean()) :: String.t()
   def container_classes(false), do: ""

@@ -3,6 +3,20 @@ defmodule PhoenixPaper.AutocompleteTest do
 
   import Phoenix.LiveViewTest
 
+  test "the input's phx-focus is targeted at the component, not the parent LiveView" do
+    html =
+      render_component(PhoenixPaper.Autocomplete,
+        id: "country",
+        name: "country",
+        options: ["Canada", "Mexico"]
+      )
+
+    [input_tag] = Regex.run(~r/<input[^>]*name="query"[^>]*>/, html)
+
+    assert input_tag =~ ~s(phx-focus="open")
+    assert input_tag =~ "phx-target="
+  end
+
   test "renders every option in the closed dropdown's initial state" do
     html =
       render_component(PhoenixPaper.Autocomplete,

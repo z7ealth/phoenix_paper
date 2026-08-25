@@ -85,28 +85,38 @@ defmodule PhoenixPaper.Select do
 
   defp wrapper_classes("outlined", shape, []) do
     [
-      "relative border border-pp-outline transition-colors focus-within:border-2 focus-within:border-pp-primary",
+      "relative flex h-14 items-end border border-pp-outline transition-colors focus-within:border-2 focus-within:border-pp-primary",
       Shape.class(shape)
     ]
   end
 
   defp wrapper_classes("outlined", shape, _errors) do
-    ["relative border-2 border-pp-error", Shape.class(shape)]
+    ["relative flex h-14 items-end border-2 border-pp-error", Shape.class(shape)]
   end
 
   defp wrapper_classes("filled", shape, []) do
     [
-      "relative border-b border-pp-outline bg-pp-surface-variant transition-colors focus-within:border-b-2 focus-within:border-pp-primary",
+      "relative flex h-14 items-end border-b border-pp-outline bg-pp-surface-variant transition-colors focus-within:border-b-2 focus-within:border-pp-primary",
       Shape.class(shape, :top)
     ]
   end
 
   defp wrapper_classes("filled", shape, _errors) do
-    ["relative border-b-2 border-pp-error bg-pp-surface-variant", Shape.class(shape, :top)]
+    [
+      "relative flex h-14 items-end border-b-2 border-pp-error bg-pp-surface-variant",
+      Shape.class(shape, :top)
+    ]
   end
 
+  # `<select>` centers its displayed value vertically inside its own box
+  # regardless of asymmetric padding-top/-bottom (unlike a plain `<input>`,
+  # which respects it literally) — so getting clearance for the label above
+  # can't be done by just padding the select more on top. Instead the select
+  # keeps small, symmetric padding and is pinned to the bottom of the fixed-
+  # height `h-14 items-end` wrapper above, leaving the label's space free at
+  # the top without fighting the select's own centering.
   defp select_classes do
-    "peer block w-full cursor-pointer appearance-none bg-transparent px-3 pt-5 pb-2 pr-8 text-sm text-pp-on-surface outline-none disabled:cursor-not-allowed disabled:opacity-40"
+    "peer block w-full cursor-pointer appearance-none bg-transparent px-3 py-2 pr-8 text-sm text-pp-on-surface outline-none disabled:cursor-not-allowed disabled:opacity-40"
   end
 
   defp label_classes([]) do

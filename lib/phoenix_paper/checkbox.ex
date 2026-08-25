@@ -9,10 +9,13 @@ defmodule PhoenixPaper.Checkbox do
   When `paperize` is `false` this renders a bare native `<input
   type="checkbox">` (no hidden-input trick, no custom box) so it never fights
   a caller's own CSS.
+
+  Ripples on click by default, wired to the small box rather than the whole
+  label — see `PhoenixPaper.Ripple`.
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.{Helpers, Shape}
+  alias PhoenixPaper.{Helpers, Ripple, Shape}
 
   attr(:id, :any, default: nil)
   attr(:name, :any, default: nil)
@@ -21,6 +24,13 @@ defmodule PhoenixPaper.Checkbox do
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:checked, :boolean, default: nil)
   attr(:paperize, :boolean, default: true)
+
+  attr(:ripple, :boolean,
+    default: true,
+    doc:
+      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
   attr(:disabled, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(form autofocus phx-click))
@@ -35,16 +45,23 @@ defmodule PhoenixPaper.Checkbox do
   end
 
   def pp_checkbox(assigns) do
-    assigns = assign_new(assigns, :checked, fn -> false end)
+    assigns =
+      assigns
+      |> assign_new(:checked, fn -> false end)
+      |> assign(:ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
     <label data-pp-component="checkbox" class={Helpers.classes(@paperize, "inline-flex items-center gap-2 cursor-pointer select-none", @class)}>
       <input :if={@paperize} type="hidden" name={@name} value="false" disabled={@disabled} />
 
-      <span :if={@paperize} class={[
-        "has-[:checked]:border-pp-primary has-[:checked]:bg-pp-primary relative inline-flex size-5 shrink-0 items-center justify-center border-2 border-pp-outline transition-colors",
-        Shape.class(:xs)
-      ]}>
+      <span
+        :if={@paperize}
+        class={[
+          "has-[:checked]:border-pp-primary has-[:checked]:bg-pp-primary relative inline-flex size-5 shrink-0 items-center justify-center border-2 border-pp-outline transition-colors",
+          Shape.class(:xs)
+        ]}
+        onclick={Ripple.on_click_centered(@ripple?)}
+      >
         <input
           type="checkbox"
           id={@id}
