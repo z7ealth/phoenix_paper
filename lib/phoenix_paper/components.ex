@@ -32,12 +32,14 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Alert, only: [pp_alert: 1]
       import PhoenixPaper.AppBar, only: [pp_app_bar: 1]
       import PhoenixPaper.Backdrop, only: [pp_backdrop: 1]
+      import PhoenixPaper.Badge, only: [pp_badge: 1]
       import PhoenixPaper.Box, only: [pp_box: 1]
       import PhoenixPaper.Breadcrumbs, only: [pp_breadcrumbs: 1]
       import PhoenixPaper.Button, only: [pp_button: 1]
       import PhoenixPaper.ButtonGroup, only: [pp_button_group: 1]
       import PhoenixPaper.Card, only: [pp_card: 1]
       import PhoenixPaper.Checkbox, only: [pp_checkbox: 1]
+      import PhoenixPaper.Chip, only: [pp_chip: 1]
       import PhoenixPaper.Container, only: [pp_container: 1]
       import PhoenixPaper.Dialog, only: [pp_dialog: 1]
       import PhoenixPaper.Divider, only: [pp_divider: 1]
@@ -75,6 +77,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.TableRow, only: [pp_table_row: 1]
       import PhoenixPaper.ThemeToggle, only: [pp_theme_toggle: 1]
       import PhoenixPaper.ToggleButton, only: [pp_toggle_button: 1]
+      import PhoenixPaper.Tooltip, only: [pp_tooltip: 1]
       import PhoenixPaper.Typography, only: [pp_typography: 1]
     end
   end

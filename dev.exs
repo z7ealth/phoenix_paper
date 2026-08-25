@@ -152,7 +152,7 @@ defmodule PhoenixPaperDemo do
   # components work the same way once those classes exist for real.
   @demo_icon_css """
   .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell, .hero-trash,
-  .hero-chevron-right, .hero-user, .hero-sun-mini, .hero-moon-mini {
+  .hero-chevron-right, .hero-user, .hero-sun-mini, .hero-moon-mini, .hero-x-mark-mini {
     display: inline-block; width: 1em; height: 1em; background-color: currentColor;
     mask-size: contain; -webkit-mask-size: contain;
     mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat;
@@ -197,6 +197,10 @@ defmodule PhoenixPaperDemo do
   .hero-moon-mini {
     mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 14.5A8.5 8.5 0 1110.2 4.3 7 7 0 0020 14.5z"/></svg>');
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 14.5A8.5 8.5 0 1110.2 4.3 7 7 0 0020 14.5z"/></svg>');
+  }
+  .hero-x-mark-mini {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>');
   }
   """
 
@@ -663,6 +667,64 @@ defmodule PhoenixPaperDemo do
   </.pp_table_container>
   """
 
+  @badge_code ~S"""
+  <.pp_badge content={4}>
+    <.pp_icon name="hero-bell" />
+  </.pp_badge>
+
+  <.pp_badge content={150}>
+    <.pp_icon name="hero-bell" />
+  </.pp_badge>
+
+  <.pp_badge variant="dot" color="success">
+    <.pp_icon name="hero-user" />
+  </.pp_badge>
+
+  <%!-- overlap="circular" pulls the badge inward to sit on a circular avatar --%>
+  <.pp_badge content={1} overlap="circular" color="primary">
+    <span class="inline-flex size-10 items-center justify-center rounded-full bg-pp-surface-variant">
+      <.pp_icon name="hero-user" />
+    </span>
+  </.pp_badge>
+  """
+
+  @chip_code ~S"""
+  <.pp_chip>Basic</.pp_chip>
+  <.pp_chip variant="outlined" color="primary">Outlined</.pp_chip>
+  <.pp_chip color="success">Success</.pp_chip>
+  <.pp_chip size="small">Small</.pp_chip>
+
+  <.pp_chip>
+    Tagged
+    <:icon><.pp_icon name="hero-check" /></:icon>
+  </.pp_chip>
+
+  <.pp_chip
+    :for={tag <- @chips}
+    deletable
+    on_delete={JS.push("delete_chip", value: %{chip: tag})}
+  >
+    {tag}
+  </.pp_chip>
+
+  <.pp_chip clickable phx-click="select_filter">Clickable</.pp_chip>
+  <.pp_chip clickable disabled>Disabled</.pp_chip>
+  """
+
+  @tooltip_code ~S"""
+  <.pp_tooltip title="Delete">
+    <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
+  </.pp_tooltip>
+
+  <.pp_tooltip title="Bottom" placement="bottom">
+    <.pp_button variant="outlined">Bottom</.pp_button>
+  </.pp_tooltip>
+
+  <.pp_tooltip title="With an arrow" arrow>
+    <.pp_button variant="outlined">Arrow</.pp_button>
+  </.pp_tooltip>
+  """
+
   @paper_code ~S"""
   <.pp_paper elevation={4} class="p-4">A raised surface — Card is built on this.</.pp_paper>
   """
@@ -806,7 +868,8 @@ defmodule PhoenixPaperDemo do
      assign(socket,
        page_title: "PhoenixPaper catalog",
        bold_pressed: false,
-       show_backdrop: false
+       show_backdrop: false,
+       chips: ["React", "Elixir", "Phoenix", "LiveView"]
      )}
   end
 
@@ -830,6 +893,16 @@ defmodule PhoenixPaperDemo do
   # doesn't do anything, just proves the click reaches the LiveView instead
   # of crashing it.
   def handle_event("dismiss", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("delete_chip", %{"chip" => chip}, socket) do
+    {:noreply, update(socket, :chips, &List.delete(&1, chip))}
+  end
+
+  # Chip's clickable variant is presentation-only in this demo — a real app
+  # would toggle its own filter state here, the same as Table's "sort".
+  def handle_event("select_filter", _params, socket) do
     {:noreply, socket}
   end
 
@@ -867,6 +940,9 @@ defmodule PhoenixPaperDemo do
         grid_code: @grid_code,
         divider_code: @divider_code,
         card_code: @card_code,
+        badge_code: @badge_code,
+        chip_code: @chip_code,
+        tooltip_code: @tooltip_code,
         icon_code: @icon_code,
         image_list_code: @image_list_code,
         table_code: @table_code,
@@ -928,6 +1004,9 @@ defmodule PhoenixPaperDemo do
           </.nav_group>
           <.nav_group label="Data display">
             <.pp_list_item href="#card">Card</.pp_list_item>
+            <.pp_list_item href="#badge">Badge</.pp_list_item>
+            <.pp_list_item href="#chip">Chip</.pp_list_item>
+            <.pp_list_item href="#tooltip">Tooltip</.pp_list_item>
             <.pp_list_item href="#icon">Icon</.pp_list_item>
             <.pp_list_item href="#image-list">Image List</.pp_list_item>
             <.pp_list_item href="#table">Table</.pp_list_item>
@@ -1692,6 +1771,97 @@ defmodule PhoenixPaperDemo do
                 {padding}
               </.pp_card>
             </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="badge"
+          title="Badge"
+          description="A small count/status indicator overlapping the corner of its child, in the spirit of MUI's Badge."
+          props={[
+            {"content", "badge content — a number or short string (default: nil)"},
+            {"max", "caps a numeric content at max+, e.g. 99+ (default: 99)"},
+            {"show_zero", "show the badge when content is the integer 0 (default: false)"},
+            {"variant", "\"standard\" | \"dot\" (default: \"standard\")"},
+            {"color", "primary | secondary | tertiary | error | success | warning | info (default: \"error\")"},
+            {"overlap", "\"rectangular\" | \"circular\" — pulls the badge inward onto a circular child (default: \"rectangular\")"},
+            {"anchor_origin", "which corner (default: \"top-right\")"},
+            {"invisible", "force-hide the badge (default: false)"}
+          ]}
+          code={@badge_code}
+        >
+          <div class="flex items-center gap-8">
+            <.pp_badge content={4}>
+              <.pp_icon name="hero-bell" />
+            </.pp_badge>
+            <.pp_badge content={150}>
+              <.pp_icon name="hero-bell" />
+            </.pp_badge>
+            <.pp_badge variant="dot" color="success">
+              <.pp_icon name="hero-user" />
+            </.pp_badge>
+            <.pp_badge content={1} overlap="circular" color="primary">
+              <span class="inline-flex size-10 items-center justify-center rounded-full bg-pp-surface-variant">
+                <.pp_icon name="hero-user" />
+              </span>
+            </.pp_badge>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="chip"
+          title="Chip"
+          description="A compact element for input, attribute, or action, in the spirit of MUI's Chip."
+          props={[
+            {"variant", "\"filled\" | \"outlined\" (default: \"filled\")"},
+            {"color", "default | primary | secondary | tertiary | error | success | warning | info (default: \"default\")"},
+            {"size", "\"small\" | \"medium\" (default: \"medium\")"},
+            {"clickable", "renders a real <button> with a ripple, for filter/action chips (default: false)"},
+            {"deletable", "renders a trailing delete control wired to on_delete (default: false)"},
+            {"on_delete", "JS command run when the delete control is clicked"},
+            {"disabled", "dims and disables the chip and its delete control (default: false)"},
+            {":icon", "a leading icon or avatar slot"}
+          ]}
+          code={@chip_code}
+        >
+          <div class="flex flex-wrap items-center gap-3">
+            <.pp_chip>Basic</.pp_chip>
+            <.pp_chip variant="outlined" color="primary">Outlined</.pp_chip>
+            <.pp_chip color="success">Success</.pp_chip>
+            <.pp_chip size="small">Small</.pp_chip>
+            <.pp_chip>
+              Tagged
+              <:icon><.pp_icon name="hero-check" /></:icon>
+            </.pp_chip>
+            <.pp_chip :for={tag <- @chips} deletable on_delete={JS.push("delete_chip", value: %{chip: tag})}>
+              {tag}
+            </.pp_chip>
+            <.pp_chip clickable phx-click="select_filter">Clickable</.pp_chip>
+            <.pp_chip clickable disabled>Disabled</.pp_chip>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="tooltip"
+          title="Tooltip"
+          description="A short text label shown on hover/focus, in the spirit of MUI's Tooltip. Pure CSS (group-hover/group-focus-within) — no JS, no collision detection/auto-flip, see the moduledoc."
+          props={[
+            {"title", "the tooltip text — nil or \"\" disables the tooltip (default: nil)"},
+            {"placement", "top | bottom | left | right (default: \"top\")"},
+            {"arrow", "a small triangle pointing at the trigger (default: false)"}
+          ]}
+          code={@tooltip_code}
+        >
+          <div class="flex items-center gap-10 py-6">
+            <.pp_tooltip title="Delete">
+              <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
+            </.pp_tooltip>
+            <.pp_tooltip title="Bottom" placement="bottom">
+              <.pp_button variant="outlined">Bottom</.pp_button>
+            </.pp_tooltip>
+            <.pp_tooltip title="With an arrow" arrow>
+              <.pp_button variant="outlined">Arrow</.pp_button>
+            </.pp_tooltip>
           </div>
         </.demo_section>
 

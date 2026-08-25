@@ -810,6 +810,70 @@ about specificity in the abstract (see "Tailwind class safety" above for
 why every one of these class strings has to be written out literally rather
 than interpolated, same rule as everywhere else).
 
+## Data display: `Badge`, `Chip`, and `Tooltip`
+
+Three MUI-parity components added together, all under "Data display" in
+`dev.exs`'s nav.
+
+- **`Badge`** overlaps a small count/status indicator on its child's
+  corner. Hiding logic matches MUI's `Badge` exactly, including a
+  perhaps-surprising edge case: `invisible or (content == 0 and not
+  show_zero) or (is_nil(content) and variant == "standard")` — a
+  `variant="dot"` badge with `content={0}` is hidden by default same as
+  `standard`, only a `nil` content is the one case `dot` treats specially
+  (stays visible, e.g. a blank "online" indicator). `color` defaults to
+  `"error"`, not a `"default"` gray like MUI — this library's `color` scale
+  is `primary`/`secondary`/`tertiary`/`error` plus `success`/`warning`/
+  `info` (see `Alert`), no eighth neutral token exists purely for `Badge`,
+  and an unread-count badge reading as attention-red is the far more common
+  real case anyway. The wrapping `<span>`'s `relative inline-flex shrink-0`
+  is a hardcoded literal, not gated by `paperize` — same reasoning as
+  `Autocomplete`'s anchor `<div class="relative">` (see "The `paperize`
+  contract" above): it's positioning plumbing the badge can't work without,
+  not part of the visual skin.
+
+- **`Chip`** picks its root tag the `ListItem` way (see "Conditional root
+  tag" above): a real `<button>` when `clickable`, a `<div>` otherwise,
+  sharing one private `chip_content/1`. The one new wrinkle: the delete
+  control (`deletable`) is deliberately a `<span role="button"
+  tabindex="0">`, **not** a real `<button>` — nesting a `<button>` inside
+  `clickable`'s own `<button>` root is invalid HTML (the browser silently
+  auto-closes the outer one, breaking the chip's whole layout). A tiny
+  `onkeydown` snippet (Enter/Space → synthetic `.click()`) keeps it
+  keyboard-operable anyway, same "small vanilla snippet" precedent as
+  `Ripple`. Its `onclick` also calls `event.stopPropagation()` so deleting
+  doesn't also fire a `clickable` chip's own click. `color="default"`
+  (gray, reusing `--color-pp-surface-variant`/`-on-surface`/`-outline` —
+  the same tokens `Input`/`Select`/`NumberField` already use) genuinely is
+  the default here, unlike `Badge` — a plain tag chip is MUI's most common
+  real case, and it's neutral, not brand-colored.
+
+- **`Tooltip`** is pure CSS — Tailwind's `group-hover:`/
+  `group-focus-within:` against a `group` wrapper, no JS/hook at all, not
+  even a vanilla snippet. `title={nil}`/`title=""` disables it (renders
+  just the trigger), matching MUI's own `title` prop exactly. No collision
+  detection/auto-flip like MUI's Popper-based positioning — `placement` is
+  a fixed offset picked once, one of the 4 cardinal directions instead of
+  MUI's 12-way matrix.
+
+  **A verification dead-end worth knowing about, so it isn't re-walked**:
+  an early headless-Chromium check of the hover reveal seemed to show
+  `group-focus-within:opacity-100` losing to the base `opacity-0` utility
+  once compiled alongside this library's full real stylesheet (thousands
+  of other classes) — but disappeared as soon as `transition-opacity`
+  duration was removed from the test. Root cause, confirmed via
+  `element.getAnimations()`: the element's opacity transition's
+  `playState` stayed `"running"` forever and never advanced, even past its
+  150ms duration — headless Chromium's `--virtual-time-budget` fast-forwards
+  timers but doesn't reliably drive the compositor frames a CSS
+  *transition* (as opposed to an instant style change) needs to progress.
+  Every other component's tests in this library check instant class/attr
+  presence, never an animated property's settled value, which is why this
+  never came up before. The CSS itself was correct the whole time — nothing
+  in `Tooltip`, `Badge`, or `Chip` needed changing. If a future headless
+  check of any *transitioning* property comes back "stuck," suspect the
+  test methodology before the component.
+
 ## Feedback (`Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`, `Snackbar`)
 
 Modeled on MUI's Feedback category. Two things are worth knowing before
@@ -1090,6 +1154,30 @@ that points at the real cause, both hit while building `dev.exs`'s catalog:
   `\"...\"` in plain string attributes; rephrase in prose, use single
   quotes for a "quoted" term, or move the string into a `{}`-wrapped
   expression/module attribute instead.
+
+Two more, hit writing `Badge`/`Chip`'s moduledocs and `Chip`'s `on_delete`
+doc string — plain Elixir gotchas, not HEEx-specific, but easy to trip
+into while writing the kind of prose-with-code-samples moduledoc this
+library favors:
+
+- **A literal `#{...}`-shaped substring inside a plain `@moduledoc
+  """..."""` heredoc is real string interpolation**, not literal text —
+  `` `"#{max}+"` `` in prose describing `Badge`'s `max` behavior tried to
+  interpolate a variable named `max` that doesn't exist at the module
+  level, failing to compile with `undefined variable "max"`. Fix: escape
+  the `#` as `\#` (`` `"\#{max}+"` ``) whenever a moduledoc's prose needs to
+  show literal `#{...}` syntax.
+- **`~s(...)`/`~S(...)` do not support nested, unescaped parens** — unlike
+  `"..."` strings, sigils using paired bracket delimiters (`()`, `[]`,
+  `{}`) only track delimiter *depth* naively; `~s(call("x"))` fails with
+  "unexpected token: )" because the tokenizer isn't aware the inner `)`
+  belongs to a string literal, not sigil-closing. Confirmed directly:
+  `~s(a (b) c)` fails the same way with no strings involved at all — it's
+  a pure paren-counting issue, nothing to do with quotes specifically. Fix:
+  pick a sigil delimiter that doesn't appear in the content (`~s[...]` for
+  content containing parens, as `Chip`'s `on_delete` doc does for its
+  `JS.push("remove_chip")` example), rather than trying to escape the
+  inner parens.
 
 ## Dev / live preview
 
