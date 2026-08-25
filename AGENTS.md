@@ -18,7 +18,9 @@ adding or changing a component.
   `ListSubheader`, `Divider`, `Box`, `Container`, `Stack`, `Grid`,
   `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, `Table`,
   `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
-  `TableFooter`, ...), plus `Helpers`, `Elevation`, `Spacing`, `Shape`,
+  `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`,
+  `Snackbar`, `Accordion`, `AccordionSummary`, `AccordionDetails`,
+  `AccordionActions`, ...), plus `Helpers`, `Elevation`, `Spacing`, `Shape`,
   `Ripple`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
@@ -335,6 +337,44 @@ only place PhoenixPaper renders source code, and it does that with
 highlight.js (a real, established syntax highlighter) rather than a
 hand-rolled component; see "Dev / live preview" below.
 
+## Surfaces: `Accordion`, `AccordionSummary`, `AccordionDetails`, `AccordionActions`
+
+Modeled on MUI's `Accordion` — pure CSS, no JS/LiveView, the same hidden-
+checkbox-plus-`peer-checked:` trick as `Drawer`/`Rating`. `pp_accordion/1`
+renders the checkbox itself, as the first child inside its own `Paper`
+surface; the caller writes `AccordionSummary`/`AccordionDetails`/
+`AccordionActions` as its `inner_block`, making them flat siblings *after*
+the checkbox (all three need the *same* `id` as `pp_accordion/1`, to build
+the matching `for=`/`peer-checked:` wiring — there's no way for sibling
+components to discover a shared id implicitly).
+
+Two things worth remembering if you touch this family:
+
+- **`disable_gutters`'s margin needs `has-[:checked]:`, not `peer-checked:`**
+  — caught this while building it, not after. Every *other* CSS reaction in
+  this family targets a true sibling of the checkbox (`AccordionSummary`'s
+  label, `AccordionDetails`, `AccordionActions` — all written by the caller
+  *after* the checkbox in `pp_accordion/1`'s `inner_block`), so
+  `peer-checked:` is correct there. But the gutters margin has to land on
+  `pp_accordion/1`'s own `Paper` root — which is the checkbox's *ancestor*,
+  not its sibling (the checkbox is rendered *inside* that root, as its own
+  first child). `peer-checked:` only reaches later siblings of the peer, so
+  it can't express "this element's own descendant checkbox is checked" —
+  that needs `has-[:checked]:` instead. Same underlying CSS distinction as
+  `peer-*` vs `has-[:checked]:` documented above, just easy to get backwards
+  mid-refactor when three other classes in the same file correctly use
+  `peer-checked:` for a *different* relationship.
+- **Exclusive single-panel groups are `type="radio"`, not JS/LiveView
+  state.** Give every accordion in a group the same `name` and
+  `pp_accordion/1` renders a radio instead of a checkbox — same-named radios
+  are natively mutually exclusive, so "only one open at a time" needs zero
+  extra code. Verified with real simulated clicks (not just static
+  rendering) that checking one radio in the group correctly unchecks
+  whichever was previously open. The one real gap versus MUI's JS-driven
+  version: a checked radio can't be *unchecked* by clicking it again (an
+  HTML limitation), so the group can't return to "all collapsed" — that's
+  documented as a known, permanent difference, not a bug to fix.
+
 ## Data display: the Table family (`Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`)
 
 Modeled on MUI's Table components — one small function component per table
@@ -371,6 +411,68 @@ selected-and-striped row would silently show the stripe, not the selection
 about specificity in the abstract (see "Tailwind class safety" above for
 why every one of these class strings has to be written out literally rather
 than interpolated, same rule as everywhere else).
+
+## Feedback (`Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`, `Snackbar`)
+
+Modeled on MUI's Feedback category. Two things are worth knowing before
+touching any of these:
+
+**`Alert`/`Snackbar` needed a new, separate color axis.** Every other
+component's `color` attr picks from `primary`/`secondary`/`tertiary`/`error`
+— brand/action colors. `Alert`'s `severity` picks from
+`success`/`info`/`warning`/`error` — status colors, a different concept that
+happens to share the name `error` (and does mean the same red) but has no
+brand equivalent for "success" or "info" or "warning". Rather than force
+`Alert` onto the existing 4-color scale (which has no green or amber), added
+`--color-pp-success`/`-warning`/`-info` (+ `-on-*` pairs) to
+`priv/static/phoenix_paper.css`, in both the light (`@theme`) and
+`[data-theme="dark"]` blocks — but **not** the `[data-pp-theme="teal"]`
+alternate palette, since status colors aren't part of a brand identity swap
+and should stay consistent regardless of which brand palette is active. Any
+new color token needs adding to `mix.exs`'s `color_classes` list too (see
+"`PhoenixPaper.Tails`, not plain `Tails`" above) — these three are as much
+a "color token" as `primary`/`secondary`/`tertiary` are, even though they
+arrived with a feature addition rather than a new brand color.
+
+**`Dialog` is the one component that isn't stateless-and-simple.** Every
+other component in this library either needs no interactivity (most of
+them), a tiny bit of pure-CSS trickery (`Drawer`, `Rating`, checkbox/switch
+tricks), or genuine server-tracked state as a `Phoenix.LiveComponent`
+(`Autocomplete`, `TransferList`). `Dialog` needs client-side show/hide with
+transitions, backdrop click-to-close, Escape-to-close, and focus trapping —
+none of which need a LiveComponent's server round-trip, so it uses the exact
+mechanism `mix phx.new`'s own generated `core_components.ex` modal already
+uses: always rendered (hidden via CSS), `Phoenix.LiveView.JS` commands
+(`JS.show`/`JS.hide`/`JS.exec`/`JS.focus_first`/`JS.pop_focus`) for the
+transitions, and `Phoenix.Component.focus_wrap/1` (a *built-in* Phoenix
+component backed by the `Phoenix.FocusWrap` hook that ships with
+`phoenix_live_view.js`) for tab-focus trapping — not a hook this library
+wrote. If you've used the generated modal before, `PhoenixPaper.Dialog` is
+that same shape with Material chrome. The one non-obvious wiring detail:
+`data-cancel` has to live on the *outermost* element (the one
+`JS.exec("data-cancel", to: "##{id}")` actually targets by CSS selector),
+not on the inner `Paper` content — putting it on the wrong element means
+`JS.exec` finds nothing and Escape/backdrop-click silently do nothing.
+
+`Progress`'s circular variant is real SVG (`stroke-dasharray`/
+`stroke-dashoffset` computed from `value`) only when determinate — the
+indeterminate spinner reuses `Button`'s exact bordered-circle
+`border-current`/`border-t-transparent`/`animate-spin` trick instead of a
+second SVG, since an indeterminate ring doesn't need to represent a real
+percentage. `Skeleton`'s `animation="pulse"` is Tailwind's own built-in
+`animate-pulse` (nothing to add); `"wave"` needed a real `@keyframes` block
+in `priv/static/phoenix_paper.css`, the same as `Progress`'s indeterminate
+linear bar — animate-spin/animate-pulse cover the other two, but there's no
+built-in Tailwind animation for a sweeping shimmer or a sliding bar.
+
+`Snackbar`'s `anchor_origin` (6 corner/edge positions) and `transition`
+(`grow`/`fade`/`slide`/`none`, another set of one-shot `@keyframes`
+utilities same as `Skeleton`'s `wave`) came later, matching MUI's own
+`Snackbar` page — `transition` only animates the *entrance*; see
+`PhoenixPaper.Snackbar`'s moduledoc for why an exit transition,
+`autoHideDuration`, and consecutive-snackbar queueing aren't built in (each
+needs either the `Dialog`-style always-rendered-plus-`JS` machinery, or
+actual state a stateless function component has nowhere to hold).
 
 ## Theming
 

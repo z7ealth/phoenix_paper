@@ -12,9 +12,11 @@ defmodule PhoenixPaper.Fab do
   attr(:color, :string, default: "secondary", values: ~w(primary secondary tertiary error))
   attr(:size, :string, default: "md", values: ~w(sm md lg))
   attr(:extended, :boolean, default: false)
+
   attr(:ripple, :boolean,
     default: true,
-    doc: "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+    doc:
+      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
   )
 
   attr(:disabled, :boolean, default: false)

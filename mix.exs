@@ -24,9 +24,10 @@
 #      from step 1). Only `application/0`'s `env:` key below — baked
 #      directly into that `.app` resource — achieves this.
 color_classes = ~w(
-  pp-primary pp-secondary pp-tertiary pp-error
+  pp-primary pp-secondary pp-tertiary pp-error pp-success pp-warning pp-info
   pp-surface pp-surface-variant pp-outline
-  pp-on-primary pp-on-secondary pp-on-tertiary pp-on-error pp-on-surface
+  pp-on-primary pp-on-secondary pp-on-tertiary pp-on-error pp-on-success
+  pp-on-warning pp-on-info pp-on-surface
 )
 
 Application.put_env(:phoenix_paper, PhoenixPaper.Tails, color_classes: color_classes)

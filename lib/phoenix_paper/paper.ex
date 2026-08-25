@@ -26,7 +26,8 @@ defmodule PhoenixPaper.Paper do
 
   attr(:component, :string,
     default: "paper",
-    doc: "overrides the data-pp-component marker — used by components (e.g. Card) built on top of Paper"
+    doc:
+      "overrides the data-pp-component marker — used by components (e.g. Card) built on top of Paper"
   )
 
   attr(:rest, :global)

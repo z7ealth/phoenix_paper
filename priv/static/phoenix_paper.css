@@ -31,6 +31,17 @@
   --color-pp-on-surface: #1f1f1f;
   --color-pp-surface-variant: #f5f5f5;
   --color-pp-outline: #79747e;
+
+  /* Semantic feedback colors (Alert/Snackbar severities) — distinct from
+     primary/secondary/tertiary/error above, which are brand/action colors,
+     not status colors. `error` already exists and doubles as the "error"
+     severity; success/warning/info are new. */
+  --color-pp-success: #2e7d32;
+  --color-pp-on-success: #ffffff;
+  --color-pp-warning: #ed6c02;
+  --color-pp-on-warning: #ffffff;
+  --color-pp-info: #0288d1;
+  --color-pp-on-info: #ffffff;
 }
 
 /*
@@ -52,6 +63,13 @@
   --color-pp-on-surface: #e6e6e6;
   --color-pp-surface-variant: #1e1e1e;
   --color-pp-outline: #938f99;
+
+  --color-pp-success: #81c995;
+  --color-pp-on-success: #0a2e0f;
+  --color-pp-warning: #ffb74d;
+  --color-pp-on-warning: #2b1500;
+  --color-pp-info: #81d4fa;
+  --color-pp-on-info: #01324a;
 }
 
 /*
@@ -182,4 +200,102 @@
 
 @utility pp-elevation-24 {
   box-shadow: 0 24px 72px 0 rgba(0, 0, 0, 0.16), 0 12px 36px 0 rgba(0, 0, 0, 0.12);
+}
+
+/*
+ * Indeterminate linear progress — the sliding bar `PhoenixPaper.Progress`
+ * uses when `value` is nil. Not a built-in Tailwind animation (unlike
+ * `animate-spin`/`animate-pulse`, which cover the circular-indeterminate
+ * and Skeleton cases), so it needs its own `@keyframes`.
+ */
+@utility pp-progress-indeterminate {
+  animation: pp-progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes pp-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(400%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/*
+ * `PhoenixPaper.Skeleton`'s animation="wave" — a semi-transparent highlight
+ * sweeping across the block. `animation="pulse"` needs no equivalent block
+ * here since it's just Tailwind's own built-in `animate-pulse`.
+ */
+@utility pp-skeleton-wave {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: pp-skeleton-wave 1.6s linear infinite;
+  }
+}
+
+@keyframes pp-skeleton-wave {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/*
+ * `PhoenixPaper.Snackbar`'s `transition` — a one-shot animation that plays
+ * when the element mounts (there's no exit transition; see the module doc
+ * for why). `slide`'s direction depends on which edge `anchor_origin`
+ * anchors to, hence two utilities instead of one.
+ */
+@utility pp-snackbar-fade {
+  animation: pp-snackbar-fade 200ms ease-out;
+}
+
+@keyframes pp-snackbar-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@utility pp-snackbar-grow {
+  animation: pp-snackbar-grow 200ms ease-out;
+}
+
+@keyframes pp-snackbar-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+}
+
+@utility pp-snackbar-slide-up {
+  animation: pp-snackbar-slide-up 200ms ease-out;
+}
+
+@keyframes pp-snackbar-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@utility pp-snackbar-slide-down {
+  animation: pp-snackbar-slide-down 200ms ease-out;
+}
+
+@keyframes pp-snackbar-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
 }

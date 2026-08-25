@@ -20,7 +20,8 @@ defmodule PhoenixPaper.ToggleButton do
 
   attr(:ripple, :boolean,
     default: true,
-    doc: "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+    doc:
+      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
   )
 
   attr(:disabled, :boolean, default: false)

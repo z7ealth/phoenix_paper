@@ -563,6 +563,105 @@ defmodule PhoenixPaperDemo do
   <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
   """
 
+  @accordion_code ~S"""
+  <.pp_accordion id="acc1">
+    <.pp_accordion_summary id="acc1">Accordion 1</.pp_accordion_summary>
+    <.pp_accordion_details id="acc1">
+      This is the content of the first accordion.
+    </.pp_accordion_details>
+    <.pp_accordion_actions id="acc1">
+      <.pp_button variant="text">Cancel</.pp_button>
+      <.pp_button variant="text">Save</.pp_button>
+    </.pp_accordion_actions>
+  </.pp_accordion>
+
+  <.pp_accordion id="acc2" default_expanded>
+    <.pp_accordion_summary id="acc2">Accordion 2 (default expanded)</.pp_accordion_summary>
+    <.pp_accordion_details id="acc2">This one starts open.</.pp_accordion_details>
+  </.pp_accordion>
+
+  <.pp_accordion id="acc3" disabled>
+    <.pp_accordion_summary id="acc3">Accordion 3 (disabled)</.pp_accordion_summary>
+    <.pp_accordion_details id="acc3">Can't be opened.</.pp_accordion_details>
+  </.pp_accordion>
+
+  <%!-- exclusive group: same name, radios instead of checkboxes --%>
+  <.pp_accordion id="faq1" name="faq">
+    <.pp_accordion_summary id="faq1">FAQ 1</.pp_accordion_summary>
+    <.pp_accordion_details id="faq1">Answer 1</.pp_accordion_details>
+  </.pp_accordion>
+  <.pp_accordion id="faq2" name="faq">
+    <.pp_accordion_summary id="faq2">FAQ 2</.pp_accordion_summary>
+    <.pp_accordion_details id="faq2">Answer 2</.pp_accordion_details>
+  </.pp_accordion>
+  """
+
+  @alert_code ~S"""
+  <.pp_alert severity="success">Changes saved.</.pp_alert>
+  <.pp_alert severity="info">A new update is available.</.pp_alert>
+  <.pp_alert severity="warning" variant="outlined">Check your input.</.pp_alert>
+  <.pp_alert severity="error" variant="filled">
+    <:title>Error</:title>
+    Could not save your changes.
+    <:action><.pp_button variant="text">Retry</.pp_button></:action>
+  </.pp_alert>
+  """
+
+  @backdrop_code ~S"""
+  <.pp_button phx-click="toggle_backdrop">Show backdrop</.pp_button>
+
+  <.pp_backdrop open={@show_backdrop} phx-click="toggle_backdrop">
+    <span class="inline-block size-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+  </.pp_backdrop>
+  """
+
+  @dialog_code ~S"""
+  <.pp_button phx-click={PhoenixPaper.Dialog.show("confirm-delete")}>
+    Delete
+  </.pp_button>
+
+  <.pp_dialog id="confirm-delete">
+    <:title>Delete this item?</:title>
+    This can't be undone.
+    <:actions>
+      <.pp_button variant="text" phx-click={PhoenixPaper.Dialog.hide("confirm-delete")}>
+        Cancel
+      </.pp_button>
+      <.pp_button color="error" phx-click={PhoenixPaper.Dialog.hide("confirm-delete")}>
+        Delete
+      </.pp_button>
+    </:actions>
+  </.pp_dialog>
+  """
+
+  @progress_code ~S"""
+  <.pp_progress value={72} />
+  <.pp_progress />
+  <.pp_progress variant="circular" value={72} />
+  <.pp_progress variant="circular" />
+  """
+
+  @skeleton_code ~S"""
+  <.pp_skeleton variant="circular" width={40} height={40} />
+  <.pp_skeleton />
+  <.pp_skeleton width="60%" />
+  <.pp_skeleton variant="rectangular" height={100} />
+  <.pp_skeleton variant="rounded" height={100} animation="wave" />
+  """
+
+  @snackbar_code ~S"""
+  <.pp_snackbar>
+    Changes saved
+    <:action>
+      <.pp_button variant="text" class="!text-pp-surface" phx-click="dismiss">Undo</.pp_button>
+    </:action>
+  </.pp_snackbar>
+
+  <.pp_snackbar anchor_origin="top-right" transition="slide">
+    Copied to clipboard
+  </.pp_snackbar>
+  """
+
   @ripple_code ~S"""
   <.pp_button>Ripples (default)</.pp_button>
   <.pp_button ripple={false}>No ripple</.pp_button>
@@ -582,11 +681,20 @@ defmodule PhoenixPaperDemo do
   """
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "PhoenixPaper catalog", bold_pressed: false)}
+    {:ok,
+     assign(socket,
+       page_title: "PhoenixPaper catalog",
+       bold_pressed: false,
+       show_backdrop: false
+     )}
   end
 
   def handle_event("toggle_bold", _params, socket) do
     {:noreply, update(socket, :bold_pressed, &(!&1))}
+  end
+
+  def handle_event("toggle_backdrop", _params, socket) do
+    {:noreply, update(socket, :show_backdrop, &(!&1))}
   end
 
   # Table's sortable header cells are presentation-only (see TableCell's
@@ -594,6 +702,13 @@ defmodule PhoenixPaperDemo do
   # the click reaches the LiveView instead of crashing it (a real app would
   # re-query/re-sort its data and re-render here).
   def handle_event("sort", _params, socket) do
+    {:noreply, socket}
+  end
+
+  # Snackbar is presentation-only (see its moduledoc) — this demo's "Undo"
+  # doesn't do anything, just proves the click reaches the LiveView instead
+  # of crashing it.
+  def handle_event("dismiss", _params, socket) do
     {:noreply, socket}
   end
 
@@ -633,6 +748,13 @@ defmodule PhoenixPaperDemo do
         table_code: @table_code,
         paper_code: @paper_code,
         typography_code: @typography_code,
+        accordion_code: @accordion_code,
+        alert_code: @alert_code,
+        backdrop_code: @backdrop_code,
+        dialog_code: @dialog_code,
+        progress_code: @progress_code,
+        skeleton_code: @skeleton_code,
+        snackbar_code: @snackbar_code,
         ripple_code: @ripple_code,
         elevation_code: @elevation_code,
         shape_code: @shape_code,
@@ -686,6 +808,15 @@ defmodule PhoenixPaperDemo do
           <.nav_group label="Surfaces">
             <.pp_list_item href="#paper">Paper</.pp_list_item>
             <.pp_list_item href="#typography">Typography</.pp_list_item>
+            <.pp_list_item href="#accordion">Accordion</.pp_list_item>
+          </.nav_group>
+          <.nav_group label="Feedback">
+            <.pp_list_item href="#alert">Alert</.pp_list_item>
+            <.pp_list_item href="#backdrop">Backdrop</.pp_list_item>
+            <.pp_list_item href="#dialog">Dialog</.pp_list_item>
+            <.pp_list_item href="#progress">Progress</.pp_list_item>
+            <.pp_list_item href="#skeleton">Skeleton</.pp_list_item>
+            <.pp_list_item href="#snackbar">Snackbar</.pp_list_item>
           </.nav_group>
           <.nav_group label="Helpers">
             <.pp_list_item href="#ripple">Ripple</.pp_list_item>
@@ -1383,6 +1514,216 @@ defmodule PhoenixPaperDemo do
             <.pp_typography variant="overline">overline. New</.pp_typography>
             <.pp_typography variant="button">button. Save changes</.pp_typography>
             <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="accordion"
+          title="Accordion"
+          description="Pure CSS, no JS/LiveView — the same hidden-checkbox-plus-peer-checked trick as Drawer/Rating. AccordionSummary/Details/Actions all need the same id as their parent Accordion, to build the matching for=/peer-checked wiring."
+          props={[
+            {"id", "required — shared with AccordionSummary/Details/Actions"},
+            {"name", "shared across accordions for an exclusive group (radio instead of checkbox)"},
+            {"default_expanded", "boolean — initial checked state, uncontrolled (default: false)"},
+            {"disabled", "boolean (default: false)"},
+            {"disable_gutters", "boolean — skip the extra margin an expanded accordion normally gets"},
+            {"elevation / shape / paperize", "same as Card — Accordion is a Paper underneath"}
+          ]}
+          code={@accordion_code}
+        >
+          <div class="flex flex-col gap-4">
+            <div>
+              <.pp_accordion id="acc1_demo">
+                <.pp_accordion_summary id="acc1_demo">Accordion 1</.pp_accordion_summary>
+                <.pp_accordion_details id="acc1_demo">
+                  This is the content of the first accordion.
+                </.pp_accordion_details>
+                <.pp_accordion_actions id="acc1_demo">
+                  <.pp_button variant="text">Cancel</.pp_button>
+                  <.pp_button variant="text">Save</.pp_button>
+                </.pp_accordion_actions>
+              </.pp_accordion>
+              <.pp_accordion id="acc2_demo" default_expanded>
+                <.pp_accordion_summary id="acc2_demo">Accordion 2 (default expanded)</.pp_accordion_summary>
+                <.pp_accordion_details id="acc2_demo">This one starts open.</.pp_accordion_details>
+              </.pp_accordion>
+              <.pp_accordion id="acc3_demo" disabled>
+                <.pp_accordion_summary id="acc3_demo">Accordion 3 (disabled)</.pp_accordion_summary>
+                <.pp_accordion_details id="acc3_demo">Can't be opened.</.pp_accordion_details>
+              </.pp_accordion>
+            </div>
+            <div class="border-t border-pp-outline/20 pt-4">
+              <p class="mb-2 text-sm opacity-70">Exclusive group (radios, name="faq_demo"):</p>
+              <.pp_accordion id="faq1_demo" name="faq_demo">
+                <.pp_accordion_summary id="faq1_demo">FAQ 1</.pp_accordion_summary>
+                <.pp_accordion_details id="faq1_demo">Answer 1</.pp_accordion_details>
+              </.pp_accordion>
+              <.pp_accordion id="faq2_demo" name="faq_demo">
+                <.pp_accordion_summary id="faq2_demo">FAQ 2</.pp_accordion_summary>
+                <.pp_accordion_details id="faq2_demo">Answer 2</.pp_accordion_details>
+              </.pp_accordion>
+              <.pp_accordion id="faq3_demo" name="faq_demo">
+                <.pp_accordion_summary id="faq3_demo">FAQ 3</.pp_accordion_summary>
+                <.pp_accordion_details id="faq3_demo">Answer 3</.pp_accordion_details>
+              </.pp_accordion>
+            </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="alert"
+          title="Alert"
+          description="A colored, icon-led message for status feedback. severity is a distinct color axis from every other component's color (success/info/warning/error status colors, not primary/secondary/tertiary/error brand colors) — see AGENTS.md."
+          props={[
+            {"severity", "success | info | warning | error (default: info) — picks the color and icon"},
+            {"variant", "standard (tinted) | outlined | filled (default: standard)"},
+            {":title / :action", "optional slots — a bold line above the message, a trailing action"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@alert_code}
+        >
+          <div class="flex flex-col gap-3">
+            <.pp_alert severity="success">Changes saved.</.pp_alert>
+            <.pp_alert severity="info">A new update is available.</.pp_alert>
+            <.pp_alert severity="warning" variant="outlined">Check your input.</.pp_alert>
+            <.pp_alert severity="error" variant="filled">
+              <:title>Error</:title>
+              Could not save your changes.
+              <:action><.pp_button variant="text" class="!text-pp-on-error">Retry</.pp_button></:action>
+            </.pp_alert>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="backdrop"
+          title="Backdrop"
+          description="A full-screen dimming overlay — most often behind a full-page loading spinner, or the piece Dialog composes for its own overlay. Stateless: open just toggles rendering it at all."
+          props={[
+            {"open", "boolean (default: true)"},
+            {":inner_block", "optional content centered over the dim — e.g. a spinner"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@backdrop_code}
+        >
+          <.pp_button phx-click="toggle_backdrop">Show backdrop</.pp_button>
+          <.pp_backdrop open={@show_backdrop} phx-click="toggle_backdrop">
+            <span class="inline-block size-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+          </.pp_backdrop>
+        </.demo_section>
+
+        <.demo_section
+          id="dialog"
+          title="Dialog"
+          description="A modal — built the same way mix phx.new's generated core_components.ex builds its modal/1: always in the DOM, shown/hidden via Phoenix.LiveView.JS commands, not a server-tracked open assign. Phoenix.Dialog.show/1 and .hide/1 return JS commands to wire to whatever should open/close it."
+          props={[
+            {"id", "required — targeted by show/1 and hide/1"},
+            {"on_cancel", "a Phoenix.LiveView.JS command run (in addition to hiding) on backdrop click/Escape"},
+            {":title / :actions", "optional slots"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@dialog_code}
+        >
+          <.pp_button phx-click={PhoenixPaper.Dialog.show("confirm-delete-demo")}>
+            Delete
+          </.pp_button>
+          <.pp_dialog id="confirm-delete-demo">
+            <:title>Delete this item?</:title>
+            This can't be undone.
+            <:actions>
+              <.pp_button variant="text" phx-click={PhoenixPaper.Dialog.hide("confirm-delete-demo")}>
+                Cancel
+              </.pp_button>
+              <.pp_button color="error" phx-click={PhoenixPaper.Dialog.hide("confirm-delete-demo")}>
+                Delete
+              </.pp_button>
+            </:actions>
+          </.pp_dialog>
+        </.demo_section>
+
+        <.demo_section
+          id="progress"
+          title="Progress"
+          description="linear or circular, combined into one component since they share the same value/color contract. value nil renders the indeterminate/animated form."
+          props={[
+            {"variant", "linear | circular (default: linear)"},
+            {"value", "0-100, nil for indeterminate (default: nil)"},
+            {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"size", "circular only — diameter in pixels (default: 40)"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@progress_code}
+        >
+          <div class="flex flex-col gap-4">
+            <div class="max-w-sm">
+              <p class="mb-2 text-sm opacity-70">linear, determinate (72%):</p>
+              <.pp_progress value={72} />
+            </div>
+            <div class="max-w-sm">
+              <p class="mb-2 text-sm opacity-70">linear, indeterminate:</p>
+              <.pp_progress />
+            </div>
+            <div class="flex items-center gap-6 border-t border-pp-outline/20 pt-4">
+              <div :for={color <- ~w(primary secondary tertiary error)} class="flex flex-col items-center gap-2">
+                <.pp_progress variant="circular" value={65} color={color} />
+                <span class="text-xs opacity-60">{color}</span>
+              </div>
+              <div class="flex flex-col items-center gap-2">
+                <.pp_progress variant="circular" />
+                <span class="text-xs opacity-60">indeterminate</span>
+              </div>
+            </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="skeleton"
+          title="Skeleton"
+          description="A placeholder loading shape — text, circular, rectangular, or rounded — with a pulsing (default) or shimmering animation while real content loads."
+          props={[
+            {"variant", "text | circular | rectangular | rounded (default: text)"},
+            {"width / height", "an integer (px) or a CSS length string, e.g. \"100%\""},
+            {"animation", "pulse | wave | none (default: pulse)"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@skeleton_code}
+        >
+          <div class="flex max-w-sm flex-col gap-3">
+            <div class="flex items-center gap-3">
+              <.pp_skeleton variant="circular" width={40} height={40} />
+              <div class="flex-1">
+                <.pp_skeleton />
+                <.pp_skeleton width="60%" />
+              </div>
+            </div>
+            <.pp_skeleton variant="rectangular" height={80} />
+            <.pp_skeleton variant="rounded" height={80} animation="wave" />
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="snackbar"
+          title="Snackbar"
+          description="A brief toast — presentation-only. Auto-dismiss-after-a-delay isn't built in: one Process.send_after/3 clearing whatever assign controls open, the same mechanism generated flash messages already use, not a second client-side timer. No exit transition either — only entrance, see AGENTS.md."
+          props={[
+            {"open", "boolean (default: true)"},
+            {"anchor_origin", "bottom-left (default) | bottom-center | bottom-right | top-left | top-center | top-right"},
+            {"transition", "grow (default) | fade | slide | none — mount-in animation only"},
+            {":action", "optional slot — e.g. an \"Undo\" button"},
+            {"elevation", "resting elevation, 0-24 (default: 6)"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@snackbar_code}
+        >
+          <div class="relative h-32 rounded-lg border border-pp-outline/20">
+            <.pp_snackbar class="!absolute !inset-x-4 !bottom-4">
+              Changes saved
+              <:action>
+                <.pp_button variant="text" class="!text-pp-surface" phx-click="dismiss">Undo</.pp_button>
+              </:action>
+            </.pp_snackbar>
+            <.pp_snackbar anchor_origin="top-right" transition="slide" class="!absolute !top-4 !right-4">
+              Copied to clipboard
+            </.pp_snackbar>
           </div>
         </.demo_section>
 
