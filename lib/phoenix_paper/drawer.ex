@@ -80,6 +80,12 @@ defmodule PhoenixPaper.Drawer do
       "surface (default) is the original plain look; the others also restyle nested List/ListItem content for contrast"
   )
 
+  attr(:elevation, :integer,
+    default: 2,
+    doc:
+      "resting elevation (0-24), see PhoenixPaper.Elevation -- 0 pairs well with a caller-added border instead"
+  )
+
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -99,7 +105,7 @@ defmodule PhoenixPaper.Drawer do
     <aside
       id={@id}
       data-pp-component="drawer"
-      class={Helpers.classes(@paperize, paper_classes(@color), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@color, @elevation), @class)}
       {@rest}
     >
       <div :if={@header != []} class="flex h-16 items-center px-4 text-lg font-medium">
@@ -131,11 +137,11 @@ defmodule PhoenixPaper.Drawer do
 
   defp toggle_id(id), do: "#{id}-toggle"
 
-  defp paper_classes(color) do
+  defp paper_classes(color, elevation) do
     [
       "fixed inset-y-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0",
       color_classes(color),
-      Elevation.class(2)
+      Elevation.class(elevation)
     ]
   end
 
