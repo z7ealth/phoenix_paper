@@ -8,7 +8,7 @@ A Material Design component library for Phoenix, in the spirit of
 [ember-paper](https://github.com/miguelcobain/ember-paper), styled with
 Tailwind CSS.
 
-See [`AGENTS.md`](AGENTS.md) for the framework's ground rules — the
+See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 `paperize` escape hatch every component supports, theming, elevation/spacing
 helpers, and the icon strategy (reusing the heroicons every `mix phx.new`
 app already vendors, no extra dependency).
@@ -22,7 +22,7 @@ elixir dev.exs
 ```
 
 This boots a real Phoenix + LiveView server on <http://localhost:4000> with
-a full catalog of every component — a navigation drawer on the left, and
+a full catalog of every component: a navigation drawer on the left, and
 for each component a live example, its options, and the HEEx snippet that
 produced it.
 
@@ -125,7 +125,7 @@ And wire up the Tailwind theme in `assets/css/app.css`:
   <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
 </.pp_tooltip>
 
-<.pp_paper elevation={2} class="p-4">A raised surface — Card is built on this.</.pp_paper>
+<.pp_paper elevation={2} class="p-4">A raised surface (Card is built on this).</.pp_paper>
 <.pp_typography variant="h4">Account settings</.pp_typography>
 <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
 
@@ -155,10 +155,10 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 ```
 
 Every component accepts `paperize={false}` to drop PhoenixPaper's classes
-entirely and render with only your own `class` — see `AGENTS.md` for the
+entirely and render with only your own `class`; see `AGENTS.md` for the
 full contract.
 
 `Button`, `Fab`, `ToggleButton`, and a linked `ListItem` ripple on
-click/tap by default (the classic Material feedback effect) — pass
+click/tap by default (the classic Material feedback effect); pass
 `ripple={false}` to turn it off. No JS hook or asset pipeline involved; see
 `PhoenixPaper.Ripple`.
