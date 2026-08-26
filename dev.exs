@@ -667,6 +667,24 @@ defmodule PhoenixPaperDemo do
   </.pp_table_container>
   """
 
+  @avatar_code ~S"""
+  <.pp_avatar src="/images/1.jpg" alt="Remy Sharp" />
+  <.pp_avatar>OP</.pp_avatar>
+  <.pp_avatar />
+
+  <%!-- variants --%>
+  <.pp_avatar variant="rounded" src="/images/1.jpg" alt="Remy Sharp" />
+  <.pp_avatar variant="square" src="/images/1.jpg" alt="Remy Sharp" />
+
+  <%!-- sizes --%>
+  <.pp_avatar size="small">OP</.pp_avatar>
+  <.pp_avatar size="medium">OP</.pp_avatar>
+  <.pp_avatar size="large">OP</.pp_avatar>
+
+  <%!-- a broken src falls back to the fallback content, no JS hook needed --%>
+  <.pp_avatar src="/images/does-not-exist.jpg" alt="Broken">OP</.pp_avatar>
+  """
+
   @badge_code ~S"""
   <.pp_badge content={4}>
     <.pp_icon name="hero-bell" />
@@ -940,6 +958,7 @@ defmodule PhoenixPaperDemo do
         grid_code: @grid_code,
         divider_code: @divider_code,
         card_code: @card_code,
+        avatar_code: @avatar_code,
         badge_code: @badge_code,
         chip_code: @chip_code,
         tooltip_code: @tooltip_code,
@@ -1004,6 +1023,7 @@ defmodule PhoenixPaperDemo do
           </.nav_group>
           <.nav_group label="Data display">
             <.pp_list_item href="#card">Card</.pp_list_item>
+            <.pp_list_item href="#avatar">Avatar</.pp_list_item>
             <.pp_list_item href="#badge">Badge</.pp_list_item>
             <.pp_list_item href="#chip">Chip</.pp_list_item>
             <.pp_list_item href="#tooltip">Tooltip</.pp_list_item>
@@ -1771,6 +1791,33 @@ defmodule PhoenixPaperDemo do
                 {padding}
               </.pp_card>
             </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="avatar"
+          title="Avatar"
+          description="A user's profile picture, initials, or icon, in the spirit of MUI's Avatar."
+          props={[
+            {"src / alt", "an image — falls back to inner_block (or a generic person icon) on load error, no JS hook needed"},
+            {"variant", "\"circular\" | \"rounded\" | \"square\" (default: \"circular\")"},
+            {"size", "\"small\" | \"medium\" | \"large\" (default: \"medium\")"},
+            {"inner_block", "initials or an icon — the fallback shown with no src, or on image error"}
+          ]}
+          code={@avatar_code}
+        >
+          <div class="flex flex-wrap items-center gap-6">
+            <.pp_avatar src={@photo_1} alt="Remy Sharp" />
+            <.pp_avatar>OP</.pp_avatar>
+            <.pp_avatar />
+            <.pp_avatar variant="rounded" src={@photo_2} alt="Travis Howard" />
+            <.pp_avatar variant="square" src={@photo_3} alt="Cindy Baker" />
+            <div class="flex items-center gap-2">
+              <.pp_avatar size="small">OP</.pp_avatar>
+              <.pp_avatar size="medium">OP</.pp_avatar>
+              <.pp_avatar size="large">OP</.pp_avatar>
+            </div>
+            <.pp_avatar src="/images/does-not-exist.jpg" alt="Broken image">OP</.pp_avatar>
           </div>
         </.demo_section>
 

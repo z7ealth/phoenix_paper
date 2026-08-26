@@ -810,10 +810,24 @@ about specificity in the abstract (see "Tailwind class safety" above for
 why every one of these class strings has to be written out literally rather
 than interpolated, same rule as everywhere else).
 
-## Data display: `Badge`, `Chip`, and `Tooltip`
+## Data display: `Avatar`, `Badge`, `Chip`, and `Tooltip`
 
-Three MUI-parity components added together, all under "Data display" in
+Four MUI-parity components added together, all under "Data display" in
 `dev.exs`'s nav.
+
+- **`Avatar`** layers an `<img>` (when `src` is given) over an always-
+  rendered fallback (the `:inner_block` slot — initials or an icon — or,
+  failing that, a generic person icon), rather than switching between them
+  server-side. A vanilla `onerror="this.style.display='none';"` on the
+  `<img>` (same "small snippet, no hook" precedent as `Ripple`) is what
+  reveals the fallback on a broken image, matching MUI's own children-on-
+  error behavior without a LiveView round-trip or an `onError` callback to
+  wire up. `size` (`small`/`medium`/`large`) is a convenience this library
+  adds — MUI's own `Avatar` has no size prop, expecting `sx`/`className`
+  instead. No `AvatarGroup`: the overlapping-stack look is a plain flex
+  container with `-space-x-*` and a `ring-2 ring-pp-surface` per avatar,
+  already reachable with Tailwind alone — not a real gap the way
+  `Snackbar`'s missing queueing is, so no dedicated component for it.
 
 - **`Badge`** overlaps a small count/status indicator on its child's
   corner. Hiding logic matches MUI's `Badge` exactly, including a

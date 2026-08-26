@@ -31,6 +31,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.AccordionSummary, only: [pp_accordion_summary: 1]
       import PhoenixPaper.Alert, only: [pp_alert: 1]
       import PhoenixPaper.AppBar, only: [pp_app_bar: 1]
+      import PhoenixPaper.Avatar, only: [pp_avatar: 1]
       import PhoenixPaper.Backdrop, only: [pp_backdrop: 1]
       import PhoenixPaper.Badge, only: [pp_badge: 1]
       import PhoenixPaper.Box, only: [pp_box: 1]

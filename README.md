@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="priv/static/images/logo/phoenixpaper-lockup-card.svg" alt="PhoenixPaper" width="320">
+</p>
+
 # PhoenixPaper
 
 A Material Design component library for Phoenix, in the spirit of
@@ -106,6 +110,20 @@ And wire up the Tailwind theme in `assets/css/app.css`:
     <.pp_button variant="text">Dismiss</.pp_button>
   </:actions>
 </.pp_card>
+
+<.pp_avatar src="/images/1.jpg" alt="Remy Sharp" />
+<.pp_avatar>OP</.pp_avatar>
+
+<.pp_badge content={4}>
+  <.pp_icon name="hero-bell" />
+</.pp_badge>
+
+<.pp_chip>Basic</.pp_chip>
+<.pp_chip deletable on_delete={JS.push("remove_tag")}>React</.pp_chip>
+
+<.pp_tooltip title="Delete">
+  <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
+</.pp_tooltip>
 
 <.pp_paper elevation={2} class="p-4">A raised surface — Card is built on this.</.pp_paper>
 <.pp_typography variant="h4">Account settings</.pp_typography>
