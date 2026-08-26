@@ -6,7 +6,9 @@
 
 A Material Design component library for Phoenix, in the spirit of
 [ember-paper](https://github.com/miguelcobain/ember-paper), styled with
-Tailwind CSS.
+Tailwind CSS. Most individual components follow the API and behavior of
+[MUI](https://mui.com/material-ui/) (Material-UI for React), adapted to
+Phoenix's server-rendered, stateless-function-component model.
 
 See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 `paperize` escape hatch every component supports, theming, elevation/spacing
