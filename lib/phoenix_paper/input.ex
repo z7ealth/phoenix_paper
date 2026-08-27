@@ -84,6 +84,23 @@ defmodule PhoenixPaper.Input do
   `filled`/`standard` don't get a notch — Material only notches the
   bordered `outlined` variant; `filled`'s underline and `standard`'s
   bare underline have no enclosing border to cut a gap into.
+
+  The legend's own `margin-left` has to line up with wherever the real
+  label actually starts, so its font size is kept in lockstep with the
+  label's own *shrunk* size (`text-xs`, not the resting `text-sm`) — an
+  earlier version left it at `text-sm`, sizing the notch for a bigger font
+  than what's actually showing and leaving dead space trailing the label
+  inside the gap, caught from a screenshot of a focused field. A
+  `:start_adornment` shifts the real label rightward (it's a flex sibling
+  ahead of the input/label column), but the `<fieldset>` is `inset-0` on
+  the *whole* wrapper regardless — so `has-[[data-pp-adornment=start]]`
+  nudges the legend's margin out to roughly clear a short adornment (a
+  "$"-style symbol). This is a fixed approximation, not a measurement of
+  the adornment's actual rendered width (that would need JS, which this
+  component otherwise avoids entirely) — a wide adornment (a multi-word
+  label, a larger icon) can still throw the notch off; there's no
+  general pure-CSS fix for that without knowing the adornment's real
+  width at layout time.
   """
   use Phoenix.Component
 
@@ -141,8 +158,12 @@ defmodule PhoenixPaper.Input do
   def pp_input(assigns) do
     ~H"""
     <div data-pp-component="input" class={Helpers.classes(@paperize, "flex flex-col gap-1", @class)}>
-      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @shape, @errors), nil)}>
-        <span :if={@start_adornment != []} class="flex shrink-0 items-center pl-3 text-pp-outline">
+      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @shape, @errors, @size), nil)}>
+        <span
+          :if={@start_adornment != []}
+          data-pp-adornment="start"
+          class={adornment_classes(@size, :start)}
+        >
           {render_slot(@start_adornment)}
         </span>
         <div class="relative min-w-0 flex-1">
@@ -171,7 +192,11 @@ defmodule PhoenixPaper.Input do
             {@label}
           </label>
         </div>
-        <span :if={@end_adornment != []} class="flex shrink-0 items-center pr-3 text-pp-outline">
+        <span
+          :if={@end_adornment != []}
+          data-pp-adornment="end"
+          class={adornment_classes(@size, :end)}
+        >
           {render_slot(@end_adornment)}
         </span>
         <fieldset
@@ -190,22 +215,57 @@ defmodule PhoenixPaper.Input do
     """
   end
 
-  defp wrapper_classes("outlined", color, _shape, errors) do
+  defp wrapper_classes("outlined", color, _shape, errors, size) do
     [
       "relative flex items-stretch transition-colors",
       "has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "focus-within:[&>fieldset>legend]:max-w-full focus-within:[&>fieldset>legend]:px-1",
-      outlined_focus_border_classes(color, errors)
+      "has-[[data-pp-adornment=start]]:[&>fieldset>legend]:!ml-7",
+      outlined_focus_border_classes(color, errors),
+      adornment_position_classes(size)
     ]
   end
 
-  defp wrapper_classes(variant, _color, _shape, errors) when errors != [] do
-    error_classes(variant)
+  defp wrapper_classes(variant, _color, _shape, errors, size) when errors != [] do
+    [error_classes(variant), adornment_position_classes(size)]
   end
 
-  defp wrapper_classes(variant, color, shape, []) do
-    [base_wrapper_classes(variant), color_classes(variant, color), shape_classes(variant, shape)]
+  defp wrapper_classes(variant, color, shape, [], size) do
+    [
+      base_wrapper_classes(variant),
+      color_classes(variant, color),
+      shape_classes(variant, shape),
+      adornment_position_classes(size)
+    ]
+  end
+
+  # The label has two resting positions (see `label_classes/2`): centered
+  # (`top-1/2`, empty/unfocused) or shrunk to the top (`top-2`, once there's
+  # a real value or focus). The adornments need to track *whichever* of
+  # those the label/input text is currently doing, not just one fixed spot
+  # — `items-center` (matching the label's own centered rest state) by
+  # default, switching to `items-end` plus the exact same bottom padding
+  # `input_classes/1` uses for this `size` (matching where the input's own
+  # text actually sits once its `pt-*`/`pb-*` asymmetry is reserving room
+  # for the shrunk label above it) the same three ways the fieldset legend
+  # already reacts to "has a real value" (see `wrapper_classes("outlined",
+  # ...)`) — a real value, mid-edit focus, or (for symmetry) a real value
+  # in a `<textarea>`. `has-*` has to live here on the shared wrapper
+  # ancestor, not on the adornment `<span>` itself, for the same reason the
+  # legend's own notch classes do (see the moduledoc's "outlined notch"
+  # section) — `has-*` only ever reaches *descendants* of the element it's
+  # applied to, and the adornment is the input's sibling, not its ancestor.
+  defp adornment_position_classes("medium") do
+    "has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-2 " <>
+      "has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-2 " <>
+      "focus-within:[&>[data-pp-adornment]]:items-end focus-within:[&>[data-pp-adornment]]:pb-2"
+  end
+
+  defp adornment_position_classes("small") do
+    "has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-1.5 " <>
+      "has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-1.5 " <>
+      "focus-within:[&>[data-pp-adornment]]:items-end focus-within:[&>[data-pp-adornment]]:pb-1.5"
   end
 
   defp outlined_focus_border_classes(_color, errors) when errors != [], do: ""
@@ -237,7 +297,7 @@ defmodule PhoenixPaper.Input do
   end
 
   defp legend_classes do
-    "invisible ml-2 max-w-0 overflow-hidden whitespace-nowrap px-0 text-sm transition-[max-width] duration-150"
+    "invisible ml-1.5 max-w-0 overflow-hidden whitespace-nowrap px-0 text-xs transition-[max-width] duration-150"
   end
 
   defp base_wrapper_classes("filled"),
@@ -285,6 +345,30 @@ defmodule PhoenixPaper.Input do
   defp input_classes("small"),
     do:
       "peer block w-full min-w-0 bg-transparent px-3 pt-5 pb-1.5 text-sm text-pp-on-surface outline-none placeholder:text-transparent disabled:cursor-not-allowed disabled:opacity-40"
+
+  # `items-center` at rest matches the label's own centered resting position
+  # (`label_classes/2`'s `top-1/2 -translate-y-1/2`) — `wrapper_classes/5`
+  # appends `adornment_position_classes/1`, which switches this to
+  # `items-end` plus the same `pb-*` as `input_classes/1` for this size the
+  # moment the input has a real value or focus, matching the label's own
+  # shrink-to-top switch (see that function's doc for the full reasoning).
+  # `text-sm` matches the input's own font size — without it the adornment
+  # renders at the browser default (~1rem vs the input's 0.875rem), which
+  # throws two same-padding, same-`items-*` elements' text baselines out of
+  # alignment purely from the font-size difference. Caught from a
+  # screenshot of the $/USD adornments sitting visibly higher than both the
+  # input's own filled-in text and its resting, centered label.
+  defp adornment_classes("medium", :start),
+    do: "flex shrink-0 items-center pl-3 text-sm text-pp-outline"
+
+  defp adornment_classes("medium", :end),
+    do: "flex shrink-0 items-center pr-3 text-sm text-pp-outline"
+
+  defp adornment_classes("small", :start),
+    do: "flex shrink-0 items-center pl-3 text-sm text-pp-outline"
+
+  defp adornment_classes("small", :end),
+    do: "flex shrink-0 items-center pr-3 text-sm text-pp-outline"
 
   defp label_classes(_color, errors) when errors != [] do
     "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-error transition-all peer-focus:top-2 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
