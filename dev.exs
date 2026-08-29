@@ -324,6 +324,26 @@ defmodule PhoenixPaperDemo do
   </.pp_fab>
   """
 
+  @speed_dial_code ~S"""
+  <%!-- Anchor the whole thing yourself; `direction` fans the actions from there.
+        Opens on hover, click/tap, or keyboard focus — pure CSS, no JS. --%>
+  <.pp_speed_dial id="create" label="Create" class="fixed bottom-6 right-6">
+    <:action label="New workbook" navigate={~p"/workbooks/new"}>
+      <.pp_icon name="hero-document-plus" />
+    </:action>
+    <:action label="Invite teammate" on_click={JS.push("open_invite")}>
+      <.pp_icon name="hero-user-plus" />
+    </:action>
+  </.pp_speed_dial>
+
+  <%!-- :open_icon cross-fades instead of rotating the :icon 45° --%>
+  <.pp_speed_dial id="menu" label="Menu" direction="down">
+    <:icon><.pp_icon name="hero-bars-3" /></:icon>
+    <:open_icon><.pp_icon name="hero-x-mark" /></:open_icon>
+    <:action label="Share"><.pp_icon name="hero-share" /></:action>
+  </.pp_speed_dial>
+  """
+
   @toggle_button_code ~S"""
   <.pp_toggle_button pressed={@bold_pressed} phx-click="toggle_bold">
     Bold
@@ -974,6 +994,7 @@ defmodule PhoenixPaperDemo do
         buttons_code: @buttons_code,
         button_group_code: @button_group_code,
         fab_code: @fab_code,
+        speed_dial_code: @speed_dial_code,
         toggle_button_code: @toggle_button_code,
         text_field_code: @text_field_code,
         select_code: @select_code,
@@ -1032,6 +1053,7 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#buttons">Button</.pp_list_item>
             <.pp_list_item href="#button-group">Button Group</.pp_list_item>
             <.pp_list_item href="#fab">Floating Action Button</.pp_list_item>
+            <.pp_list_item href="#speed-dial">Speed Dial</.pp_list_item>
             <.pp_list_item href="#toggle-button">Toggle Button</.pp_list_item>
           </.nav_group>
           <.nav_group label="Forms">
@@ -1235,6 +1257,42 @@ defmodule PhoenixPaperDemo do
                 <span class="hero-star" /> Create
               </.pp_fab>
             </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="speed-dial"
+          title="Speed Dial"
+          description={"A FAB that fans out related actions on hover, click/tap, or keyboard focus — pure CSS, no JS. Anchor it yourself (class=\"fixed bottom-6 right-6\"); direction picks which way the actions open. Each action's label shows as a pill (MUI's tooltipOpen)."}
+          props={[
+            {"id / label", "id wires the toggle; label is the trigger's accessible name (required)"},
+            {"direction", "up (default) | down | left | right"},
+            {"color", "primary | secondary | tertiary | error (default: secondary) — the trigger"},
+            {"size", "sm | md | lg (default: md) — the trigger"},
+            {"default_open", "boolean (default: false)"},
+            {":icon / :open_icon", "closed icon (default hero-plus, rotates 45°) / cross-fade icon when open"},
+            {":action", "slot — body is the icon; attrs: label, href/navigate/patch, on_click"},
+            {"ripple", "boolean (default: true)"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@speed_dial_code}
+        >
+          <div class="flex items-end gap-16 px-4 pt-28 pb-4">
+            <.pp_speed_dial id="sd_up_demo" label="Create">
+              <:action label="New workbook"><span class="hero-document-plus" /></:action>
+              <:action label="New folder"><span class="hero-folder-plus" /></:action>
+              <:action label="Import"><span class="hero-arrow-up-tray" /></:action>
+            </.pp_speed_dial>
+            <.pp_speed_dial id="sd_right_demo" label="Share" direction="right" color="primary">
+              <:action label="Copy link"><span class="hero-link" /></:action>
+              <:action label="Email"><span class="hero-envelope" /></:action>
+            </.pp_speed_dial>
+            <.pp_speed_dial id="sd_menu_demo" label="Menu" direction="down">
+              <:icon><span class="hero-bars-3" /></:icon>
+              <:open_icon><span class="hero-x-mark" /></:open_icon>
+              <:action label="Settings"><span class="hero-cog-6-tooth" /></:action>
+              <:action label="Help"><span class="hero-question-mark-circle" /></:action>
+            </.pp_speed_dial>
           </div>
         </.demo_section>
 

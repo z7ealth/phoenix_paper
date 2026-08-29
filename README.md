@@ -39,7 +39,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.0"}
+    {:phoenix_paper, "~> 0.2.1"}
   ]
 end
 ```
@@ -158,6 +158,16 @@ And wire up the Tailwind theme in `assets/css/app.css`:
   <.pp_button variant="outlined">Week</.pp_button>
 </.pp_button_group>
 <.pp_fab>+</.pp_fab>
+
+<%!-- A FAB that fans out related actions on hover / click / focus — pure CSS --%>
+<.pp_speed_dial id="create" label="Create" class="fixed bottom-6 right-6">
+  <:action label="New workbook" navigate={~p"/workbooks/new"}>
+    <.pp_icon name="hero-document-plus" />
+  </:action>
+  <:action label="Invite teammate" on_click={JS.push("open_invite")}>
+    <.pp_icon name="hero-user-plus" />
+  </:action>
+</.pp_speed_dial>
 
 <.pp_icon name="hero-check" />
 

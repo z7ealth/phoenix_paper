@@ -65,6 +65,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Skeleton, only: [pp_skeleton: 1]
       import PhoenixPaper.Slider, only: [pp_slider: 1]
       import PhoenixPaper.Snackbar, only: [pp_snackbar: 1]
+      import PhoenixPaper.SpeedDial, only: [pp_speed_dial: 1]
       import PhoenixPaper.Stack, only: [pp_stack: 1]
       import PhoenixPaper.Switch, only: [pp_switch: 1]
       import PhoenixPaper.Tab, only: [pp_tab: 1]

@@ -19,9 +19,9 @@ adding or changing a component.
   `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, `Table`,
   `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
   `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`,
-  `Snackbar`, `Accordion`, `AccordionSummary`, `AccordionDetails`,
-  `AccordionActions`, ...), plus `Helpers`, `Elevation`, `Spacing`, `Shape`,
-  `Ripple`.
+  `Snackbar`, `Flash`, `SpeedDial`, `Accordion`, `AccordionSummary`,
+  `AccordionDetails`, `AccordionActions`, ...), plus `Helpers`, `Elevation`,
+  `Spacing`, `Shape`, `Ripple`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
 - `priv/static/phoenix_paper.css` — the Tailwind v4 theme (color tokens,
@@ -294,6 +294,12 @@ targeting is id-based, not sibling-based. Only the elements that need to
 *react* to the checkbox (the drawer panel, its backdrop) have to be its
 actual siblings for `peer-checked:` to reach them; the button that flips it
 doesn't.
+
+`SpeedDial` layers a fourth thing on top of that same checkbox: the reveal
+target reacts to `peer-checked:` **or** `group-hover:` **or**
+`group-focus-within:` at once, so one CSS-only component opens on tap
+(checkbox, sticky), hover (transient), and keyboard focus. See its own
+section under "Actions" for why the trigger↔actions gap must be padding.
 
 ## Stateless function components vs. `Phoenix.LiveComponent`
 
@@ -1041,6 +1047,47 @@ The `stack_classes/1` container is `pointer-events-none` with
 `[&_[data-pp-component=snackbar]]:pointer-events-auto` so the transparent
 gaps between/around chips don't eat clicks on the page beneath — the same
 `data-pp-component` compound-selector reach `Tabs`/`Drawer` use.
+
+## Actions: `PhoenixPaper.SpeedDial`
+
+`pp_speed_dial/1` is MUI's `SpeedDial` + `SpeedDialAction` — a FAB that
+fans out `:action` FABs. It's one component (not a `Fab` composed with
+separate action components the way MUI splits them) because the actions
+have nothing to say in isolation, and the reveal wiring has to be shared.
+
+**The reveal is three CSS mechanisms stacked**, matching how MUI's own
+opens three ways:
+
+- **`peer-checked:`** — a hidden `<input type="checkbox" class="peer sr-only">`
+  rendered as a *direct child of the wrapper* (before both the trigger
+  `<label for>` and the actions container, so `peer-checked:` reaches both
+  — the exact `Drawer` layout), toggled by clicking the trigger. This is
+  the touch path: tap opens, tap again closes, no hover needed.
+- **`group-hover:`** — the wrapper is `group`; hovering it (trigger *or*
+  actions) opens the dial and leaving closes it. The gap between trigger
+  and first action is `p{t,b,l,r}-4` **padding on the actions container**,
+  never margin — margin would be a dead zone the pointer crosses and the
+  dial would flicker shut.
+- **`group-focus-within:`** — Tab to the (sr-only but focusable) checkbox
+  and the dial opens; it stays open as focus moves through the action
+  links/buttons. `peer-focus-visible:` on the trigger `<label>` paints the
+  focus ring the sr-only checkbox can't show itself.
+
+Each reveal target carries all three (`peer-checked:opacity-100
+group-hover:opacity-100 group-focus-within:opacity-100`, likewise
+`pointer-events-auto` and `scale-100`). What this can't do that MUI's JS
+can: `aria-expanded` on the trigger (a state a CSS-only component never
+names), Esc / true outside-click to close, and per-action hover tooltips
+— each `:action`'s `label` is instead an always-visible pill (MUI's
+`tooltipOpen`), left of the action for `up`/`down`, above it for
+`left`/`right`.
+
+Actions link (`href`/`navigate`/`patch` → `Phoenix.Component.link/1`) or
+button (`on_click` → `phx-click`) via `speed_dial_action/1`, the same
+two-branch split as `Button`'s link mode / `ListItem`. `:icon` defaults to
+`hero-plus` and rotates 45° when open (→ `✕`); an `:open_icon` slot
+switches that to a cross-fade. Ripple on trigger + actions, `ripple and
+paperize` gated like everywhere.
 
 ## Theming
 

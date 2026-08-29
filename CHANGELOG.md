@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-29
+
+### Added
+
+- `PhoenixPaper.SpeedDial` (`pp_speed_dial/1`) — a Floating Action Button
+  that fans out a set of `:action` FABs on hover, click, or keyboard
+  focus (MUI's `SpeedDial` + `SpeedDialAction`). Pure CSS, no JS/hook;
+  `direction` (`up`/`down`/`left`/`right`), an optional `:open_icon`
+  cross-fade, and per-action link (`href`/`navigate`/`patch`) or
+  `on_click`.
+
 ## [0.2.0] - 2026-08-29
 
 ### Added
@@ -42,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/z7ealth/phoenix_paper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/z7ealth/phoenix_paper/releases/tag/v0.1.0
