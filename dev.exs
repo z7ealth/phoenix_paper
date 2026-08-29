@@ -288,6 +288,11 @@ defmodule PhoenixPaperDemo do
     <:start_icon><.pp_icon name="hero-trash" /></:start_icon>
     Delete
   </.pp_button>
+
+  <%!-- href/navigate/patch render an <a> (Phoenix.Component.link/1), so a
+        "button" that navigates never nests <button> inside <a> --%>
+  <.pp_button href="/issues" variant="text">Issues</.pp_button>
+  <.pp_button navigate="/workbooks/new">New workbook</.pp_button>
   """
 
   @button_group_code ~S"""
@@ -343,6 +348,13 @@ defmodule PhoenixPaperDemo do
   </.pp_input>
 
   <.pp_input multiline rows={3} label="Bio" name="bio_demo" />
+
+  <%!-- hide_label: dense, unwrapped — no floating label (used as
+        placeholder), no notch, no helper/error rows. For an inline
+        filter toolbar. Pair with size="small". --%>
+  <.pp_input hide_label label="Search" name="q" size="small">
+    <:start_adornment><.pp_icon name="hero-magnifying-glass" /></:start_adornment>
+  </.pp_input>
   """
 
   @select_code ~S"""
@@ -359,6 +371,9 @@ defmodule PhoenixPaperDemo do
     prompt="Choose one"
     options={["Canada", "Mexico", "United States"]}
   />
+
+  <%!-- hide_label: the dense, inline counterpart of Text Field's own --%>
+  <.pp_select hide_label label="Status" name="status" prompt="Any" options={["Active", "Archived"]} />
   """
 
   @number_field_code ~S"""
@@ -473,6 +488,15 @@ defmodule PhoenixPaperDemo do
 
   <.pp_app_bar variant="dense" class="!static">
     Dense variant
+  </.pp_app_bar>
+
+  <%!-- max_width caps + centres the toolbar row the way wrapping MUI's
+        Toolbar in a <Container> would — line it up with a pp_container of
+        the same max_width in the page body. disable_gutters drops the
+        toolbar's own horizontal padding. --%>
+  <.pp_app_bar position="sticky" max_width="xl">
+    My App
+    <:actions><.pp_theme_toggle label={nil} /></:actions>
   </.pp_app_bar>
   """
 
@@ -861,6 +885,21 @@ defmodule PhoenixPaperDemo do
   <.pp_snackbar anchor_origin="top-right" transition="slide">
     Copied to clipboard
   </.pp_snackbar>
+
+  <%!-- on_close renders a trailing ✕ (MUI's close-IconButton). Pair it
+        with auto_hide_duration for a hook-free client-side auto-dismiss
+        (a no-op CSS animation whose animationend clicks the ✕). --%>
+  <.pp_snackbar on_close={JS.push("dismiss")} auto_hide_duration={5000}>
+    Link copied
+  </.pp_snackbar>
+  """
+
+  @flash_code ~S"""
+  <%!-- Drop once in the root layout, where a generated <.flash_group> goes. --%>
+  <.pp_flash_group flash={@flash} />
+
+  <%!-- Opt-in client-side auto-dismiss, via lv:clear-flash — no handler. --%>
+  <.pp_flash_group flash={@flash} auto_hide_duration={4000} anchor_origin="top-right" />
   """
 
   @ripple_code ~S"""
@@ -974,6 +1013,7 @@ defmodule PhoenixPaperDemo do
         progress_code: @progress_code,
         skeleton_code: @skeleton_code,
         snackbar_code: @snackbar_code,
+        flash_code: @flash_code,
         ripple_code: @ripple_code,
         elevation_code: @elevation_code,
         shape_code: @shape_code,
@@ -1043,6 +1083,7 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#progress">Progress</.pp_list_item>
             <.pp_list_item href="#skeleton">Skeleton</.pp_list_item>
             <.pp_list_item href="#snackbar">Snackbar</.pp_list_item>
+            <.pp_list_item href="#flash">Flash</.pp_list_item>
           </.nav_group>
           <.nav_group label="Helpers">
             <.pp_list_item href="#ripple">Ripple</.pp_list_item>
@@ -1089,8 +1130,9 @@ defmodule PhoenixPaperDemo do
             {"ripple", "boolean — the ripple effect on click/tap (default: true)"},
             {"disabled", "boolean (default: false)"},
             {"loading", "boolean — spinner replaces start_icon, disables the button (default: false)"},
+            {"href / navigate / patch", "any set → renders an <a> instead of a <button>, same styling"},
             {":start_icon / :end_icon", "slots — an icon before/after the label"},
-            {"type", "button | submit | reset (default: button)"},
+            {"type", "button | submit | reset (default: button — ignored in link mode)"},
             {"paperize", "boolean — apply PhoenixPaper's classes at all (default: true)"},
             {"class", "merged on top via Tails"}
           ]}
@@ -1123,6 +1165,11 @@ defmodule PhoenixPaperDemo do
                 <:start_icon><span class="hero-trash" /></:start_icon>
                 Delete
               </.pp_button>
+            </div>
+            <div class="flex items-center gap-4 border-t border-pp-outline/20 pt-4">
+              <.pp_button href="#button" variant="text">Link (href)</.pp_button>
+              <.pp_button navigate="#button">Link (navigate)</.pp_button>
+              <.pp_button href="#button" disabled variant="outlined">Disabled link</.pp_button>
             </div>
           </div>
         </.demo_section>
@@ -1229,6 +1276,7 @@ defmodule PhoenixPaperDemo do
             {"size", "medium | small (default: medium)"},
             {"shape", "corner radius token (default: :sm) — ignored for variant=\"standard\""},
             {"multiline / rows", "renders a <textarea rows={@rows}> instead of <input>"},
+            {"hide_label", "boolean (default: false) — dense, unwrapped variant for an inline filter toolbar (label → placeholder, no notch, no helper/error rows)"},
             {"start_adornment / end_adornment", "slots for prefix/suffix content, e.g. an icon or unit"},
             {"field", "a Phoenix.HTML.FormField from to_form/2 — sets name/id/value for you"},
             {"errors", "list of error strings — switches to the error color and hides helper_text"},
@@ -1257,6 +1305,14 @@ defmodule PhoenixPaperDemo do
             <.pp_input multiline rows={3} label="Bio" name="bio_demo" value="A short bio, spanning a couple lines of text." class="sm:col-span-2" />
             <.pp_input paperize={false} label="paperize: false" name="bare_input_demo" class="border-b border-fuchsia-500 px-1 py-1 font-mono text-fuchsia-700" />
           </div>
+          <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-pp-outline/20 pt-4">
+            <span class="text-xs uppercase opacity-60">hide_label — inline filter toolbar</span>
+            <.pp_input hide_label label="Search" name="dense_search_demo" size="small" class="w-48">
+              <:start_adornment><span class="hero-magnifying-glass size-4" /></:start_adornment>
+            </.pp_input>
+            <.pp_select hide_label label="Status" name="dense_status_demo" prompt="Any status" options={["Active", "Archived"]} />
+            <.pp_input hide_label label="Owner" name="dense_owner_demo" size="small" errors={["required"]} class="w-40" />
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -1267,6 +1323,7 @@ defmodule PhoenixPaperDemo do
             {"options", "list of {label, value} tuples, or plain values"},
             {"prompt", "an empty/placeholder option's label"},
             {"variant", "outlined | filled (default: outlined)"},
+            {"hide_label", "boolean (default: false) — dense, unwrapped variant (see Text Field)"},
             {"field / errors / helper_text", "same as Text Field"},
             {"disabled", "boolean (default: false)"}
           ]}
@@ -1275,6 +1332,10 @@ defmodule PhoenixPaperDemo do
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <.pp_select label="Country" name="country_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
             <.pp_select variant="filled" label="Country" name="country_filled_demo" prompt="Choose one" options={["Canada", "Mexico", "United States"]} />
+          </div>
+          <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-pp-outline/20 pt-4">
+            <span class="text-xs uppercase opacity-60">hide_label</span>
+            <.pp_select hide_label label="Status" name="dense_country_demo" prompt="Any" options={["Active", "Archived", "Draft"]} />
           </div>
         </.demo_section>
 
@@ -1487,6 +1548,8 @@ defmodule PhoenixPaperDemo do
             {"elevation", "resting elevation, 0-24 (default: 4) — ignored for color=\"transparent\""},
             {"position", "static | relative | sticky | fixed | absolute (default: static)"},
             {"variant", "regular | dense (default: regular) — dense shrinks the toolbar row"},
+            {"max_width", "sm | md | lg | xl | 2xl | full (default: full) — caps + centres the toolbar content"},
+            {"disable_gutters", "boolean (default: false) — drops the toolbar's horizontal padding"},
             {"paperize", "boolean (default: true)"}
           ]}
           code={@app_bar_code}
@@ -1500,6 +1563,12 @@ defmodule PhoenixPaperDemo do
             </.pp_app_bar>
             <.pp_app_bar variant="dense" class="!static">
               dense variant
+              <:actions>
+                <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
+              </:actions>
+            </.pp_app_bar>
+            <.pp_app_bar max_width="sm" color="surface" class="!static border border-pp-outline/30">
+              max_width=&quot;sm&quot; (content capped + centred)
               <:actions>
                 <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
               </:actions>
@@ -2245,11 +2314,14 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="snackbar"
           title="Snackbar"
-          description="A brief toast — presentation-only. Auto-dismiss-after-a-delay isn't built in: one Process.send_after/3 clearing whatever assign controls open, the same mechanism generated flash messages already use, not a second client-side timer. No exit transition either — only entrance, see AGENTS.md."
+          description="A brief toast on an inverted-surface chip. Server-owned dismissal (a Process.send_after/3 clearing the open assign) is still the default, but auto_hide_duration + on_close give a hook-free client-side auto-dismiss for the no-round-trip case. No exit transition — only entrance, see AGENTS.md. For Phoenix flash messages, use Flash below."
           props={[
             {"open", "boolean (default: true)"},
             {"anchor_origin", "bottom-left (default) | bottom-center | bottom-right | top-left | top-center | top-right"},
             {"transition", "grow (default) | fade | slide | none — mount-in animation only"},
+            {"on_close", "a JS — renders a trailing ✕ button running it (MUI's close-IconButton)"},
+            {"auto_hide_duration", "ms after which the snackbar triggers on_close itself (needs on_close; client-side)"},
+            {"positioned", "boolean (default: true) — keep the fixed viewport anchoring, or drop it to place the chip yourself"},
             {":action", "optional slot — e.g. an \"Undo\" button"},
             {"elevation", "resting elevation, 0-24 (default: 6)"},
             {"paperize", "boolean (default: true)"}
@@ -2263,9 +2335,34 @@ defmodule PhoenixPaperDemo do
                 <.pp_button variant="text" class="!text-pp-surface" phx-click="dismiss">Undo</.pp_button>
               </:action>
             </.pp_snackbar>
-            <.pp_snackbar anchor_origin="top-right" transition="slide" class="!absolute !top-4 !right-4">
-              Copied to clipboard
+            <.pp_snackbar on_close={JS.push("dismiss")} class="!absolute !top-4 !right-4">
+              Link copied
             </.pp_snackbar>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="flash"
+          title="Flash"
+          description="Phoenix's @flash rendered as stacked snackbars — the Material counterpart of a generated core_components' flash_group. Dismiss is wired to LiveView's built-in lv:clear-flash (no handler in your LiveView); auto_hide_duration is opt-in. Monochrome by spec: the kind picks a leading icon, not a colour."
+          props={[
+            {"flash", "the @flash map"},
+            {"kinds", "flash keys to render, in stacking order (default: [:info, :error])"},
+            {"anchor_origin", "corner/edge of the viewport the stack sits at (default: bottom-right)"},
+            {"auto_hide_duration", "ms after which each chip clears itself via lv:clear-flash (opt-in)"},
+            {"transition", "grow | fade | slide (default) | none"},
+            {"paperize", "boolean (default: true)"}
+          ]}
+          code={@flash_code}
+        >
+          <div class="flex flex-col items-start gap-3">
+            <p class="text-sm opacity-70">
+              Shown here inline (positioned={false}) rather than fixed to the viewport corner:
+            </p>
+            <div class="flex flex-col gap-2">
+              <.pp_flash flash={%{"info" => "Workbook saved."}} kind={:info} />
+              <.pp_flash flash={%{"error" => "Could not reach the guest agent."}} kind={:error} />
+            </div>
           </div>
         </.demo_section>
 

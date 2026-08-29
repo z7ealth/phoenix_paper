@@ -190,4 +190,50 @@ defmodule PhoenixPaper.InputTest do
   test "paperize={false} renders no fieldset at all" do
     refute render_component(&bare/1) =~ "<fieldset"
   end
+
+  test "hide_label: no wrapper column, no label/fieldset, no helper text — label becomes the placeholder" do
+    html = render_component(&dense/1)
+
+    refute html =~ "flex flex-col gap-1"
+    refute html =~ "<label"
+    refute html =~ "<fieldset"
+    refute html =~ "helper goes here"
+    assert html =~ ~s(placeholder="Search")
+    assert html =~ "border-pp-outline"
+    assert html =~ ~s(data-pp-dense="true")
+  end
+
+  defp dense(assigns) do
+    ~H"""
+    <.pp_input hide_label label="Search" name="q" size="small" helper_text="helper goes here" />
+    """
+  end
+
+  test "hide_label with errors: red border, but no error message text (no reflow)" do
+    html = render_component(&dense_error/1)
+
+    assert html =~ "border-pp-error"
+    refute html =~ "is required"
+  end
+
+  defp dense_error(assigns) do
+    ~H"""
+    <.pp_input hide_label label="Search" name="q" errors={["is required"]} />
+    """
+  end
+
+  test "hide_label still honors field=" do
+    html = render_component(&dense_field/1)
+    assert html =~ ~s(name="user[email]")
+    assert html =~ ~s(value="hello@example.com")
+  end
+
+  defp dense_field(assigns) do
+    form = Phoenix.Component.to_form(%{"email" => "hello@example.com"}, as: :user)
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_input hide_label field={@form[:email]} label="Email" />
+    """
+  end
 end

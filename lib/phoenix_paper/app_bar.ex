@@ -44,6 +44,22 @@ defmodule PhoenixPaper.AppBar do
   MUI itself, just a manually laid-out taller `Toolbar`; compose that
   yourself the same way, e.g. wrap the default slot's content across two
   flex rows and set `class="h-32"`.
+
+  ## Constraining the toolbar width
+
+  By default the toolbar row spans the full bar edge to edge. `max_width`
+  caps and centres its content the way you'd wrap MUI's `Toolbar` in a
+  `<Container>` — so the bar's background still bleeds to the viewport
+  edges, but its icons/title/actions line up with a `pp_container` of the
+  same `max_width` in the page body below:
+
+      <.pp_app_bar position="sticky" max_width="xl">…</.pp_app_bar>
+      <.pp_container max_width="xl">…page…</.pp_container>
+
+  `disable_gutters` drops the toolbar's horizontal padding (MUI's
+  `Toolbar disableGutters`) — for a bar whose children manage their own
+  edge spacing. The default gutters are responsive (`px-4` rising to
+  `px-6` from the `sm` breakpoint), matching MUI's own `Toolbar`.
   """
   use Phoenix.Component
 
@@ -71,6 +87,17 @@ defmodule PhoenixPaper.AppBar do
     doc: "dense shrinks the toolbar row height/padding/title size"
   )
 
+  attr(:max_width, :string,
+    default: "full",
+    values: ~w(sm md lg xl 2xl full),
+    doc: "caps and centres the toolbar content, like wrapping MUI's Toolbar in a Container"
+  )
+
+  attr(:disable_gutters, :boolean,
+    default: false,
+    doc: "drops the toolbar's horizontal padding (MUI's Toolbar disableGutters)"
+  )
+
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -87,7 +114,7 @@ defmodule PhoenixPaper.AppBar do
       class={Helpers.classes(@paperize, paper_classes(@color, @elevation, @position), @class)}
       {@rest}
     >
-      <div class={toolbar_classes(@variant)}>
+      <div class={toolbar_classes(@variant, @max_width, @disable_gutters)}>
         <div :if={@leading != []} class="flex items-center">{render_slot(@leading)}</div>
         <div class={title_classes(@variant)}>{render_slot(@inner_block)}</div>
         <div :if={@actions != []} class="flex items-center gap-1">{render_slot(@actions)}</div>
@@ -113,8 +140,33 @@ defmodule PhoenixPaper.AppBar do
   defp position_classes("fixed"), do: "fixed inset-x-0 top-0 z-20"
   defp position_classes("absolute"), do: "absolute inset-x-0 top-0 z-20"
 
-  defp toolbar_classes("regular"), do: "flex h-16 items-center gap-4 px-4"
-  defp toolbar_classes("dense"), do: "flex h-12 items-center gap-3 px-3"
+  # The toolbar row's layout classes stay unconditional (not gated behind
+  # `paperize`) for the reason spelled out in AGENTS.md — there's no `class`
+  # attr on this inner div for a `paperize={false}` caller to rebuild the
+  # three-region flex layout with. `max_width`/`disable_gutters` are part of
+  # that same structural layer.
+  defp toolbar_classes(variant, max_width, disable_gutters) do
+    [
+      row_classes(variant),
+      "mx-auto w-full",
+      max_width_class(max_width),
+      gutter_classes(variant, disable_gutters)
+    ]
+  end
+
+  defp row_classes("regular"), do: "flex h-16 items-center gap-4"
+  defp row_classes("dense"), do: "flex h-12 items-center gap-3"
+
+  defp gutter_classes(_variant, true), do: "px-0"
+  defp gutter_classes("regular", false), do: "px-4 sm:px-6"
+  defp gutter_classes("dense", false), do: "px-3 sm:px-4"
+
+  defp max_width_class("sm"), do: "max-w-screen-sm"
+  defp max_width_class("md"), do: "max-w-screen-md"
+  defp max_width_class("lg"), do: "max-w-screen-lg"
+  defp max_width_class("xl"), do: "max-w-screen-xl"
+  defp max_width_class("2xl"), do: "max-w-screen-2xl"
+  defp max_width_class("full"), do: "max-w-none"
 
   defp title_classes("regular"), do: "flex-1 truncate text-lg font-medium"
   defp title_classes("dense"), do: "flex-1 truncate text-base font-medium"

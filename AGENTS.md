@@ -60,13 +60,26 @@ adding or changing a component.
 ## Conditional root tag: link vs. static element
 
 HEEx can't parameterize a tag name (`<{@tag}>` isn't valid), so a component
-that should render as `<a>` when it's a link and a plain `<div>`/`<span>`
-otherwise (`ListItem`) needs two `:if`/`:if={!...}` branches in the same
-template, each rendering its own root element. Factor the shared inner
-markup into a private function component (e.g. `ListItem`'s `item_content/1`)
-called from both branches instead of duplicating it — passing the same
-`assigns` map through works fine since it's still just a Phoenix.Component
-function receiving assigns, not a macro needing anything special.
+that should render as `<a>` when it's a link and a plain `<div>`/`<span>`/
+`<button>` otherwise (`ListItem`, `Button`) needs two `:if`/`:if={!...}`
+branches in the same template, each rendering its own root element. Factor
+the shared inner markup into a private function component (e.g. `ListItem`'s
+`item_content/1`, `Button`'s `button_content/1`) called from both branches
+instead of duplicating it — passing the same `assigns` map through works
+fine since it's still just a Phoenix.Component function receiving assigns,
+not a macro needing anything special.
+
+`Button`'s link branch (`href`/`navigate`/`patch` set → `Phoenix.Component.link/1`,
+MUI's `Button` `href`/`component={Link}`) has one wrinkle `ListItem`'s
+doesn't: `<button>` has a native `disabled`, `<a>` doesn't. The
+`disabled:opacity-40 disabled:pointer-events-none` in `base_classes/1`
+only fires on a real `:disabled` element, so the link branch adds
+`pointer-events-none opacity-40` as always-on utilities (`inert_classes/1`)
+gated on the same `disabled or loading`, and sets `aria-disabled` instead
+of `disabled`. `type` is dropped in link mode. Ripple flows through `<.link>`
+unchanged — it already did for `ListItem`, and `onclick` (not `onpointer*`)
+is what makes that legal through a function component (see "The ripple
+effect").
 
 `Typography` hits the same wall with more branches (`variant="h1"` needs
 `<h1>`, `variant="body1"` needs `<p>`, `variant="code"` needs `<code>`, ...)
@@ -401,6 +414,18 @@ layout/`sx` compositions in their own docs), so they're documented as
 "compose it yourself" in `AppBar`'s moduledoc instead, the same treatment
 `Table` gives `TablePagination`/`TableSortLabel`.
 
+`max_width` (`sm`..`2xl`/`full`, default `full`) and `disable_gutters`
+were added later, the missing half of "MUI's `Toolbar` inside a
+`Container`": the `<header>` background still bleeds edge to edge, but the
+inner toolbar row can be capped and centred (`mx-auto w-full
+max-w-screen-*`) so its icons/title/actions line up with a `pp_container`
+of the same `max_width` in the page body. They live on the inner toolbar
+`<div>`, so they're part of that div's **unconditional** layer (below) —
+not gated behind `paperize`. The default gutters also became responsive at
+the same time (`px-4 sm:px-6` regular, `px-3 sm:px-4` dense), matching
+MUI's own `Toolbar` — this is a visual change for existing callers, noted
+in the CHANGELOG; `disable_gutters` (→ `px-0`) is the escape hatch.
+
 The inner toolbar `<div>` (the flex row arranging `:leading`/title/
 `:actions`) keeps its layout classes **unconditional**, not gated behind
 `paperize` like the outer `<header>`'s color/elevation/position classes
@@ -705,6 +730,23 @@ per-component margin attr), and controlled/uncontrolled value semantics
 (N/A — LiveView forms already have one way to be "controlled": `field=`
 from `to_form/2`).
 
+`hide_label` (also on `Select`) *is* essentially MUI's `hiddenLabel` +
+`margin="dense"` rolled together, added because the default field is
+unusably tall/wide for an inline filter toolbar: it renders a **separate
+`def pp_input(%{hide_label: true} = assigns)` clause** (cleanest — the
+notch/floating-label machinery below is intricate enough that threading a
+flag through every branch would be a minefield; a whole separate clause
+touches none of it) that drops the outer `flex flex-col gap-1` column, the
+`<label>`, the `<fieldset>` notch and the helper/error `<p>` rows, uses
+`@label` as the `placeholder`, and swaps the asymmetric `pt-7 pb-2`
+padding (which only exists to reserve room for the floated label) for a
+symmetric `py-2.5`/`py-1.5`. Errors still show — as the red border — just
+not the message text, so an error appearing doesn't reflow the toolbar
+row. `outlined`'s border thickens on focus the `Select`-wrapper way
+(`border` → `focus-within:border-2`), accepting the 1px shift rather than
+carrying the fieldset overlay into the dense path. The `field=` clause
+runs first and re-dispatches, so `hide_label` + `field=` composes.
+
 The floating label is the same pure-CSS `peer-*` trick as `Checkbox`/
 `Switch`'s state styling (see "CSS-only interactive state" above): the
 `<input>`/`<textarea>` is marked `peer` and always rendered with
@@ -945,10 +987,60 @@ built-in Tailwind animation for a sweeping shimmer or a sliding bar.
 (`grow`/`fade`/`slide`/`none`, another set of one-shot `@keyframes`
 utilities same as `Skeleton`'s `wave`) came later, matching MUI's own
 `Snackbar` page — `transition` only animates the *entrance*; see
-`PhoenixPaper.Snackbar`'s moduledoc for why an exit transition,
-`autoHideDuration`, and consecutive-snackbar queueing aren't built in (each
-needs either the `Dialog`-style always-rendered-plus-`JS` machinery, or
-actual state a stateless function component has nowhere to hold).
+`PhoenixPaper.Snackbar`'s moduledoc for why an exit transition and
+consecutive-snackbar queueing still aren't built in (each needs either the
+`Dialog`-style always-rendered-plus-`JS` machinery, or actual state a
+stateless function component has nowhere to hold).
+
+`autoHideDuration` *did* land, as opt-in `auto_hide_duration` (ms) paired
+with `on_close` (a `JS` — MUI's close-IconButton pattern, rendered as a
+trailing ✕). No JS hook: a standalone zero-footprint `<span
+class="pp-snackbar-timeout">` inside the chip runs a no-op `opacity: 1 → 1`
+CSS animation of `var(--pp-snackbar-timeout)` duration, and its
+`onanimationend` (a raw inline handler — legal because the `<span>` isn't
+a function component, same latitude `ThemeToggle`'s `onclick` uses) clicks
+the ✕. It's a *child* span, never the root, so its `animation` shorthand
+can't clash with the root's own entrance `transition` animation. Still
+off by default — the server usually owns "is this message live"
+(`Process.send_after/3` clearing the `open` assign); the client timer is
+for the no-round-trip case, i.e. `pp_flash_group`.
+
+`positioned` (default `true`) was split out of the all-or-nothing
+`paperize` gate: `positioned={false}` drops only the `fixed inset-x-4 …`
+anchor classes, keeping the inverted chip/elevation/transition. That's
+what lets `PhoenixPaper.Flash` stack several chips inside its own `fixed`
+corner container instead of each one anchoring itself to the same spot.
+
+## Feedback: `PhoenixPaper.Flash` (Phoenix flash → snackbars)
+
+`pp_flash_group/1` is the Material counterpart of a generated
+`core_components.ex`'s `flash_group/1` — drop it once in the root layout.
+It reads `:info`/`:error` (or whatever `kinds` lists) from `@flash` via
+`Phoenix.Flash.get/2` and renders one `pp_snackbar positioned={false}` per
+present message inside a `fixed` corner stack (`flex flex-col gap-2`).
+
+- **Dismiss needs no LiveView handler.** The ✕ is
+  `JS.push("lv:clear-flash", value: %{key: kind})` — `lv:clear-flash` is
+  handled by the LiveView JS client itself: it clears that flash key and
+  the server re-renders without it, so the `:if={@message}` on the chip
+  goes false and it's gone. `auto_hide_duration` threads straight through
+  to each chip and fires the *same* push on the timer.
+- **Monochrome by kind, on purpose.** Material snackbars are a single
+  inverted surface regardless of severity (the `Snackbar` moduledoc's
+  own note) — so the kind only picks a leading heroicon
+  (`icon_name/1`: info/success/warning/error recognised, anything else no
+  icon), never a background color. Colored severity surfaces = an
+  `Alert` inside a bare `pp_snackbar`.
+- **`role`** is `alert` for `:error`, `status` otherwise.
+- The `:client-error`/`:server-error` `phx-disconnected` flashes a
+  generated `core_components` renders are a *different* mechanism (no
+  server flash entry) and are out of scope — keep the generated
+  `<.flash>` for those.
+
+The `stack_classes/1` container is `pointer-events-none` with
+`[&_[data-pp-component=snackbar]]:pointer-events-auto` so the transparent
+gaps between/around chips don't eat clicks on the page beneath — the same
+`data-pp-component` compound-selector reach `Tabs`/`Drawer` use.
 
 ## Theming
 

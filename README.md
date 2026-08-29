@@ -39,7 +39,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.1.0"}
+    {:phoenix_paper, "~> 0.2.0"}
   ]
 end
 ```
@@ -108,6 +108,9 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 
 <.pp_button color="primary">Save</.pp_button>
 <.pp_button color="primary" ripple={false}>No ripple</.pp_button>
+<.pp_button href={~p"/issues"} variant="text">Issues</.pp_button>
+<%!-- href/navigate/patch render an <a>, so a "button" that navigates
+      never nests <button> inside <a> --%>
 
 <.pp_card>
   <:title>Account</:title>
@@ -137,6 +140,10 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 
 <.pp_input field={@form[:email]} label="Email" />
 <.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />
+
+<%!-- hide_label: dense, unwrapped variant for an inline filter toolbar --%>
+<.pp_input hide_label label="Search" name="q" size="small" />
+<.pp_select hide_label label="Status" name="status" prompt="Any" options={["Active", "Archived"]} />
 <.pp_number_field field={@form[:quantity]} label="Quantity" min={0} max={10} />
 
 <.pp_checkbox field={@form[:accept]} label="I agree to the terms" />
@@ -153,6 +160,11 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 <.pp_fab>+</.pp_fab>
 
 <.pp_icon name="hero-check" />
+
+<%!-- Phoenix flash (@flash) as Material snackbars — drop once in the root
+      layout, where a generated <.flash_group> would go --%>
+<.pp_flash_group flash={@flash} />
+<.pp_flash_group flash={@flash} auto_hide_duration={4000} />
 
 <%!-- Autocomplete and TransferList need interactive state, so they're
       Phoenix.LiveComponents (LiveView only) instead of pp_* functions --%>

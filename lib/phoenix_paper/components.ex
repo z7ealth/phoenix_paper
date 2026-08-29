@@ -46,6 +46,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Divider, only: [pp_divider: 1]
       import PhoenixPaper.Drawer, only: [pp_drawer: 1, pp_drawer_toggle: 1]
       import PhoenixPaper.Fab, only: [pp_fab: 1]
+      import PhoenixPaper.Flash, only: [pp_flash_group: 1, pp_flash: 1]
       import PhoenixPaper.Grid, only: [pp_grid: 1]
       import PhoenixPaper.GridItem, only: [pp_grid_item: 1]
       import PhoenixPaper.Icon, only: [pp_icon: 1]

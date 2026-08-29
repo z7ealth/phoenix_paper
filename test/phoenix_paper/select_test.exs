@@ -55,4 +55,40 @@ defmodule PhoenixPaper.SelectTest do
     html = render_component(&select/1)
     assert html =~ "cursor-pointer"
   end
+
+  test "hide_label: no wrapper column, no label, no helper text, compact box" do
+    html = render_component(&dense/1)
+
+    refute html =~ "flex flex-col gap-1"
+    refute html =~ "<label"
+    refute html =~ "helper goes here"
+    refute html =~ "h-14"
+    assert html =~ ~s(data-pp-dense="true")
+    assert html =~ "border-pp-outline"
+    assert html =~ "Active"
+  end
+
+  defp dense(assigns) do
+    ~H"""
+    <.pp_select
+      hide_label
+      label="Status"
+      name="status"
+      prompt="Any"
+      helper_text="helper goes here"
+      options={[{"Active", "active"}, {"Archived", "archived"}]}
+    />
+    """
+  end
+
+  test "hide_label with errors renders the red border" do
+    html = render_component(&dense_error/1)
+    assert html =~ "border-pp-error"
+  end
+
+  defp dense_error(assigns) do
+    ~H"""
+    <.pp_select hide_label name="status" errors={["is required"]} options={["a", "b"]} />
+    """
+  end
 end
