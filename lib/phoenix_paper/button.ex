@@ -22,6 +22,27 @@ defmodule PhoenixPaper.Button do
   if both are given) and disables the button — no `loading_position`/
   overlay options like MUI's; this covers the common case without the
   complexity of the rest of that API.
+
+  ## Link mode
+
+  Pass `href`, `navigate` or `patch` and `pp_button/1` renders a
+  `Phoenix.Component.link/1` (an `<a>`) instead of a `<button>`, keeping
+  the exact same variants/colors/ripple — the same idea as MUI's `Button`
+  taking an `href` (or `component={Link}`). Use it wherever the "button"
+  is really navigation, so you don't end up nesting a real `<button>`
+  inside an `<a>` (invalid HTML):
+
+      <.pp_button href={~p"/issues"} variant="text">Issues</.pp_button>
+      <.pp_button navigate={~p"/new"} variant="raised">New workbook</.pp_button>
+      <.pp_button href={~p"/users/log_out"} method="delete" variant="text">
+        Sign out
+      </.pp_button>
+
+  `type` is ignored in link mode (there's no form to submit); `disabled`
+  still works — an `<a>` can't be natively disabled, so it renders
+  `aria-disabled="true"` plus `pointer-events-none` and the same dimmed
+  look. Any link-specific attr (`method`, `download`, `target`, `rel`, ...)
+  passes straight through via the global `rest`.
   """
   use Phoenix.Component
 
@@ -52,22 +73,67 @@ defmodule PhoenixPaper.Button do
   )
 
   attr(:type, :string, default: "button", values: ~w(button submit reset))
+
+  attr(:href, :any,
+    default: nil,
+    doc: "renders an <a> (via Phoenix.Component.link/1) instead of a <button>"
+  )
+
+  attr(:navigate, :any, default: nil, doc: "like href, a LiveView live navigation")
+  attr(:patch, :any, default: nil, doc: "like href, a LiveView live patch")
+
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form name value autofocus))
+
+  attr(:rest, :global,
+    include:
+      ~w(form name value autofocus download hreflang referrerpolicy rel target method csrf_token replace)
+  )
 
   slot(:start_icon, doc: "an icon before the label, replaced by the spinner when loading")
   slot(:end_icon, doc: "an icon after the label")
   slot(:inner_block, required: true)
 
-  @doc "Renders a button. See the module doc for variants, colors, and icons/loading."
+  @doc "Renders a button. See the module doc for variants, colors, icons/loading, and link mode."
   def pp_button(assigns) do
+    linked? =
+      assigns.href not in [nil, false] or assigns.navigate not in [nil, false] or
+        assigns.patch not in [nil, false]
+
     assigns =
-      assign(assigns, :ripple?, assigns.ripple and assigns.paperize and not assigns.loading)
+      assigns
+      |> assign(:linked?, linked?)
+      |> assign(:inert?, assigns.disabled or assigns.loading)
+      |> assign(
+        :ripple?,
+        assigns.ripple and assigns.paperize and not assigns.loading and not assigns.disabled
+      )
 
     ~H"""
+    <.link
+      :if={@linked?}
+      href={@href}
+      navigate={@navigate}
+      patch={@patch}
+      aria-disabled={@inert? && "true"}
+      aria-busy={to_string(@loading)}
+      data-pp-component="button"
+      data-pp-variant={@variant}
+      class={
+        Helpers.classes(
+          @paperize,
+          [paper_classes(@variant, @color, @elevation, @shape, @ripple?), inert_classes(@inert?)],
+          @class
+        )
+      }
+      onclick={Ripple.on_click(@ripple?)}
+      {@rest}
+    >
+      {button_content(assigns)}
+    </.link>
     <button
+      :if={!@linked?}
       type={@type}
-      disabled={@disabled || @loading}
+      disabled={@inert?}
       aria-busy={to_string(@loading)}
       data-pp-component="button"
       data-pp-variant={@variant}
@@ -75,20 +141,33 @@ defmodule PhoenixPaper.Button do
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
-      <span
-        :if={@loading}
-        class="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
-      />
-      <span :if={!@loading && @start_icon != []} class="inline-flex shrink-0 items-center">
-        {render_slot(@start_icon)}
-      </span>
-      {render_slot(@inner_block)}
-      <span :if={@end_icon != []} class="inline-flex shrink-0 items-center">
-        {render_slot(@end_icon)}
-      </span>
+      {button_content(assigns)}
     </button>
     """
   end
+
+  defp button_content(assigns) do
+    ~H"""
+    <span
+      :if={@loading}
+      class="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+    />
+    <span :if={!@loading && @start_icon != []} class="inline-flex shrink-0 items-center">
+      {render_slot(@start_icon)}
+    </span>
+    {render_slot(@inner_block)}
+    <span :if={@end_icon != []} class="inline-flex shrink-0 items-center">
+      {render_slot(@end_icon)}
+    </span>
+    """
+  end
+
+  # An `<a>` has no native `disabled`, so link mode reproduces the
+  # `disabled:opacity-40 disabled:pointer-events-none` look from
+  # `base_classes/1` (which only fires on a real `:disabled` element)
+  # with always-on utilities instead, gated on the same `disabled || loading`.
+  defp inert_classes(true), do: "pointer-events-none opacity-40"
+  defp inert_classes(false), do: ""
 
   defp paper_classes(variant, color, elevation, shape, ripple) do
     [

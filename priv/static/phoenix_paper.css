@@ -400,6 +400,27 @@
 }
 
 /*
+ * `PhoenixPaper.Snackbar`'s `auto_hide_duration` — a zero-footprint timer.
+ * This runs on a tiny standalone `<span>` inside the snackbar (never the
+ * root, so it can't clash with the root's own entrance `transition`
+ * animation), and its `animationend` — fired once, `--pp-snackbar-timeout`
+ * after mount — is what clicks the close button. The animated property is
+ * inert (`opacity` held at 1 on a hidden element); only the timing matters.
+ */
+@utility pp-snackbar-timeout {
+  animation: pp-snackbar-timeout var(--pp-snackbar-timeout, 5000ms) linear forwards;
+}
+
+@keyframes pp-snackbar-timeout {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
  * `PhoenixPaper.Slider` — a native `<input type="range">` fully re-skinned
  * via `::-webkit-slider-runnable-track`/`::-webkit-slider-thumb` and
  * `::-moz-range-track`/`::-moz-range-progress`/`::-moz-range-thumb`, not

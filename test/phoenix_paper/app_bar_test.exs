@@ -83,6 +83,32 @@ defmodule PhoenixPaper.AppBarTest do
     """
   end
 
+  test "max_width caps and centres the toolbar row" do
+    html = render_component(&constrained/1)
+    assert html =~ "max-w-screen-xl"
+    assert html =~ "mx-auto"
+  end
+
+  defp constrained(assigns) do
+    ~H"""
+    <.pp_app_bar max_width="xl">Title</.pp_app_bar>
+    """
+  end
+
+  test "default gutters are responsive; disable_gutters drops them" do
+    assert render_component(&app_bar/1) =~ "sm:px-6"
+
+    html = render_component(&no_gutters/1)
+    assert html =~ "px-0"
+    refute html =~ "sm:px-6"
+  end
+
+  defp no_gutters(assigns) do
+    ~H"""
+    <.pp_app_bar disable_gutters>Title</.pp_app_bar>
+    """
+  end
+
   test "paperize={false} drops built-in classes" do
     html = render_component(&bare/1)
     refute html =~ "bg-pp-primary"

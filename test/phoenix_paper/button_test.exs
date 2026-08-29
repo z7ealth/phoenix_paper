@@ -96,6 +96,55 @@ defmodule PhoenixPaper.ButtonTest do
     """
   end
 
+  test "href renders an <a> instead of a <button>, keeping the Material classes and ripple" do
+    html = render_component(&link_button/1)
+
+    assert html =~ ~s(<a)
+    refute html =~ ~s(<button)
+    assert html =~ ~s(href="/issues")
+    assert html =~ "bg-pp-primary"
+    assert html =~ "onclick="
+    assert html =~ "Issues"
+  end
+
+  defp link_button(assigns) do
+    ~H"""
+    <.pp_button href="/issues">Issues</.pp_button>
+    """
+  end
+
+  test "navigate/patch also switch to link mode" do
+    assert render_component(&nav_button/1) =~ ~s(<a)
+    assert render_component(&patch_button/1) =~ ~s(<a)
+  end
+
+  defp nav_button(assigns) do
+    ~H"""
+    <.pp_button navigate="/new">New</.pp_button>
+    """
+  end
+
+  defp patch_button(assigns) do
+    ~H"""
+    <.pp_button patch="/tab/2">Tab</.pp_button>
+    """
+  end
+
+  test "link-mode passes link attrs through and honors disabled without a disabled attribute" do
+    html = render_component(&disabled_link/1)
+
+    assert html =~ ~s(method="delete")
+    assert html =~ ~s(aria-disabled="true")
+    assert html =~ "pointer-events-none"
+    refute html =~ "onclick="
+  end
+
+  defp disabled_link(assigns) do
+    ~H"""
+    <.pp_button href="/logout" method="delete" disabled>Sign out</.pp_button>
+    """
+  end
+
   test "loading disables the button, drops the ripple handler, and swaps start_icon for a spinner" do
     html = render_component(&loading/1)
 

@@ -50,6 +50,7 @@ defmodule PhoenixPaper.SnackbarTest do
   test "anchor_origin (default bottom-left) positions bottom-left" do
     html = render_component(&snackbar/1)
 
+    assert html =~ "fixed"
     assert html =~ "bottom-4"
     assert html =~ "left-4"
   end
@@ -101,6 +102,56 @@ defmodule PhoenixPaper.SnackbarTest do
   defp slide_bottom(assigns) do
     ~H"""
     <.pp_snackbar anchor_origin="bottom-left" transition="slide">Changes saved</.pp_snackbar>
+    """
+  end
+
+  test "on_close renders a trailing ✕ button wired to the given JS" do
+    html = render_component(&closable/1)
+
+    assert html =~ "data-pp-snackbar-close"
+    assert html =~ ~s(aria-label="Close")
+    assert html =~ "phx-click"
+  end
+
+  defp closable(assigns) do
+    ~H"""
+    <.pp_snackbar on_close={Phoenix.LiveView.JS.push("dismiss")}>Saved</.pp_snackbar>
+    """
+  end
+
+  test "auto_hide_duration renders the CSS-timer span only when on_close is also set" do
+    html = render_component(&auto_hide/1)
+    assert html =~ "pp-snackbar-timeout"
+    assert html =~ "--pp-snackbar-timeout: 4000ms"
+    assert html =~ "onanimationend"
+
+    refute render_component(&auto_hide_no_close/1) =~ "pp-snackbar-timeout"
+  end
+
+  defp auto_hide(assigns) do
+    ~H"""
+    <.pp_snackbar auto_hide_duration={4000} on_close={Phoenix.LiveView.JS.push("dismiss")}>
+      Saved
+    </.pp_snackbar>
+    """
+  end
+
+  defp auto_hide_no_close(assigns) do
+    ~H"""
+    <.pp_snackbar auto_hide_duration={4000}>Saved</.pp_snackbar>
+    """
+  end
+
+  test "positioned={false} keeps the chip styling but drops the fixed anchor classes" do
+    html = render_component(&unpositioned/1)
+
+    assert html =~ "bg-pp-on-surface"
+    refute html =~ "fixed"
+  end
+
+  defp unpositioned(assigns) do
+    ~H"""
+    <.pp_snackbar positioned={false}>Saved</.pp_snackbar>
     """
   end
 

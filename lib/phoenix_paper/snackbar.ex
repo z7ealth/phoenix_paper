@@ -10,18 +10,24 @@ defmodule PhoenixPaper.Snackbar do
         </:action>
       </.pp_snackbar>
 
-  Deliberately presentation-only — positioning (`anchor_origin`), the dark
-  inverted-surface chip, a mount-in `transition`, and the optional `:action`
-  slot, nothing else. A few things MUI's `Snackbar` has that this doesn't,
-  and why:
+  Positioning (`anchor_origin`), the dark inverted-surface chip, a mount-in
+  `transition`, an optional `:action` slot, an optional `on_close` dismiss
+  button, and an optional `auto_hide_duration`. For rendering Phoenix flash
+  messages as snackbars, reach for `PhoenixPaper.Flash.pp_flash_group/1`,
+  which wraps this component. A few things MUI's `Snackbar` has that this
+  doesn't, and why:
 
-  - **No `autoHideDuration`.** Auto-dismiss-after-a-few-seconds is one
-    `Process.send_after/3` in your LiveView clearing whatever assign
-    controls `open` — the same mechanism `mix phx.new`'s generated flash
-    messages already use. A client-side JS timer here would just be a
-    second, redundant way to do the same thing, and one that can drift out
-    of sync with the server's own idea of whether the message is still
-    live.
+  - **`autoHideDuration` is opt-in and client-only.** Set
+    `auto_hide_duration` (milliseconds) *together with* `on_close` and the
+    snackbar dismisses itself after that delay by triggering `on_close` —
+    implemented with a zero-footprint CSS animation whose `animationend`
+    clicks the close button, no JS hook (the same "small vanilla snippet"
+    philosophy as `PhoenixPaper.Ripple`). It's off by default because the
+    server is usually the better owner of "is this message still live" —
+    one `Process.send_after/3` clearing whatever assign controls `open`,
+    the mechanism `mix phx.new`'s generated flash already uses. Use the
+    client timer when there's no server round-trip to hang it off (a
+    purely client-dismissed flash via `JS.push("lv:clear-flash")`).
   - **No exit transition.** `open={false}` removes the element from the DOM
     immediately (`:if` under the hood) — animating *that* would need the
     same always-rendered-plus-`Phoenix.LiveView.JS` machinery
@@ -47,6 +53,10 @@ defmodule PhoenixPaper.Snackbar do
           <.pp_alert severity="success">Changes saved.</.pp_alert>
         </.pp_snackbar>
 
+    If you only need to move the chip (keep its styling, drop the
+    viewport anchoring — e.g. to stack several inside your own container),
+    use `positioned={false}` instead of going fully `paperize={false}`.
+
   Always uses `bg-pp-on-surface`/`text-pp-surface` regardless of the current
   theme — an *inverted* surface (dark chip on a light theme, light chip on a
   dark theme) is the Material spec for a snackbar, not a themed surface like
@@ -54,7 +64,9 @@ defmodule PhoenixPaper.Snackbar do
   """
   use Phoenix.Component
 
+  alias Phoenix.LiveView.JS
   alias PhoenixPaper.{Elevation, Helpers}
+  import PhoenixPaper.Icon, only: [pp_icon: 1]
 
   attr(:paperize, :boolean, default: true)
   attr(:open, :boolean, default: true)
@@ -71,7 +83,25 @@ defmodule PhoenixPaper.Snackbar do
     doc: "the mount-in animation — there's no exit transition, see the module doc"
   )
 
+  attr(:positioned, :boolean,
+    default: true,
+    doc:
+      "keep the viewport-anchored `fixed` positioning — set false to drop it and place the chip yourself (e.g. inside PhoenixPaper.Flash's stack)"
+  )
+
   attr(:elevation, :integer, default: 6)
+
+  attr(:on_close, JS,
+    default: nil,
+    doc: "when set, renders a trailing ✕ button running this — MUI's close-IconButton pattern"
+  )
+
+  attr(:auto_hide_duration, :integer,
+    default: nil,
+    doc:
+      "milliseconds after which the snackbar triggers on_close itself (client-side; needs on_close set)"
+  )
+
   attr(:class, :any, default: nil)
   attr(:rest, :global)
 
@@ -86,19 +116,36 @@ defmodule PhoenixPaper.Snackbar do
       role="status"
       data-pp-component="snackbar"
       data-pp-anchor-origin={@anchor_origin}
-      class={Helpers.classes(@paperize, paper_classes(@anchor_origin, @transition, @elevation), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@anchor_origin, @transition, @elevation, @positioned), @class)}
       {@rest}
     >
       <div class="text-sm">{render_slot(@inner_block)}</div>
       <div :if={@action != []} class="flex shrink-0 items-center">{render_slot(@action)}</div>
+      <button
+        :if={@on_close}
+        type="button"
+        data-pp-snackbar-close
+        phx-click={@on_close}
+        aria-label="Close"
+        class="-mr-1 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-pp-surface/80 transition-colors hover:bg-pp-surface/10 hover:text-pp-surface"
+      >
+        <.pp_icon name="hero-x-mark-mini" class="!size-4" />
+      </button>
+      <span
+        :if={@on_close && @auto_hide_duration}
+        aria-hidden="true"
+        class="pp-snackbar-timeout pointer-events-none absolute"
+        style={"--pp-snackbar-timeout: #{@auto_hide_duration}ms"}
+        onanimationend="var b=this.parentNode.querySelector('[data-pp-snackbar-close]');if(b){b.click()}"
+      />
     </div>
     """
   end
 
-  defp paper_classes(anchor_origin, transition, elevation) do
+  defp paper_classes(anchor_origin, transition, elevation, positioned) do
     [
-      "z-50 mx-auto flex w-fit max-w-md items-center gap-4 rounded-lg bg-pp-on-surface px-4 py-3 text-pp-surface",
-      anchor_classes(anchor_origin),
+      "relative z-50 mx-auto flex w-fit max-w-md items-center gap-4 rounded-lg bg-pp-on-surface px-4 py-3 text-pp-surface",
+      if(positioned, do: anchor_classes(anchor_origin)),
       transition_classes(transition, anchor_origin),
       Elevation.class(elevation)
     ]

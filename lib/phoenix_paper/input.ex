@@ -25,6 +25,23 @@ defmodule PhoenixPaper.Input do
   that it isn't relied on here; add it yourself via `class` if your
   supported browsers cover it and you want it.
 
+  ## `hide_label` — the dense, inline variant
+
+  `hide_label` strips everything that makes a text field a *block* element:
+  the outer `flex flex-col gap-1` column, the floating `<label>` and its
+  notched `<fieldset>`, and the helper-text / error-message `<p>` rows
+  below. What's left is just the bordered (or filled) input box itself,
+  compact and symmetric, with `label` rendered as the `placeholder`
+  instead. This is the MUI `hiddenLabel` idea — for an input that has to
+  sit inline in a filter toolbar next to other controls without throwing
+  the row's height around or reflowing it when an error appears (the error
+  still shows, as a red border; only its *message* is suppressed). Pair it
+  with `size="small"`:
+
+      <.pp_input hide_label label="Search" name="q" size="small">
+        <:start_adornment><.pp_icon name="hero-magnifying-glass" /></:start_adornment>
+      </.pp_input>
+
   `:start_adornment`/`:end_adornment` (prefix/suffix content — an icon, a
   unit like "kg", a button) sit as plain flex siblings *outside* the
   input/label positioning box, not inside it — this means adding one never
@@ -126,6 +143,12 @@ defmodule PhoenixPaper.Input do
     doc: "renders a <textarea rows={@rows}> instead of <input>"
   )
 
+  attr(:hide_label, :boolean,
+    default: false,
+    doc:
+      "dense inline variant — no wrapper column, no floating label (used as placeholder), no notch, no helper/error text; see the module doc"
+  )
+
   attr(:rows, :integer, default: 3, doc: "multiline only")
 
   attr(:field, Phoenix.HTML.FormField, default: nil)
@@ -153,6 +176,52 @@ defmodule PhoenixPaper.Input do
     |> assign(:value, assigns.value || field.value)
     |> assign(:errors, Enum.map(errors, &Helpers.translate_error/1))
     |> pp_input()
+  end
+
+  def pp_input(%{hide_label: true} = assigns) do
+    ~H"""
+    <div
+      data-pp-component="input"
+      data-pp-dense="true"
+      class={Helpers.classes(@paperize, dense_wrapper_classes(@variant, @color, @shape, @errors, @size), @class)}
+    >
+      <span
+        :if={@start_adornment != []}
+        data-pp-adornment="start"
+        class={adornment_classes(@size, :start)}
+      >
+        {render_slot(@start_adornment)}
+      </span>
+      <textarea
+        :if={@multiline}
+        id={@id}
+        name={@name}
+        rows={@rows}
+        disabled={@disabled}
+        placeholder={@label}
+        class={Helpers.classes(@paperize, [dense_field_classes(@size), "resize-y"], nil)}
+        {@rest}
+      >{@value}</textarea>
+      <input
+        :if={!@multiline}
+        type={@type}
+        id={@id}
+        name={@name}
+        value={@value}
+        disabled={@disabled}
+        placeholder={@label}
+        class={Helpers.classes(@paperize, dense_field_classes(@size), nil)}
+        {@rest}
+      />
+      <span
+        :if={@end_adornment != []}
+        data-pp-adornment="end"
+        class={adornment_classes(@size, :end)}
+      >
+        {render_slot(@end_adornment)}
+      </span>
+    </div>
+    """
   end
 
   def pp_input(assigns) do
@@ -369,6 +438,57 @@ defmodule PhoenixPaper.Input do
 
   defp adornment_classes("small", :end),
     do: "flex shrink-0 items-center pr-3 text-sm text-pp-outline"
+
+  # `hide_label` variant (see the module doc) — a plain bordered/filled box,
+  # no notch, so `outlined` gets an ordinary static border that thickens on
+  # focus the same way `PhoenixPaper.Select`'s wrapper does (this library
+  # already accepts that 1px focus shift there rather than the fieldset
+  # overlay the full `Input` uses).
+  defp dense_wrapper_classes(variant, color, shape, errors, _size) do
+    [
+      "relative flex items-stretch transition-colors",
+      dense_border_classes(variant, color, errors),
+      dense_shape_classes(variant, shape)
+    ]
+  end
+
+  defp dense_border_classes("outlined", _color, errors) when errors != [],
+    do: "border-2 border-pp-error"
+
+  defp dense_border_classes("filled", _color, errors) when errors != [],
+    do: "border-b-2 border-pp-error bg-pp-surface-variant"
+
+  defp dense_border_classes("standard", _color, errors) when errors != [],
+    do: "border-b-2 border-pp-error"
+
+  defp dense_border_classes("outlined", color, []),
+    do: ["border border-pp-outline focus-within:border-2", dense_focus_border(color)]
+
+  defp dense_border_classes("filled", color, []),
+    do: [
+      "border-b border-pp-outline bg-pp-surface-variant focus-within:border-b-2",
+      dense_focus_border(color)
+    ]
+
+  defp dense_border_classes("standard", color, []),
+    do: ["border-b border-pp-outline focus-within:border-b-2", dense_focus_border(color)]
+
+  defp dense_focus_border("primary"), do: "focus-within:border-pp-primary"
+  defp dense_focus_border("secondary"), do: "focus-within:border-pp-secondary"
+  defp dense_focus_border("tertiary"), do: "focus-within:border-pp-tertiary"
+  defp dense_focus_border("error"), do: "focus-within:border-pp-error"
+
+  defp dense_shape_classes("standard", _shape), do: ""
+  defp dense_shape_classes("filled", shape), do: Shape.class(shape, :top)
+  defp dense_shape_classes("outlined", shape), do: Shape.class(shape)
+
+  defp dense_field_classes("medium"),
+    do:
+      "peer block w-full min-w-0 bg-transparent px-3 py-2.5 text-sm text-pp-on-surface outline-none placeholder:text-pp-outline disabled:cursor-not-allowed disabled:opacity-40"
+
+  defp dense_field_classes("small"),
+    do:
+      "peer block w-full min-w-0 bg-transparent px-3 py-1.5 text-sm text-pp-on-surface outline-none placeholder:text-pp-outline disabled:cursor-not-allowed disabled:opacity-40"
 
   defp label_classes(_color, errors) when errors != [] do
     "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-error transition-all peer-focus:top-2 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
