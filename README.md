@@ -4,6 +4,10 @@
 
 # PhoenixPaper
 
+[![Hex.pm](https://img.shields.io/hexpm/v/phoenix_paper.svg)](https://hex.pm/packages/phoenix_paper)
+[![Hexdocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/phoenix_paper)
+[![License](https://img.shields.io/hexpm/l/phoenix_paper.svg)](https://github.com/z7ealth/phoenix_paper/blob/master/LICENSE)
+
 A Material Design component library for Phoenix, in the spirit of
 [ember-paper](https://github.com/miguelcobain/ember-paper), styled with
 Tailwind CSS. Most individual components follow the API and behavior of

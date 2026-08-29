@@ -35,14 +35,24 @@ Application.put_env(:phoenix_paper, PhoenixPaper.Tails, color_classes: color_cla
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @source_url "https://github.com/z7ealth/phoenix_paper"
+  @description "A Material Design component library for Phoenix and LiveView, styled with Tailwind CSS."
+
   def project do
     [
       app: :phoenix_paper,
-      version: "0.1.0",
-      elixir: "~> 1.20",
+      version: @version,
+      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
-      deps: deps()
+      deps: deps(),
+      description: @description,
+      package: package(),
+      docs: docs(),
+      name: "PhoenixPaper",
+      source_url: @source_url,
+      homepage_url: @source_url
     ]
   end
 
@@ -61,7 +71,29 @@ defmodule PhoenixPaper.MixProject do
   defp deps do
     [
       {:phoenix_live_view, "~> 1.0"},
-      {:tails, "~> 0.1.11"}
+      {:tails, "~> 0.1.11"},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      licenses: ["MIT"],
+      maintainers: ["Héctor Salinas"],
+      links: %{
+        "GitHub" => @source_url,
+        "Changelog" => @source_url <> "/blob/master/CHANGELOG.md"
+      },
+      files: ~w(lib priv .formatter.exs mix.exs README.md LICENSE CHANGELOG.md AGENTS.md)
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: ["README.md", "CHANGELOG.md", "AGENTS.md", "LICENSE"]
     ]
   end
 end
