@@ -23,8 +23,8 @@
   --color-pp-on-primary: #ffffff;
   --color-pp-secondary: #ff4081;
   --color-pp-on-secondary: #000000;
-  --color-pp-tertiary: #009688;
-  --color-pp-on-tertiary: #ffffff;
+  --color-pp-accent: #009688;
+  --color-pp-on-accent: #ffffff;
   --color-pp-error: #d32f2f;
   --color-pp-on-error: #ffffff;
   --color-pp-surface: #ffffff;
@@ -33,7 +33,7 @@
   --color-pp-outline: #79747e;
 
   /* Semantic feedback colors (Alert/Snackbar severities) — distinct from
-     primary/secondary/tertiary/error above, which are brand/action colors,
+     primary/secondary/accent/error above, which are brand/action colors,
      not status colors. `error` already exists and doubles as the "error"
      severity; success/warning/info are new. */
   --color-pp-success: #2e7d32;
@@ -55,8 +55,8 @@
   --color-pp-on-primary: #0a0e1f;
   --color-pp-secondary: #ff80ab;
   --color-pp-on-secondary: #1a0511;
-  --color-pp-tertiary: #4db6ac;
-  --color-pp-on-tertiary: #04211d;
+  --color-pp-accent: #4db6ac;
+  --color-pp-on-accent: #04211d;
   --color-pp-error: #ef9a9a;
   --color-pp-on-error: #370505;
   --color-pp-surface: #121212;
@@ -94,8 +94,8 @@
     --color-pp-on-primary: #0a0e1f;
     --color-pp-secondary: #ff80ab;
     --color-pp-on-secondary: #1a0511;
-    --color-pp-tertiary: #4db6ac;
-    --color-pp-on-tertiary: #04211d;
+    --color-pp-accent: #4db6ac;
+    --color-pp-on-accent: #04211d;
     --color-pp-error: #ef9a9a;
     --color-pp-on-error: #370505;
     --color-pp-surface: #121212;
@@ -123,8 +123,8 @@
   --color-pp-on-primary: #ffffff;
   --color-pp-secondary: #ff8f00;
   --color-pp-on-secondary: #1f1300;
-  --color-pp-tertiary: #5c6bc0;
-  --color-pp-on-tertiary: #ffffff;
+  --color-pp-accent: #5c6bc0;
+  --color-pp-on-accent: #ffffff;
 }
 
 [data-pp-theme="teal"][data-theme="dark"] {
@@ -132,8 +132,8 @@
   --color-pp-on-primary: #04211d;
   --color-pp-secondary: #ffca80;
   --color-pp-on-secondary: #2b1a00;
-  --color-pp-tertiary: #8c9eff;
-  --color-pp-on-tertiary: #0a0e3d;
+  --color-pp-accent: #8c9eff;
+  --color-pp-on-accent: #0a0e3d;
 }
 
 /* Same "system" fallback as above, for the teal palette. */
@@ -143,8 +143,8 @@
     --color-pp-on-primary: #04211d;
     --color-pp-secondary: #ffca80;
     --color-pp-on-secondary: #2b1a00;
-    --color-pp-tertiary: #8c9eff;
-    --color-pp-on-tertiary: #0a0e3d;
+    --color-pp-accent: #8c9eff;
+    --color-pp-on-accent: #0a0e3d;
   }
 }
 
@@ -400,23 +400,30 @@
 }
 
 /*
- * `PhoenixPaper.Snackbar`'s `auto_hide_duration` — a zero-footprint timer.
- * This runs on a tiny standalone `<span>` inside the snackbar (never the
- * root, so it can't clash with the root's own entrance `transition`
- * animation), and its `animationend` — fired once, `--pp-snackbar-timeout`
- * after mount — is what clicks the close button. The animated property is
- * inert (`opacity` held at 1 on a hidden element); only the timing matters.
+ * `PhoenixPaper.Snackbar`'s `auto_hide_duration` — doubles as the timer
+ * *and* a visible countdown bar. This runs on a tiny standalone `<span>`
+ * inside the snackbar (never the root, so it can't clash with the root's
+ * own entrance `transition` animation), and its `animationend` — fired
+ * once, `--pp-snackbar-timeout` after mount — is what clicks the close
+ * button. The animated property (`transform: scaleX`) is also what the
+ * user sees: a bar shrinking from full width to nothing over exactly the
+ * duration that drives the real dismissal, so there's only one timer, not
+ * a visual one that could drift out of sync with the functional one. Under
+ * `paperize={false}` the span still animates (this class stays
+ * unconditional — see `PhoenixPaper.Snackbar`), it's just sized to
+ * nothing, so the effect goes back to invisible-but-functional.
  */
 @utility pp-snackbar-timeout {
+  transform-origin: left;
   animation: pp-snackbar-timeout var(--pp-snackbar-timeout, 5000ms) linear forwards;
 }
 
 @keyframes pp-snackbar-timeout {
   from {
-    opacity: 1;
+    transform: scaleX(1);
   }
   to {
-    opacity: 1;
+    transform: scaleX(0);
   }
 }
 
@@ -745,8 +752,8 @@
   --pp-slider-color: var(--color-pp-secondary);
 }
 
-@utility pp-slider-tertiary {
-  --pp-slider-color: var(--color-pp-tertiary);
+@utility pp-slider-accent {
+  --pp-slider-color: var(--color-pp-accent);
 }
 
 @utility pp-slider-error {

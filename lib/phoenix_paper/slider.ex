@@ -94,7 +94,7 @@ defmodule PhoenixPaper.Slider do
   attr(:min, :any, default: 0)
   attr(:max, :any, default: 100)
   attr(:step, :any, default: 1)
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
   attr(:size, :string, default: "medium", values: ~w(medium small))
   attr(:orientation, :string, default: "horizontal", values: ~w(horizontal vertical))
 
@@ -270,7 +270,7 @@ defmodule PhoenixPaper.Slider do
 
   defp color_classes("primary"), do: "pp-slider-primary"
   defp color_classes("secondary"), do: "pp-slider-secondary"
-  defp color_classes("tertiary"), do: "pp-slider-tertiary"
+  defp color_classes("accent"), do: "pp-slider-accent"
   defp color_classes("error"), do: "pp-slider-error"
 
   defp track_classes("normal"), do: ""
@@ -279,7 +279,7 @@ defmodule PhoenixPaper.Slider do
 
   defp between_classes("primary"), do: "bg-pp-primary"
   defp between_classes("secondary"), do: "bg-pp-secondary"
-  defp between_classes("tertiary"), do: "bg-pp-tertiary"
+  defp between_classes("accent"), do: "bg-pp-accent"
   defp between_classes("error"), do: "bg-pp-error"
 
   defp percent(value, min, max) do

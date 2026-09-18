@@ -23,12 +23,13 @@ defmodule PhoenixPaper.Avatar do
   `size` (`"small"`/`"medium"`/`"large"`, default `"medium"`) is a
   convenience this library adds — MUI's own `Avatar` has no `size` prop at
   all, expecting `sx`/`className` for arbitrary sizing instead. Three
-  presets covers the common case; for anything else, override `class`
-  (e.g. `class="size-24"` for a big profile-page avatar — `Tails` resolves
-  the conflict with the preset's own `size-*`, see `PhoenixPaper.Tails`'s
-  moduledoc for why a plain `size-*` needs the same `!` treatment
-  `ThemeToggle`'s icons do if you're mixing it into a `class` that also
-  carries other utilities `Tails` doesn't know conflict).
+  presets covers the common case; for anything else, override `class` with
+  `class="!size-24"` for a big profile-page avatar — PhoenixPaper doesn't
+  merge/resolve class conflicts at all (see AGENTS.md, "Overriding
+  built-in classes via `class`"), so overriding the preset's own `size-*`
+  needs Tailwind's `!` (important) prefix to win deterministically, the
+  same treatment every override of a built-in utility needs, not just
+  `size-*`.
 
   No `AvatarGroup` (MUI's overlapping-stack wrapper) — a caller gets the
   same look by rendering several `pp_avatar`s inside a flex container with

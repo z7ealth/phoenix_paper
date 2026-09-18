@@ -29,7 +29,7 @@ defmodule PhoenixPaper.Tab do
   attr(:orientation, :string, default: "horizontal", values: ~w(horizontal vertical))
   attr(:default_selected, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
 
   attr(:ripple, :boolean,
     default: true,

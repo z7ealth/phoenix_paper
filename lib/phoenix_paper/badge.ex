@@ -37,7 +37,7 @@ defmodule PhoenixPaper.Badge do
   `"top-right"`) picks which corner.
 
   Deliberately no `color="default"` (MUI's own default): every other color
-  attr in this library is `primary`/`secondary`/`tertiary`/`error` plus
+  attr in this library is `primary`/`secondary`/`accent`/`error` plus
   `success`/`warning`/`info` for status (see `PhoenixPaper.Alert`) — adding
   an eighth, gray "default" here just for `Badge` would be a new token this
   library otherwise never needs. `color` defaults to `"error"` instead,
@@ -75,7 +75,7 @@ defmodule PhoenixPaper.Badge do
 
   attr(:color, :string,
     default: "error",
-    values: ~w(primary secondary tertiary error success warning info)
+    values: ~w(primary secondary accent error success warning info)
   )
 
   attr(:overlap, :string,
@@ -137,7 +137,7 @@ defmodule PhoenixPaper.Badge do
 
   defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
   defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("tertiary"), do: "bg-pp-tertiary text-pp-on-tertiary"
+  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
   defp color_classes("error"), do: "bg-pp-error text-pp-on-error"
   defp color_classes("success"), do: "bg-pp-success text-pp-on-success"
   defp color_classes("warning"), do: "bg-pp-warning text-pp-on-warning"

@@ -10,7 +10,7 @@ defmodule PhoenixPaper.ToggleButton do
   alias PhoenixPaper.{Helpers, Ripple, Shape}
 
   attr(:pressed, :boolean, default: false)
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
 
   attr(:shape, :atom,
     default: :md,
@@ -67,8 +67,8 @@ defmodule PhoenixPaper.ToggleButton do
     do:
       "border-pp-secondary bg-pp-secondary text-pp-on-secondary focus-visible:outline-pp-secondary"
 
-  defp state_classes(true, "tertiary"),
-    do: "border-pp-tertiary bg-pp-tertiary text-pp-on-tertiary focus-visible:outline-pp-tertiary"
+  defp state_classes(true, "accent"),
+    do: "border-pp-accent bg-pp-accent text-pp-on-accent focus-visible:outline-pp-accent"
 
   defp state_classes(true, "error"),
     do: "border-pp-error bg-pp-error text-pp-on-error focus-visible:outline-pp-error"
@@ -81,9 +81,9 @@ defmodule PhoenixPaper.ToggleButton do
     do:
       "border-pp-outline text-pp-on-surface hover:bg-pp-secondary/10 focus-visible:outline-pp-secondary"
 
-  defp state_classes(false, "tertiary"),
+  defp state_classes(false, "accent"),
     do:
-      "border-pp-outline text-pp-on-surface hover:bg-pp-tertiary/10 focus-visible:outline-pp-tertiary"
+      "border-pp-outline text-pp-on-surface hover:bg-pp-accent/10 focus-visible:outline-pp-accent"
 
   defp state_classes(false, "error"),
     do: "border-pp-outline text-pp-on-surface hover:bg-pp-error/10 focus-visible:outline-pp-error"

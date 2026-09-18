@@ -62,7 +62,7 @@ defmodule PhoenixPaper.Chip do
   `NumberField` already use for their filled backgrounds) is the default
   here, unlike every other colored component in this library — a plain tag
   chip (MUI's most common real-world case) is neutral, not brand-colored.
-  Every other `color` value (`primary`/`secondary`/`tertiary`/`error`, plus
+  Every other `color` value (`primary`/`secondary`/`accent`/`error`, plus
   `success`/`warning`/`info` for status, see `PhoenixPaper.Alert`) is also
   available.
 
@@ -88,7 +88,7 @@ defmodule PhoenixPaper.Chip do
 
   attr(:color, :string,
     default: "default",
-    values: ~w(default primary secondary tertiary error success warning info)
+    values: ~w(default primary secondary accent error success warning info)
   )
 
   attr(:size, :string, default: "medium", values: ~w(small medium))
@@ -214,7 +214,7 @@ defmodule PhoenixPaper.Chip do
   defp color_classes("filled", "default"), do: "bg-pp-surface-variant text-pp-on-surface"
   defp color_classes("filled", "primary"), do: "bg-pp-primary text-pp-on-primary"
   defp color_classes("filled", "secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("filled", "tertiary"), do: "bg-pp-tertiary text-pp-on-tertiary"
+  defp color_classes("filled", "accent"), do: "bg-pp-accent text-pp-on-accent"
   defp color_classes("filled", "error"), do: "bg-pp-error text-pp-on-error"
   defp color_classes("filled", "success"), do: "bg-pp-success text-pp-on-success"
   defp color_classes("filled", "warning"), do: "bg-pp-warning text-pp-on-warning"
@@ -229,8 +229,8 @@ defmodule PhoenixPaper.Chip do
   defp color_classes("outlined", "secondary"),
     do: "bg-transparent text-pp-secondary border border-pp-secondary"
 
-  defp color_classes("outlined", "tertiary"),
-    do: "bg-transparent text-pp-tertiary border border-pp-tertiary"
+  defp color_classes("outlined", "accent"),
+    do: "bg-transparent text-pp-accent border border-pp-accent"
 
   defp color_classes("outlined", "error"),
     do: "bg-transparent text-pp-error border border-pp-error"

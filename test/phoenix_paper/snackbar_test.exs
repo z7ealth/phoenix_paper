@@ -168,4 +168,66 @@ defmodule PhoenixPaper.SnackbarTest do
     <.pp_snackbar transition="none">Changes saved</.pp_snackbar>
     """
   end
+
+  test "color (default): stays the inverted monochrome chip" do
+    html = render_component(&snackbar/1)
+
+    assert html =~ "bg-pp-on-surface"
+    assert html =~ "text-pp-surface"
+  end
+
+  test "color=\"primary\" paints the chip and the close button's contrast to match" do
+    html = render_component(&primary_colored/1)
+
+    assert html =~ "bg-pp-primary"
+    assert html =~ "text-pp-on-primary"
+    refute html =~ "bg-pp-on-surface"
+  end
+
+  defp primary_colored(assigns) do
+    ~H"""
+    <.pp_snackbar color="primary" on_close={Phoenix.LiveView.JS.push("dismiss")}>
+      Saved
+    </.pp_snackbar>
+    """
+  end
+
+  test "color=\"error\" paired with auto_hide_duration colors the timer bar to match" do
+    html = render_component(&error_colored_with_timer/1)
+
+    assert html =~ "bg-pp-error"
+    assert html =~ "bg-pp-on-error/40"
+  end
+
+  defp error_colored_with_timer(assigns) do
+    ~H"""
+    <.pp_snackbar
+      color="error"
+      auto_hide_duration={4000}
+      on_close={Phoenix.LiveView.JS.push("dismiss")}
+    >
+      Failed
+    </.pp_snackbar>
+    """
+  end
+
+  test "paperize={false} keeps the timer animation functional but strips the visible bar's size/color" do
+    html = render_component(&bare_with_timer/1)
+
+    assert html =~ "pp-snackbar-timeout"
+    refute html =~ "bg-pp-surface/40"
+    refute html =~ "inset-x-0"
+  end
+
+  defp bare_with_timer(assigns) do
+    ~H"""
+    <.pp_snackbar
+      paperize={false}
+      auto_hide_duration={4000}
+      on_close={Phoenix.LiveView.JS.push("dismiss")}
+    >
+      Saved
+    </.pp_snackbar>
+    """
+  end
 end

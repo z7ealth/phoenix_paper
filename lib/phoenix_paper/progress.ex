@@ -26,7 +26,7 @@ defmodule PhoenixPaper.Progress do
   attr(:paperize, :boolean, default: true)
   attr(:variant, :string, default: "linear", values: ~w(linear circular))
   attr(:value, :integer, default: nil, doc: "0-100, nil for indeterminate (animated)")
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
   attr(:size, :integer, default: 40, doc: "circular only — diameter in pixels")
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -104,7 +104,7 @@ defmodule PhoenixPaper.Progress do
   defp track_classes("secondary"),
     do: "h-1 w-full overflow-hidden rounded-full bg-pp-secondary/20"
 
-  defp track_classes("tertiary"), do: "h-1 w-full overflow-hidden rounded-full bg-pp-tertiary/20"
+  defp track_classes("accent"), do: "h-1 w-full overflow-hidden rounded-full bg-pp-accent/20"
   defp track_classes("error"), do: "h-1 w-full overflow-hidden rounded-full bg-pp-error/20"
 
   defp bar_classes("primary", nil),
@@ -113,8 +113,8 @@ defmodule PhoenixPaper.Progress do
   defp bar_classes("secondary", nil),
     do: "h-full w-1/3 rounded-full bg-pp-secondary pp-progress-indeterminate"
 
-  defp bar_classes("tertiary", nil),
-    do: "h-full w-1/3 rounded-full bg-pp-tertiary pp-progress-indeterminate"
+  defp bar_classes("accent", nil),
+    do: "h-full w-1/3 rounded-full bg-pp-accent pp-progress-indeterminate"
 
   defp bar_classes("error", nil),
     do: "h-full w-1/3 rounded-full bg-pp-error pp-progress-indeterminate"
@@ -125,15 +125,15 @@ defmodule PhoenixPaper.Progress do
   defp bar_classes("secondary", _value),
     do: "h-full rounded-full bg-pp-secondary transition-[width] duration-300"
 
-  defp bar_classes("tertiary", _value),
-    do: "h-full rounded-full bg-pp-tertiary transition-[width] duration-300"
+  defp bar_classes("accent", _value),
+    do: "h-full rounded-full bg-pp-accent transition-[width] duration-300"
 
   defp bar_classes("error", _value),
     do: "h-full rounded-full bg-pp-error transition-[width] duration-300"
 
   defp circular_classes("primary"), do: "text-pp-primary"
   defp circular_classes("secondary"), do: "text-pp-secondary"
-  defp circular_classes("tertiary"), do: "text-pp-tertiary"
+  defp circular_classes("accent"), do: "text-pp-accent"
   defp circular_classes("error"), do: "text-pp-error"
 
   defp indeterminate_circular_classes("primary"),
@@ -144,9 +144,9 @@ defmodule PhoenixPaper.Progress do
     do:
       "inline-block animate-spin rounded-full border-4 border-current text-pp-secondary border-t-transparent"
 
-  defp indeterminate_circular_classes("tertiary"),
+  defp indeterminate_circular_classes("accent"),
     do:
-      "inline-block animate-spin rounded-full border-4 border-current text-pp-tertiary border-t-transparent"
+      "inline-block animate-spin rounded-full border-4 border-current text-pp-accent border-t-transparent"
 
   defp indeterminate_circular_classes("error"),
     do:

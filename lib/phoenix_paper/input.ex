@@ -130,7 +130,7 @@ defmodule PhoenixPaper.Input do
   attr(:type, :string, default: "text")
   attr(:variant, :string, default: "outlined", values: ~w(outlined filled standard))
   attr(:size, :string, default: "medium", values: ~w(medium small))
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
 
   attr(:shape, :atom,
     default: :sm,
@@ -345,8 +345,8 @@ defmodule PhoenixPaper.Input do
   defp outlined_focus_border_classes("secondary", []),
     do: "focus-within:[&>fieldset]:border-2 focus-within:[&>fieldset]:border-pp-secondary"
 
-  defp outlined_focus_border_classes("tertiary", []),
-    do: "focus-within:[&>fieldset]:border-2 focus-within:[&>fieldset]:border-pp-tertiary"
+  defp outlined_focus_border_classes("accent", []),
+    do: "focus-within:[&>fieldset]:border-2 focus-within:[&>fieldset]:border-pp-accent"
 
   defp outlined_focus_border_classes("error", []),
     do: "focus-within:[&>fieldset]:border-2 focus-within:[&>fieldset]:border-pp-error"
@@ -384,8 +384,8 @@ defmodule PhoenixPaper.Input do
   defp color_classes("filled", "secondary"),
     do: "focus-within:border-b-2 focus-within:border-pp-secondary"
 
-  defp color_classes("filled", "tertiary"),
-    do: "focus-within:border-b-2 focus-within:border-pp-tertiary"
+  defp color_classes("filled", "accent"),
+    do: "focus-within:border-b-2 focus-within:border-pp-accent"
 
   defp color_classes("filled", "error"),
     do: "focus-within:border-b-2 focus-within:border-pp-error"
@@ -396,8 +396,8 @@ defmodule PhoenixPaper.Input do
   defp color_classes("standard", "secondary"),
     do: "border-b border-pp-outline focus-within:border-b-2 focus-within:border-pp-secondary"
 
-  defp color_classes("standard", "tertiary"),
-    do: "border-b border-pp-outline focus-within:border-b-2 focus-within:border-pp-tertiary"
+  defp color_classes("standard", "accent"),
+    do: "border-b border-pp-outline focus-within:border-b-2 focus-within:border-pp-accent"
 
   defp color_classes("standard", "error"),
     do: "border-b border-pp-outline focus-within:border-b-2 focus-within:border-pp-error"
@@ -475,7 +475,7 @@ defmodule PhoenixPaper.Input do
 
   defp dense_focus_border("primary"), do: "focus-within:border-pp-primary"
   defp dense_focus_border("secondary"), do: "focus-within:border-pp-secondary"
-  defp dense_focus_border("tertiary"), do: "focus-within:border-pp-tertiary"
+  defp dense_focus_border("accent"), do: "focus-within:border-pp-accent"
   defp dense_focus_border("error"), do: "focus-within:border-pp-error"
 
   defp dense_shape_classes("standard", _shape), do: ""
@@ -502,8 +502,8 @@ defmodule PhoenixPaper.Input do
     "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-outline transition-all peer-focus:top-2 peer-focus:text-xs peer-focus:text-pp-secondary peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
   end
 
-  defp label_classes("tertiary", []) do
-    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-outline transition-all peer-focus:top-2 peer-focus:text-xs peer-focus:text-pp-tertiary peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
+  defp label_classes("accent", []) do
+    "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-pp-outline transition-all peer-focus:top-2 peer-focus:text-xs peer-focus:text-pp-accent peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs"
   end
 
   defp label_classes("error", []) do

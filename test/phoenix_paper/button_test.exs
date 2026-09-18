@@ -78,6 +78,58 @@ defmodule PhoenixPaper.ButtonTest do
     assert html =~ "cursor-pointer"
   end
 
+  test "does not force uppercase text — inherits text-transform instead" do
+    html = render_component(&raised_primary/1)
+
+    refute html =~ "uppercase"
+    assert html =~ "[text-transform:inherit]"
+  end
+
+  test "size (default medium) renders the medium padding/text-size classes" do
+    html = render_component(&raised_primary/1)
+
+    assert html =~ "px-6"
+    assert html =~ "py-2.5"
+    assert html =~ "text-sm"
+  end
+
+  test "size=small and size=large render different padding/text-size classes" do
+    small = render_component(&small_button/1)
+    large = render_component(&large_button/1)
+
+    assert small =~ "px-4"
+    assert small =~ "text-xs"
+    refute small =~ "px-6"
+
+    assert large =~ "px-8"
+    assert large =~ "text-base"
+    refute large =~ "px-6"
+  end
+
+  defp small_button(assigns) do
+    ~H"""
+    <.pp_button size="small">Save</.pp_button>
+    """
+  end
+
+  defp large_button(assigns) do
+    ~H"""
+    <.pp_button size="large">Save</.pp_button>
+    """
+  end
+
+  test "size affects icon-variant padding too" do
+    html = render_component(&small_icon_button/1)
+
+    assert html =~ "p-1"
+  end
+
+  defp small_icon_button(assigns) do
+    ~H"""
+    <.pp_button variant="icon" size="small"><span class="hero-star" /></.pp_button>
+    """
+  end
+
   test "start_icon and end_icon render around the label" do
     html = render_component(&with_icons/1)
 

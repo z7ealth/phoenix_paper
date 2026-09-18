@@ -23,6 +23,16 @@ defmodule PhoenixPaper.Button do
   overlay options like MUI's; this covers the common case without the
   complexity of the rest of that API.
 
+  `size` (`"small"`/`"medium"`/`"large"`, default `"medium"`) scales
+  padding/gap/font-size (and just padding for `variant="icon"`, since that
+  variant has no label) — MUI's own `Button` `size` prop.
+
+  Label text is **not** forced to uppercase — it sets
+  `[text-transform:inherit]` rather than Material 2's classic `uppercase`
+  (an earlier version of this component did force `uppercase`), matching
+  Material 3's relaxed button typography and letting a caller's own
+  ancestor `text-transform` (or lack of one) come through unchanged.
+
   ## Link mode
 
   Pass `href`, `navigate` or `patch` and `pp_button/1` renders a
@@ -50,7 +60,8 @@ defmodule PhoenixPaper.Button do
 
   attr(:paperize, :boolean, default: true, doc: "apply PhoenixPaper's Material styling")
   attr(:variant, :string, default: "raised", values: ~w(raised flat outlined text icon))
-  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
+  attr(:size, :string, default: "medium", values: ~w(small medium large))
   attr(:elevation, :integer, default: nil, doc: "override the resting elevation (0-24)")
 
   attr(:shape, :atom,
@@ -121,7 +132,10 @@ defmodule PhoenixPaper.Button do
       class={
         Helpers.classes(
           @paperize,
-          [paper_classes(@variant, @color, @elevation, @shape, @ripple?), inert_classes(@inert?)],
+          [
+            paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?),
+            inert_classes(@inert?)
+          ],
           @class
         )
       }
@@ -137,7 +151,13 @@ defmodule PhoenixPaper.Button do
       aria-busy={to_string(@loading)}
       data-pp-component="button"
       data-pp-variant={@variant}
-      class={Helpers.classes(@paperize, paper_classes(@variant, @color, @elevation, @shape, @ripple?), @class)}
+      class={
+        Helpers.classes(
+          @paperize,
+          paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?),
+          @class
+        )
+      }
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
@@ -169,9 +189,9 @@ defmodule PhoenixPaper.Button do
   defp inert_classes(true), do: "pointer-events-none opacity-40"
   defp inert_classes(false), do: ""
 
-  defp paper_classes(variant, color, elevation, shape, ripple) do
+  defp paper_classes(variant, color, size, elevation, shape, ripple) do
     [
-      base_classes(variant),
+      base_classes(variant, size),
       Shape.class(shape),
       color_classes(variant, color),
       elevation_classes(variant, elevation),
@@ -179,13 +199,27 @@ defmodule PhoenixPaper.Button do
     ]
   end
 
-  defp base_classes("icon") do
-    "inline-flex items-center justify-center p-2 cursor-pointer transition-colors duration-150 ease-out select-none disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+  defp base_classes("icon", size) do
+    [
+      "inline-flex items-center justify-center cursor-pointer transition-colors duration-150 ease-out select-none disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+      icon_size_classes(size)
+    ]
   end
 
-  defp base_classes(_variant) do
-    "inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium tracking-wide uppercase whitespace-nowrap cursor-pointer transition-[box-shadow,background-color,color,border-color] duration-150 ease-out select-none disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+  defp base_classes(_variant, size) do
+    [
+      "inline-flex items-center justify-center whitespace-nowrap cursor-pointer font-medium [text-transform:inherit] transition-[box-shadow,background-color,color,border-color] duration-150 ease-out select-none disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+      size_classes(size)
+    ]
   end
+
+  defp icon_size_classes("small"), do: "p-1"
+  defp icon_size_classes("medium"), do: "p-2"
+  defp icon_size_classes("large"), do: "p-3"
+
+  defp size_classes("small"), do: "gap-1.5 px-4 py-1.5 text-xs"
+  defp size_classes("medium"), do: "gap-2 px-6 py-2.5 text-sm"
+  defp size_classes("large"), do: "gap-2.5 px-8 py-3.5 text-base"
 
   defp color_classes("raised", "primary"),
     do: "bg-pp-primary text-pp-on-primary focus-visible:outline-pp-primary"
@@ -193,8 +227,8 @@ defmodule PhoenixPaper.Button do
   defp color_classes("raised", "secondary"),
     do: "bg-pp-secondary text-pp-on-secondary focus-visible:outline-pp-secondary"
 
-  defp color_classes("raised", "tertiary"),
-    do: "bg-pp-tertiary text-pp-on-tertiary focus-visible:outline-pp-tertiary"
+  defp color_classes("raised", "accent"),
+    do: "bg-pp-accent text-pp-on-accent focus-visible:outline-pp-accent"
 
   defp color_classes("raised", "error"),
     do: "bg-pp-error text-pp-on-error focus-visible:outline-pp-error"
@@ -205,8 +239,8 @@ defmodule PhoenixPaper.Button do
   defp color_classes("flat", "secondary"),
     do: "bg-pp-secondary text-pp-on-secondary focus-visible:outline-pp-secondary"
 
-  defp color_classes("flat", "tertiary"),
-    do: "bg-pp-tertiary text-pp-on-tertiary focus-visible:outline-pp-tertiary"
+  defp color_classes("flat", "accent"),
+    do: "bg-pp-accent text-pp-on-accent focus-visible:outline-pp-accent"
 
   defp color_classes("flat", "error"),
     do: "bg-pp-error text-pp-on-error focus-visible:outline-pp-error"
@@ -219,9 +253,9 @@ defmodule PhoenixPaper.Button do
     do:
       "bg-transparent text-pp-secondary border border-pp-secondary hover:bg-pp-secondary/10 focus-visible:outline-pp-secondary"
 
-  defp color_classes("outlined", "tertiary"),
+  defp color_classes("outlined", "accent"),
     do:
-      "bg-transparent text-pp-tertiary border border-pp-tertiary hover:bg-pp-tertiary/10 focus-visible:outline-pp-tertiary"
+      "bg-transparent text-pp-accent border border-pp-accent hover:bg-pp-accent/10 focus-visible:outline-pp-accent"
 
   defp color_classes("outlined", "error"),
     do:
@@ -234,9 +268,8 @@ defmodule PhoenixPaper.Button do
     do:
       "bg-transparent text-pp-secondary hover:bg-pp-secondary/10 focus-visible:outline-pp-secondary"
 
-  defp color_classes("text", "tertiary"),
-    do:
-      "bg-transparent text-pp-tertiary hover:bg-pp-tertiary/10 focus-visible:outline-pp-tertiary"
+  defp color_classes("text", "accent"),
+    do: "bg-transparent text-pp-accent hover:bg-pp-accent/10 focus-visible:outline-pp-accent"
 
   defp color_classes("text", "error"),
     do: "bg-transparent text-pp-error hover:bg-pp-error/10 focus-visible:outline-pp-error"
@@ -247,8 +280,8 @@ defmodule PhoenixPaper.Button do
   defp color_classes("icon", "secondary"),
     do: "text-pp-secondary hover:bg-pp-secondary/10 focus-visible:outline-pp-secondary"
 
-  defp color_classes("icon", "tertiary"),
-    do: "text-pp-tertiary hover:bg-pp-tertiary/10 focus-visible:outline-pp-tertiary"
+  defp color_classes("icon", "accent"),
+    do: "text-pp-accent hover:bg-pp-accent/10 focus-visible:outline-pp-accent"
 
   defp color_classes("icon", "error"),
     do: "text-pp-error hover:bg-pp-error/10 focus-visible:outline-pp-error"

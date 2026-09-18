@@ -18,7 +18,7 @@ adding or changing a component.
   `ListSubheader`, `Divider`, `Box`, `Container`, `Stack`, `Grid`,
   `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, `Table`,
   `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
-  `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`,
+  `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Menu`, `Progress`, `Skeleton`,
   `Snackbar`, `Flash`, `SpeedDial`, `Accordion`, `AccordionSummary`,
   `AccordionDetails`, `AccordionActions`, ...), plus `Helpers`, `Elevation`,
   `Spacing`, `Shape`, `Ripple`.
@@ -45,7 +45,9 @@ adding or changing a component.
     no-op flag — but that should be rare; almost everything has *some*
     skin (even `Stack`/`Grid`/`Container` apply layout classes that
     `paperize={false}` legitimately turns off).
-  - `class` (`:any`, default `nil`) — merged with `Tails`.
+  - `class` (`:any`, default `nil`) — concatenated after the component's
+    own built-in classes (see "Overriding built-in classes via `class`"
+    below for what that does and doesn't guarantee).
   - `rest` (`:global`) — for `phx-*` bindings, `id`, `data-*`, etc.
 - Register new components in `PhoenixPaper.Components.__using__/1` in the
   same change.
@@ -152,9 +154,11 @@ Every component takes a `paperize` boolean attribute, **default `true`**.
 
 - `paperize={true}` (default): the component renders with PhoenixPaper's
   Material Design classes (the "paper" skin) — colors, elevation, shape,
-  typography. A caller-supplied `class` is still merged on top via
-  `PhoenixPaper.Tails` (last conflicting utility wins), so small tweaks
-  don't require dropping into `paperize={false}`.
+  typography. A caller-supplied `class` is concatenated after them, so a
+  small tweak doesn't *require* dropping into `paperize={false}` — but
+  see "Overriding built-in classes via `class`" below: without a
+  class-merge step, overriding a specific built-in utility (rather than
+  just adding a new one) needs Tailwind's `!` prefix to reliably win.
 - `paperize={false}`: **all** of the component's built-in classes are
   dropped. Only the caller's `class` and `rest` attrs render. The DOM
   structure needed for the component to function stays (e.g. the
@@ -181,58 +185,45 @@ component computes an effective `ripple and paperize` value and uses
 `PhoenixPaper.Ripple`'s moduledoc). Keep that pattern for any new
 component that adds `ripple`.
 
-## `PhoenixPaper.Tails`, not plain `Tails` — and updating it when adding a color token
+## Overriding built-in classes via `class` — no merge, use `!important`
 
-`Helpers.classes/3` merges through `PhoenixPaper.Tails`, a `Tails.Custom`
-instance, **never** the plain `Tails` module directly. This isn't
-stylistic: plain `Tails` only recognizes Tailwind's own built-in palette
-names when deciding whether two classes conflict. It has no idea `pp-*` is
-a color family, so when a class sharing a prefix with a `pp-*` color shows
-up in the same merge — a font-size utility and `text-pp-*` both start
-`text-`; a border/outline *width* utility and `border-pp-*`/`outline-pp-*`
-both start `border-`/`outline-`) — it can't tell they're different CSS
-properties, lumps them into one "conflicting" group, and silently keeps
-only the last one. This was a real, already-shipping bug: `focus-visible:
-outline-2` was being dropped by every component using the standard focus
-ring pattern (`outline-2` + `outline-pp-primary` together), quietly
-shrinking every focus ring in the library to the browser default width.
-`PhoenixPaper.Tails` is `Tails.Custom` told about `pp-*` via `color_classes`
-specifically to fix this class of bug for good — see its moduledoc.
+PhoenixPaper does **not** depend on a Tailwind class-merging library.
+Earlier versions routed every `class` through `PhoenixPaper.Tails`, a
+`Tails.Custom` instance (from the `tails` hex package) configured to
+recognize `pp-*` as a color family so it could tell e.g. `text-pp-primary`
+(color) apart from `text-xs` (font-size) when deciding whether two
+same-prefixed classes conflict. `tails` was retired on hex.pm (all
+versions marked "Deprecated" — its own last release was May 2024, with no
+maintained drop-in successor: the most-downloaded alternative, `tw_merge`,
+explicitly documents that it doesn't support extending its color/token
+recognition at all, which is the one feature this library actually needed)
+— rather than either vendor `tails`' own ~2000-line merge engine into this
+codebase permanently or depend on a library that can't do what we need,
+`Helpers.classes/3` and `Helpers.toggle_label_classes/1` now just
+concatenate: `[paper_classes, extra_class]`, flattened and space-joined,
+nothing more. See `PhoenixPaper.Helpers`'s moduledoc.
 
-That configuration lives entirely in `mix.exs`, split across **two
-mechanisms that are both required together** — this took two failed
-attempts (verified against a real external app depending on this package
-via `path:`, not just this package's own `mix test`, since that's what
-actually exposed each gap) to land correctly:
+**What this means in practice**: a caller's `class` reliably *adds* new
+utilities, but does **not** reliably *replace* a built-in one that targets
+the same CSS property — both classes render, and which one visually wins
+is decided by Tailwind's own generated stylesheet order (fixed by
+Tailwind's internal utility ordering, not by where the class appears in
+your `class={...}` attribute), so it's not something to rely on. To
+override a specific built-in utility (a color, a size, a border width, a
+padding, ...), prefix your override with Tailwind's `!` (important)
+modifier — e.g. `class="!bg-red-500"` to override a button's default
+`bg-pp-primary`, `class="!size-24"` to override `Avatar`'s preset
+`size-*`. `!` beats a non-`!` class regardless of stylesheet order, so it's
+the one deterministic way to win. This was already the documented
+workaround for the one case even `tails` itself couldn't merge (`size-*`,
+a shorthand its ruleset predates — see `ThemeToggle`'s section below); it's
+now the standard pattern for *every* override, not just that one case.
 
-- A plain `Application.put_env(:phoenix_paper, PhoenixPaper.Tails,
-  color_classes: [...])` at the top of `mix.exs`, so the value is visible
-  when `PhoenixPaper.Tails` itself compiles (`Application.compile_env/2`
-  reads whatever's in the application environment *at that moment* — a
-  `config/config.exs` file can't help here at all, since **Mix ignores
-  `config/config.exs` from dependencies** entirely; `mix.exs` works because
-  Mix always evaluates a dependency's `mix.exs` first, before any of its
-  `lib/*.ex`, to learn how to build it).
-- The *same* value again, in `application/0`'s `env:` key. This one's
-  needed because `Application.compile_env/2` doesn't just read a value —
-  it also makes Mix validate that value against whatever `:phoenix_paper`
-  is loaded with when the OTP application actually **starts** (e.g. when
-  `PhoenixPlayground.start/1` boots the full app tree in `dev.exs`).
-  Application loading resets the app's environment from its compiled
-  `.app` resource file, discarding the ad-hoc `put_env` from step one —
-  `env:` is what bakes a value directly into that resource, so it's there
-  when loading happens. Without it, `mix compile`/`mix test` pass (they
-  never start the OTP application) but booting a real LiveView server
-  crashes with a `Mix.Error` about mismatched compile-time/runtime values.
-
-Using only one of the two isn't enough — the `mix.exs` module comment
-where both live spells out exactly which failure mode each one alone
-leaves open, if you're ever tempted to simplify it back down to one.
-
-**If you ever add a new `pp-*` token** (a new palette color in
-`priv/static/phoenix_paper.css`, say), add its name to the shared
-`color_classes` list in `mix.exs` too — otherwise it inherits this exact
-bug the moment it's combined with a same-prefixed non-color utility.
+If a new component needs the *default itself* to be conditional rather
+than asking every caller to reach for `!`, prefer branching in the
+component's own `paper_classes/...` (a `case`/`cond` picking one literal
+string, per "Tailwind class safety" below) over expecting `class` overrides
+to replace it — that keeps the override-free path.
 
 ## Tailwind class safety — no dynamic class names
 
@@ -458,19 +449,25 @@ in the live top app bar — found from a user screenshot showing a blank
 colored bar, not from any test (rendering the class list in isolation
 looks completely fine; the bug only exists in the *combination* of two
 components' independent, individually-correct defaults). Fixed by adding
-`class="text-pp-on-primary hover:bg-pp-on-primary/10 focus-visible:outline-pp-on-primary"`
+`class="!text-pp-on-primary hover:!bg-pp-on-primary/10 focus-visible:!outline-pp-on-primary"`
 (or the `border-pp-on-primary`-inclusive variant for `variant="outlined"`)
-to each affected button — plain `class` overrides via `Helpers.classes/3`'s
-Tails merge, no component change needed, since `Button` has no way to know
-its container's color and (like `ButtonGroup`/`Tabs`/`AppBar` itself)
-isn't meant to. There's no general fix for this beyond "remember to
-override text/border/outline color for brand-colored buttons placed on a
-brand-colored surface" — the same caveat applies to any `Button` dropped
-into a colored `Drawer` (see below) or `Card`.
+to each affected button — a plain `class` override, no component change
+needed, since `Button` has no way to know its container's color and (like
+`ButtonGroup`/`Tabs`/`AppBar` itself) isn't meant to. Note the `!` prefix
+on every one of those: `Button`'s own `color_classes/2` already sets
+`text-pp-primary`/`hover:bg-pp-primary/10`/`focus-visible:outline-pp-primary`,
+and PhoenixPaper doesn't merge/resolve class conflicts (see "Overriding
+built-in classes via `class`" above) — without `!`, both the default and
+the override would render and the button's actual color would be down to
+Tailwind's stylesheet order, not this override. There's no general fix
+for this beyond "remember to override text/border/outline color for
+brand-colored buttons placed on a brand-colored surface" — the same
+caveat applies to any `Button` dropped into a colored `Drawer` (see below)
+or `Card`.
 
 ## Navigation: `Drawer`'s `color` and reaching into nested `List`/`ListItem`
 
-`Drawer` gained a `color` attr (`primary`/`secondary`/`tertiary`/`surface`,
+`Drawer` gained a `color` attr (`primary`/`secondary`/`accent`/`surface`,
 default `surface` — unchanged prior behavior) so the whole panel can match
 a colored `AppBar`. Unlike every other `color` attr in this library
 (`Button`, `AppBar`, `Tab`, ...), which only ever touches the component's
@@ -638,6 +635,59 @@ inner toolbar div makes and for the same reason: there's no `class` attr
 exposed on an individual `<li>` for a `paperize={false}` caller to rebuild
 that row layout themselves.
 
+## Navigation: `Menu`
+
+MUI files `Menu`/`MenuItem` under its own "Navigation" category
+(mui.com/material-ui/react-menu), so this follows the same grouping —
+`pp_menu/1` is a trigger that reveals a small anchored popover list of
+actions (an overflow menu, a profile menu). It's the second component in
+this library that isn't stateless-and-simple (`Dialog` is the first, see
+above): the checkbox/`peer-checked:` trick every other reveal component
+uses (`Accordion`, `Drawer`, `SpeedDial`) can only express "is *some*
+sibling checked," with no way to close itself on an outside click or on
+selecting an item — both baseline-expected menu behavior — so `Menu` uses
+the same `Phoenix.LiveView.JS` + `phx-click-away` mechanism `Dialog` uses
+for its own backdrop-click case, not a new mechanism.
+
+**One real difference from `Dialog`'s architecture**: `Dialog`'s trigger
+lives wherever the caller puts it on the page (`phx-click={Dialog.show(id)}`
+on a button anywhere), fully decoupled from the dialog markup itself,
+because a full-screen modal doesn't need to be positioned relative to
+anything. A menu's popover *does* — it has to render right under its own
+trigger — and doing that without a bespoke JS hook measuring
+`getBoundingClientRect` (the thing this library consistently avoids, see
+`Slider`'s `valueLabelDisplay`/`Tabs`'s sliding-indicator notes) means
+plain CSS: `absolute`-positioning the panel against a `relative` ancestor
+that also contains the trigger. So unlike `Dialog`, `pp_menu/1` renders
+*both* the trigger and the panel itself, as one component, and the
+`:trigger` slot only supplies the trigger's inner content, not a whole
+independent element elsewhere on the page.
+
+**Closing an item closes the menu — via bubbling, not cooperation.**
+`phx-click={close(@id)}` sits on the panel wrapper itself; clicking any
+item inside (a `ListItem`, a plain link, anything) runs that item's own
+click handling first, then the native DOM click event bubbles up to the
+panel's own listener and closes the menu — zero coordination needed from
+whatever `:inner_block` renders. The trade-off: an item meant to *stay*
+open after its own click (a submenu trigger, a `Switch` toggled from
+inside the menu) isn't supported — not a bug, the same class of accepted
+gap as `Accordion`'s can't-uncheck radio or `Tabs`' non-roving focus.
+
+**Positioning is unconditional, not gated by `paperize`.** The panel's
+`absolute`/anchor-offset classes live on the outer wrapper `<div>`, never
+routed through `Helpers.classes/3` — same reasoning as `Badge`'s wrapping
+`<span>` and `Autocomplete`'s anchor `<div>` (see "The `paperize`
+contract"): it's positioning plumbing the popover can't function without,
+not visual skin. Only the inner `PhoenixPaper.Paper` surface (background,
+elevation, rounded corners, cosmetic padding/min-width) is paperize-gated.
+
+`anchor` (`bottom-start`/`bottom-end`/`top-start`/`top-end`, default
+`bottom-start`) is a fixed offset picked once, the same "no collision
+detection/auto-flip like MUI's Popper-based positioning" trade-off
+`Tooltip`'s `placement` already documents and for the same reason: real
+auto-flip needs a runtime viewport-space measurement, another JS hook this
+library doesn't add.
+
 ## Forms: `Slider` (MUI Slider parity)
 
 Rewritten from `accent-color`-only styling to a fully custom
@@ -724,7 +774,7 @@ the thumb's pixel position at all.
 
 `Input.pp_input/1` is modeled on MUI's TextField: three `variant`s
 (`outlined`, `filled`, `standard`), a `color` (`primary`/`secondary`/
-`tertiary`/`error`) that only shows up on `:focus-within` (border + label),
+`accent`/`error`) that only shows up on `:focus-within` (border + label),
 a `size` (`medium`/`small`), `multiline`+`rows`, and `:start_adornment`/
 `:end_adornment` slots. Not ported from MUI: `select` (that's the separate
 `PhoenixPaper.Select` component), `fullWidth` (just put `class="w-full"` on
@@ -885,7 +935,7 @@ Four MUI-parity components added together, all under "Data display" in
   `standard`, only a `nil` content is the one case `dot` treats specially
   (stays visible, e.g. a blank "online" indicator). `color` defaults to
   `"error"`, not a `"default"` gray like MUI — this library's `color` scale
-  is `primary`/`secondary`/`tertiary`/`error` plus `success`/`warning`/
+  is `primary`/`secondary`/`accent`/`error` plus `success`/`warning`/
   `info` (see `Alert`), no eighth neutral token exists purely for `Badge`,
   and an unread-count badge reading as attention-red is the far more common
   real case anyway. The wrapping `<span>`'s `relative inline-flex shrink-0`
@@ -942,7 +992,7 @@ Modeled on MUI's Feedback category. Two things are worth knowing before
 touching any of these:
 
 **`Alert`/`Snackbar` needed a new, separate color axis.** Every other
-component's `color` attr picks from `primary`/`secondary`/`tertiary`/`error`
+component's `color` attr picks from `primary`/`secondary`/`accent`/`error`
 — brand/action colors. `Alert`'s `severity` picks from
 `success`/`info`/`warning`/`error` — status colors, a different concept that
 happens to share the name `error` (and does mean the same red) but has no
@@ -952,16 +1002,17 @@ brand equivalent for "success" or "info" or "warning". Rather than force
 `priv/static/phoenix_paper.css`, in both the light (`@theme`) and
 `[data-theme="dark"]` blocks — but **not** the `[data-pp-theme="teal"]`
 alternate palette, since status colors aren't part of a brand identity swap
-and should stay consistent regardless of which brand palette is active. Any
-new color token needs adding to `mix.exs`'s `color_classes` list too (see
-"`PhoenixPaper.Tails`, not plain `Tails`" above) — these three are as much
-a "color token" as `primary`/`secondary`/`tertiary` are, even though they
-arrived with a feature addition rather than a new brand color.
+and should stay consistent regardless of which brand palette is active.
+(Older versions of this library also required registering any new `pp-*`
+token in `mix.exs`'s `color_classes` list, for a class-merge dependency
+that's since been dropped — see "Overriding built-in classes via `class`"
+above. A new color token today needs nothing beyond the CSS file itself.)
 
-**`Dialog` is the one component that isn't stateless-and-simple.** Every
-other component in this library either needs no interactivity (most of
-them), a tiny bit of pure-CSS trickery (`Drawer`, `Rating`, checkbox/switch
-tricks), or genuine server-tracked state as a `Phoenix.LiveComponent`
+**`Dialog` was the first component that isn't stateless-and-simple**
+(`Menu` is the second — see "Overlays: `Menu`" below). Every other
+component in this library either needs no interactivity (most of them), a
+tiny bit of pure-CSS trickery (`Drawer`, `Rating`, checkbox/switch tricks),
+or genuine server-tracked state as a `Phoenix.LiveComponent`
 (`Autocomplete`, `TransferList`). `Dialog` needs client-side show/hide with
 transitions, backdrop click-to-close, Escape-to-close, and focus trapping —
 none of which need a LiveComponent's server round-trip, so it uses the exact
@@ -1094,9 +1145,15 @@ paperize` gated like everywhere.
 Colors are Tailwind v4 theme tokens backed by CSS custom properties, defined
 in `priv/static/phoenix_paper.css`:
 
-- `--color-pp-primary`, `--color-pp-secondary`, `--color-pp-tertiary`,
+- `--color-pp-primary`, `--color-pp-secondary`, `--color-pp-accent`,
   `--color-pp-error`, `--color-pp-surface`, `--color-pp-surface-variant`,
-  `--color-pp-outline`, and their `pp-on-*` foreground counterparts.
+  `--color-pp-outline`, and their `pp-on-*` foreground counterparts. This
+  third brand slot was originally named `tertiary` (Material 3's own name
+  for it) — renamed to `accent` throughout the library (CSS variables,
+  every component's `color` attr value, every `pp-accent`/`pp-on-accent`
+  class) as a deliberate breaking change; a consuming app using
+  `color="tertiary"` or `bg-pp-tertiary` needs to update to `"accent"`/
+  `bg-pp-accent`. No color value changed, only the name.
 - **Namespaced `pp-` on every token.** This is deliberate: Phoenix apps
   commonly ship daisyUI, which defines its own `primary`/`secondary`/
   `base-100`/... Tailwind v4 theme colors. Unprefixed names would collide
@@ -1121,7 +1178,7 @@ in `priv/static/phoenix_paper.css`:
   `phoenix_paper.css`. That's the entire theming API — no build step, no
   JS config.
 
-## `PhoenixPaper.ThemeToggle`, and a `PhoenixPaper.Tails` gap it exposed
+## `PhoenixPaper.ThemeToggle`, and a class-merging gap it exposed early
 
 Rewritten from a thin `PhoenixPaper.Switch` wrapper to its own markup so a
 sun/moon icon could live *inside* the sliding thumb (swapped via a
@@ -1138,22 +1195,25 @@ sun/moon icon could live *inside* the sliding thumb (swapped via a
   `AppBar`. Rather than fix it per-placement (there's no `class` override
   path into `Switch`'s internals anyway), the toggle just never uses a
   color that could plausibly match its own container.
-- **Found a real gap in the vendored `Tails`**: passing `class="size-3"`
-  to override `PhoenixPaper.Icon`'s default `size-5` left **both** classes
-  in the merged output (verified directly: `Tails.classes("size-5
-  size-3")` returns `"size-3 size-5"`, not just `"size-3"`) — this
-  version of `Tails`'s conflict-resolution ruleset doesn't know about
-  Tailwind's `size-*` shorthand (a newer utility; the ruleset predates
-  it), so it doesn't treat two `size-*` classes as conflicting the way it
-  does e.g. two `text-*` or `bg-*` classes. With both classes present,
-  which one actually wins is down to Tailwind's own internal utility
-  ordering in the generated stylesheet — not something to rely on. Fixed
-  the same way `TableRow`'s `selected` state already does for its own
-  specificity fight: `class="!size-3"` (Tailwind's `!important` prefix),
-  which wins regardless of generation order. If you hit visibly-wrong
-  sizing after overriding an `Icon`'s (or any component's) default size
-  via `class`, check whether this is why — `Tails` silently keeping both
-  classes doesn't error or warn, it just produces an ambiguous class list.
+- **Found a real gap in the `tails` hex package this library used to
+  depend on, before class-merging was dropped entirely** (see "Overriding
+  built-in classes via `class`" above): passing `class="size-3"` to
+  override `PhoenixPaper.Icon`'s default `size-5` left **both** classes in
+  the merged output (verified directly: `Tails.classes("size-5 size-3")`
+  returned `"size-3 size-5"`, not just `"size-3"`) — that version of
+  `tails`'s conflict-resolution ruleset didn't know about Tailwind's
+  `size-*` shorthand (a newer utility; the ruleset predated it), so it
+  didn't treat two `size-*` classes as conflicting the way it did e.g. two
+  `text-*` or `bg-*` classes. With both classes present, which one
+  actually won was down to Tailwind's own internal utility ordering in the
+  generated stylesheet — not something to rely on. Fixed the same way
+  `TableRow`'s `selected` state already does for its own specificity
+  fight: `class="!size-3"` (Tailwind's `!important` prefix), which wins
+  regardless of generation order. This was the first sign that a "merge"
+  dependency only ever helps for the cases it happens to know about and
+  silently does nothing for the rest without any error or warning — the
+  same `!` pattern this one gap needed is now how every override works,
+  everywhere in this library, since there's no merge step left at all.
 - **First version's `<script>`-based system-preference sync looked right
   and wasn't** — worth knowing in detail since it's the kind of bug that
   only shows up on a real dark-OS machine, never in a static render or a

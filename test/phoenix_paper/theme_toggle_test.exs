@@ -85,7 +85,7 @@ defmodule PhoenixPaper.ThemeToggleTest do
     assert html =~ "hero-moon-mini"
   end
 
-  test "the icon size override uses !important — Tails doesn't recognize size-* as a conflict group" do
+  test "the icon size override uses !important — class overrides aren't merged, so ! is what wins" do
     html = render_component(&basic/1)
     assert html =~ "!size-3"
   end

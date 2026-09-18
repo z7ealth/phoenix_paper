@@ -56,6 +56,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.List, only: [pp_list: 1]
       import PhoenixPaper.ListItem, only: [pp_list_item: 1]
       import PhoenixPaper.ListSubheader, only: [pp_list_subheader: 1]
+      import PhoenixPaper.Menu, only: [pp_menu: 1]
       import PhoenixPaper.NumberField, only: [pp_number_field: 1]
       import PhoenixPaper.Paper, only: [pp_paper: 1]
       import PhoenixPaper.Progress, only: [pp_progress: 1]

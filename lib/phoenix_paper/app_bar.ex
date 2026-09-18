@@ -67,7 +67,7 @@ defmodule PhoenixPaper.AppBar do
 
   attr(:color, :string,
     default: "primary",
-    values: ~w(primary secondary tertiary surface transparent)
+    values: ~w(primary secondary accent surface transparent)
   )
 
   attr(:elevation, :integer,
@@ -131,7 +131,7 @@ defmodule PhoenixPaper.AppBar do
 
   defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
   defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("tertiary"), do: "bg-pp-tertiary text-pp-on-tertiary"
+  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
   defp color_classes("surface"), do: "bg-pp-surface text-pp-on-surface"
 
   defp position_classes("static"), do: "static"

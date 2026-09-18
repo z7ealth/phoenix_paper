@@ -13,7 +13,7 @@ defmodule PhoenixPaper.Alert do
 
   `severity` (`success`/`info`/`warning`/`error`) picks both the color and
   the leading icon — a distinct axis from every other component's `color`
-  attr (`primary`/`secondary`/`tertiary`/`error`), since these are status
+  attr (`primary`/`secondary`/`accent`/`error`), since these are status
   colors (see `priv/static/phoenix_paper.css`'s `--color-pp-success`/
   `-warning`/`-info`), not brand/action colors. `error` happens to be the
   one name shared with the rest of the library's `color` scale, and does

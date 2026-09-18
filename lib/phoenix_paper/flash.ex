@@ -62,7 +62,7 @@ defmodule PhoenixPaper.Flash do
   )
 
   attr(:anchor_origin, :string,
-    default: "bottom-right",
+    default: "top-right",
     values: @anchor_values,
     doc: "corner/edge of the viewport the stack sits at"
   )
@@ -100,7 +100,7 @@ defmodule PhoenixPaper.Flash do
 
   attr(:kind, :atom, required: true)
   attr(:flash, :map, required: true)
-  attr(:anchor_origin, :string, default: "bottom-right", values: @anchor_values)
+  attr(:anchor_origin, :string, default: "top-right", values: @anchor_values)
   attr(:auto_hide_duration, :integer, default: nil)
   attr(:transition, :string, default: "slide")
   attr(:paperize, :boolean, default: true)

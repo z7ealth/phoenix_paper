@@ -81,7 +81,7 @@ defmodule PhoenixPaper.SpeedDial do
     doc: "which way the actions fan out from the trigger"
   )
 
-  attr(:color, :string, default: "secondary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "secondary", values: ~w(primary secondary accent error))
   attr(:size, :string, default: "md", values: ~w(sm md lg))
 
   attr(:default_open, :boolean,
@@ -234,8 +234,8 @@ defmodule PhoenixPaper.SpeedDial do
   defp trigger_color("secondary"),
     do: "bg-pp-secondary text-pp-on-secondary peer-focus-visible:outline-pp-secondary"
 
-  defp trigger_color("tertiary"),
-    do: "bg-pp-tertiary text-pp-on-tertiary peer-focus-visible:outline-pp-tertiary"
+  defp trigger_color("accent"),
+    do: "bg-pp-accent text-pp-on-accent peer-focus-visible:outline-pp-accent"
 
   defp trigger_color("error"),
     do: "bg-pp-error text-pp-on-error peer-focus-visible:outline-pp-error"

@@ -39,7 +39,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.1"}
+    {:phoenix_paper, "~> 0.2.2"}
   ]
 end
 ```
@@ -133,6 +133,15 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 <.pp_tooltip title="Delete">
   <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
 </.pp_tooltip>
+
+<%!-- A trigger that opens a small anchored popover of actions --%>
+<.pp_menu id="profile-menu">
+  <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
+  <.pp_list>
+    <.pp_list_item navigate={~p"/profile"}>Profile</.pp_list_item>
+    <.pp_list_item phx-click="log_out">Log out</.pp_list_item>
+  </.pp_list>
+</.pp_menu>
 
 <.pp_paper elevation={2} class="p-4">A raised surface (Card is built on this).</.pp_paper>
 <.pp_typography variant="h4">Account settings</.pp_typography>

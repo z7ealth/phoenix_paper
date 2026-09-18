@@ -102,13 +102,13 @@ defmodule PhoenixPaper.Tabs do
   @doc false
   def active_classes("primary"), do: "border-pp-primary text-pp-primary"
   def active_classes("secondary"), do: "border-pp-secondary text-pp-secondary"
-  def active_classes("tertiary"), do: "border-pp-tertiary text-pp-tertiary"
+  def active_classes("accent"), do: "border-pp-accent text-pp-accent"
   def active_classes("error"), do: "border-pp-error text-pp-error"
 
   @doc false
   def inactive_classes, do: "border-transparent text-pp-on-surface"
 
-  @all_active_classes "border-pp-primary text-pp-primary border-pp-secondary text-pp-secondary border-pp-tertiary text-pp-tertiary border-pp-error text-pp-error"
+  @all_active_classes "border-pp-primary text-pp-primary border-pp-secondary text-pp-secondary border-pp-accent text-pp-accent border-pp-error text-pp-error"
 
   @doc """
   A `Phoenix.LiveView.JS` command that selects the tab/panel `value` within

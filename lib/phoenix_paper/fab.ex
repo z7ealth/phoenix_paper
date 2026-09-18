@@ -9,7 +9,7 @@ defmodule PhoenixPaper.Fab do
 
   alias PhoenixPaper.{Elevation, Helpers, Ripple}
 
-  attr(:color, :string, default: "secondary", values: ~w(primary secondary tertiary error))
+  attr(:color, :string, default: "secondary", values: ~w(primary secondary accent error))
   attr(:size, :string, default: "md", values: ~w(sm md lg))
   attr(:extended, :boolean, default: false)
 
@@ -76,8 +76,8 @@ defmodule PhoenixPaper.Fab do
   defp color_classes("secondary"),
     do: "bg-pp-secondary text-pp-on-secondary focus-visible:outline-pp-secondary"
 
-  defp color_classes("tertiary"),
-    do: "bg-pp-tertiary text-pp-on-tertiary focus-visible:outline-pp-tertiary"
+  defp color_classes("accent"),
+    do: "bg-pp-accent text-pp-on-accent focus-visible:outline-pp-accent"
 
   defp color_classes("error"), do: "bg-pp-error text-pp-on-error focus-visible:outline-pp-error"
 end

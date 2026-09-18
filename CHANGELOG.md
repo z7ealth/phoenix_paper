@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-18
+
+### Added
+
+- `pp_drawer/1` gains `width` (`"sm"`/`"md"`/`"lg"`/`"xl"`, default `"md"`
+  — unchanged `w-64`), applied at both the mobile and desktop breakpoint
+  together.
+- `PhoenixPaper.Menu` (`pp_menu/1`) — a trigger that reveals a small
+  anchored popover list of actions (MUI's `Menu`/`MenuItem`): an overflow
+  ("...") menu, a profile menu, etc. Closes on selecting an item, clicking
+  outside, or Escape. `anchor` picks a fixed corner
+  (`bottom-start`/`bottom-end`/`top-start`/`top-end`, default
+  `bottom-start`).
+- `pp_button/1` gains `size` (`"small"`/`"medium"`/`"large"`, default
+  `"medium"`), scaling padding/gap/font-size (padding only for
+  `variant="icon"`) — MUI's own `Button` `size` prop.
+- `pp_snackbar/1` gains `color` (`"default"`/`"primary"`/`"secondary"`/
+  `"accent"`/`"error"`, default `"default"` — unchanged inverted-monochrome
+  look). A brand color paints the chip and switches the close button's and
+  the `auto_hide_duration` timer bar's own contrast to match.
+- `pp_snackbar/1`'s `auto_hide_duration` timer is now a visible countdown
+  bar along the chip's bottom edge (shrinks over exactly the same duration
+  that drives the real dismissal), not the previous invisible timing-only
+  animation. `paperize={false}` still leaves it invisible-but-functional.
+
+### Changed
+
+- **Breaking:** the third brand color slot is renamed `tertiary` → `accent`
+  everywhere: `--color-pp-tertiary`/`--color-pp-on-tertiary` →
+  `--color-pp-accent`/`--color-pp-on-accent`, every component's
+  `color="tertiary"` → `color="accent"`, every `pp-tertiary`/`pp-on-tertiary`
+  utility class → `pp-accent`/`pp-on-accent`. No color values changed, only
+  the name. Update any `color="tertiary"` or `bg-pp-tertiary`/
+  `text-pp-tertiary`/etc. in your own app.
+- `pp_flash_group/1`/`pp_flash/1`'s default `anchor_origin` is now
+  `"top-right"` (was `"bottom-right"`).
+- `pp_button/1` no longer forces label text to uppercase — it sets
+  `[text-transform:inherit]` instead, matching Material 3's relaxed
+  button typography.
+
+### Fixed
+
+- `pp_drawer/1`'s mobile backdrop could stay visible (blocking clicks)
+  after opening the drawer on a small viewport and then resizing past
+  `lg` without closing it first — `peer-checked:block`'s selector
+  specificity was beating the `lg:hidden` meant to cancel it at the
+  desktop breakpoint. The reveal is now scoped with `max-lg:` instead, so
+  it's structurally absent from the generated CSS at `lg` and up rather
+  than present-but-outranked.
+
+### Removed
+
+- The `tails` dependency (retired on hex.pm). `class` overrides are now
+  plain concatenation instead of a Tailwind class-conflict merge — a
+  caller's `class` reliably *adds* utilities but no longer reliably
+  *replaces* one of a component's own built-in utilities for the same CSS
+  property. To override a built-in class deterministically, prefix your
+  override with Tailwind's `!` (important) modifier, e.g.
+  `class="!bg-red-500"`. See `AGENTS.md`, "Overriding built-in classes via
+  `class`".
+
 ## [0.2.1] - 2026-08-29
 
 ### Added
@@ -53,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/z7ealth/phoenix_paper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/z7ealth/phoenix_paper/releases/tag/v0.1.0

@@ -152,7 +152,8 @@ defmodule PhoenixPaperDemo do
   # components work the same way once those classes exist for real.
   @demo_icon_css """
   .hero-check, .hero-star, .hero-home, .hero-cog, .hero-bell, .hero-trash,
-  .hero-chevron-right, .hero-user, .hero-sun-mini, .hero-moon-mini, .hero-x-mark-mini {
+  .hero-chevron-right, .hero-user, .hero-sun-mini, .hero-moon-mini, .hero-x-mark-mini,
+  .hero-ellipsis-vertical {
     display: inline-block; width: 1em; height: 1em; background-color: currentColor;
     mask-size: contain; -webkit-mask-size: contain;
     mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat;
@@ -201,6 +202,10 @@ defmodule PhoenixPaperDemo do
   .hero-x-mark-mini {
     mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>');
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg>');
+  }
+  .hero-ellipsis-vertical {
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>');
   }
   """
 
@@ -293,6 +298,10 @@ defmodule PhoenixPaperDemo do
         "button" that navigates never nests <button> inside <a> --%>
   <.pp_button href="/issues" variant="text">Issues</.pp_button>
   <.pp_button navigate="/workbooks/new">New workbook</.pp_button>
+
+  <.pp_button size="small">Small</.pp_button>
+  <.pp_button size="medium">Medium</.pp_button>
+  <.pp_button size="large">Large</.pp_button>
   """
 
   @button_group_code ~S"""
@@ -316,7 +325,7 @@ defmodule PhoenixPaperDemo do
 
   @fab_code ~S"""
   <.pp_fab :for={size <- ~w(sm md lg)} size={size}><.pp_icon name="hero-star" /></.pp_fab>
-  <.pp_fab :for={color <- ~w(primary secondary tertiary error)} color={color}>
+  <.pp_fab :for={color <- ~w(primary secondary accent error)} color={color}>
     <.pp_icon name="hero-star" />
   </.pp_fab>
   <.pp_fab extended color="primary">
@@ -349,7 +358,7 @@ defmodule PhoenixPaperDemo do
     Bold
   </.pp_toggle_button>
 
-  <.pp_toggle_button :for={color <- ~w(primary secondary tertiary error)} pressed color={color}>
+  <.pp_toggle_button :for={color <- ~w(primary secondary accent error)} pressed color={color}>
     {color}
   </.pp_toggle_button>
   """
@@ -438,7 +447,7 @@ defmodule PhoenixPaperDemo do
   <.pp_slider name="volume_small" label="Small" value={60} size="small" />
 
   <%!-- colors --%>
-  <.pp_slider :for={color <- ~w(primary secondary tertiary error)} name={"volume_#{color}"} label={color} value={60} color={color} />
+  <.pp_slider :for={color <- ~w(primary secondary accent error)} name={"volume_#{color}"} label={color} value={60} color={color} />
 
   <%!-- track modes --%>
   <.pp_slider name="volume_no_track" label="track: none" value={60} track="none" />
@@ -499,7 +508,7 @@ defmodule PhoenixPaperDemo do
     </:actions>
   </.pp_app_bar>
 
-  <.pp_app_bar :for={color <- ~w(primary secondary tertiary surface transparent)} color={color} class="!static">
+  <.pp_app_bar :for={color <- ~w(primary secondary accent surface transparent)} color={color} class="!static">
     {color}
     <:actions>
       <.pp_button variant="icon"><.pp_icon name="hero-bell" /></.pp_button>
@@ -526,12 +535,22 @@ defmodule PhoenixPaperDemo do
     My App
   </.pp_app_bar>
 
-  <.pp_drawer id="app-drawer" color="primary">
+  <.pp_drawer id="app-drawer" color="primary" width="lg">
     <:header>My App</:header>
     <.pp_list>
       <.pp_list_item href="/" active={@current_path == "/"}>Home</.pp_list_item>
     </.pp_list>
   </.pp_drawer>
+
+  <%!-- On lg: and up the panel is sticky (in-flow, not fixed), so a flex
+        wrapper around the drawer and main content gets a "push" layout
+        for free — no separate prop needed. --%>
+  <div class="lg:flex">
+    <.pp_drawer id="app-drawer">...</.pp_drawer>
+    <main class="flex-1">
+      <%!-- page content --%>
+    </main>
+  </div>
   """
 
   @tabs_code ~S"""
@@ -596,6 +615,26 @@ defmodule PhoenixPaperDemo do
   </.pp_breadcrumbs>
   """
 
+  @menu_code ~S"""
+  <.pp_menu id="profile-menu">
+    <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
+    <.pp_list>
+      <.pp_list_item navigate="/profile">Profile</.pp_list_item>
+      <.pp_list_item navigate="/settings">Settings</.pp_list_item>
+      <.pp_list_item phx-click="log_out">Log out</.pp_list_item>
+    </.pp_list>
+  </.pp_menu>
+
+  <%!-- anchor picks a fixed corner relative to the trigger --%>
+  <.pp_menu id="new-menu" anchor="bottom-end">
+    <:trigger><.pp_button>New</.pp_button></:trigger>
+    <.pp_list>
+      <.pp_list_item phx-click="new_doc">Document</.pp_list_item>
+      <.pp_list_item phx-click="new_sheet">Spreadsheet</.pp_list_item>
+    </.pp_list>
+  </.pp_menu>
+  """
+
   @box_code ~S"""
   <.pp_box class="rounded-lg bg-pp-surface-variant p-4">A div (default).</.pp_box>
   <.pp_box tag="span" class="rounded bg-pp-surface-variant px-2 py-1">A span.</.pp_box>
@@ -651,7 +690,7 @@ defmodule PhoenixPaperDemo do
   """
 
   @icon_code ~S"""
-  <.pp_icon name="hero-check" class="text-pp-tertiary" />
+  <.pp_icon name="hero-check" class="text-pp-accent" />
   """
 
   @image_list_code ~S"""
@@ -907,19 +946,27 @@ defmodule PhoenixPaperDemo do
   </.pp_snackbar>
 
   <%!-- on_close renders a trailing ✕ (MUI's close-IconButton). Pair it
-        with auto_hide_duration for a hook-free client-side auto-dismiss
-        (a no-op CSS animation whose animationend clicks the ✕). --%>
+        with auto_hide_duration for a hook-free client-side auto-dismiss —
+        the same timer also drives a visible shrinking bar along the
+        chip's bottom edge. --%>
   <.pp_snackbar on_close={JS.push("dismiss")} auto_hide_duration={5000}>
     Link copied
+  </.pp_snackbar>
+
+  <%!-- color trades the inverted Material-spec chip for a brand surface;
+        the close button and the timer bar switch contrast to match. --%>
+  <.pp_snackbar color="primary" on_close={JS.push("dismiss")} auto_hide_duration={6000}>
+    Saved
   </.pp_snackbar>
   """
 
   @flash_code ~S"""
-  <%!-- Drop once in the root layout, where a generated <.flash_group> goes. --%>
+  <%!-- Drop once in the root layout, where a generated <.flash_group> goes.
+        Defaults to the top-right corner. --%>
   <.pp_flash_group flash={@flash} />
 
   <%!-- Opt-in client-side auto-dismiss, via lv:clear-flash — no handler. --%>
-  <.pp_flash_group flash={@flash} auto_hide_duration={4000} anchor_origin="top-right" />
+  <.pp_flash_group flash={@flash} auto_hide_duration={4000} anchor_origin="bottom-left" />
   """
 
   @ripple_code ~S"""
@@ -1012,6 +1059,7 @@ defmodule PhoenixPaperDemo do
         tabs_code: @tabs_code,
         list_code: @list_code,
         breadcrumbs_code: @breadcrumbs_code,
+        menu_code: @menu_code,
         box_code: @box_code,
         container_code: @container_code,
         stack_code: @stack_code,
@@ -1074,6 +1122,7 @@ defmodule PhoenixPaperDemo do
             <.pp_list_item href="#drawer">Drawer</.pp_list_item>
             <.pp_list_item href="#tabs">Tabs</.pp_list_item>
             <.pp_list_item href="#breadcrumbs">Breadcrumbs</.pp_list_item>
+            <.pp_list_item href="#menu">Menu</.pp_list_item>
             <.pp_list_item href="#list">List</.pp_list_item>
           </.nav_group>
           <.nav_group label="Layout">
@@ -1146,7 +1195,8 @@ defmodule PhoenixPaperDemo do
           description="The five classic Material variants. Ripples on click by default (see Helpers below)."
           props={[
             {"variant", "raised | flat | outlined | text | icon (default: raised)"},
-            {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"color", "primary | secondary | accent | error (default: primary)"},
+            {"size", "small | medium | large (default: medium)"},
             {"elevation", "override the resting elevation, 0-24 (default: nil — variant decides)"},
             {"shape", ":none | :xs | :sm | :md | :lg | :xl | :full (default: :full, a pill)"},
             {"ripple", "boolean — the ripple effect on click/tap (default: true)"},
@@ -1156,14 +1206,14 @@ defmodule PhoenixPaperDemo do
             {":start_icon / :end_icon", "slots — an icon before/after the label"},
             {"type", "button | submit | reset (default: button — ignored in link mode)"},
             {"paperize", "boolean — apply PhoenixPaper's classes at all (default: true)"},
-            {"class", "merged on top via Tails"}
+            {"class", "appended after the built-in classes — use ! to override one"}
           ]}
           code={@buttons_code}
         >
           <div class="flex flex-col gap-4">
             <div :for={variant <- ~w(raised flat outlined text icon)} class="flex flex-wrap items-center gap-3">
               <span class="w-20 shrink-0 text-xs uppercase opacity-60">{variant}</span>
-              <.pp_button :for={color <- ~w(primary secondary tertiary error)} variant={variant} color={color}>
+              <.pp_button :for={color <- ~w(primary secondary accent error)} variant={variant} color={color}>
                 <span :if={variant == "icon"} class="hero-star" />
                 <span :if={variant != "icon"}>{color}</span>
               </.pp_button>
@@ -1193,6 +1243,9 @@ defmodule PhoenixPaperDemo do
               <.pp_button navigate="#button">Link (navigate)</.pp_button>
               <.pp_button href="#button" disabled variant="outlined">Disabled link</.pp_button>
             </div>
+            <div class="flex items-center gap-4 border-t border-pp-outline/20 pt-4">
+              <.pp_button :for={size <- ~w(small medium large)} size={size}>{size}</.pp_button>
+            </div>
           </div>
         </.demo_section>
 
@@ -1205,7 +1258,7 @@ defmodule PhoenixPaperDemo do
             {"shape", "corner radius token for the group's outer corners (default: :md)"},
             {"disable_elevation", "boolean — zero out every child button's own elevation shadow (default: false)"},
             {"paperize", "boolean (default: true)"},
-            {"class", "merged on top via Tails"}
+            {"class", "appended after the built-in classes — use ! to override one"}
           ]}
           code={@button_group_code}
         >
@@ -1232,7 +1285,7 @@ defmodule PhoenixPaperDemo do
           title="Floating Action Button"
           description="A circular, elevated, icon-only button, or a labeled pill with extended."
           props={[
-            {"color", "primary | secondary | tertiary | error (default: secondary)"},
+            {"color", "primary | secondary | accent | error (default: secondary)"},
             {"size", "sm | md | lg (default: md)"},
             {"extended", "boolean — labeled pill instead of a fixed circle (default: false)"},
             {"ripple", "boolean (default: true)"},
@@ -1248,7 +1301,7 @@ defmodule PhoenixPaperDemo do
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <span class="w-16 shrink-0 text-xs uppercase opacity-60">color</span>
-              <.pp_fab :for={color <- ~w(primary secondary tertiary error)} color={color}>
+              <.pp_fab :for={color <- ~w(primary secondary accent error)} color={color}>
                 <span class="hero-star" />
               </.pp_fab>
             </div>
@@ -1267,7 +1320,7 @@ defmodule PhoenixPaperDemo do
           props={[
             {"id / label", "id wires the toggle; label is the trigger's accessible name (required)"},
             {"direction", "up (default) | down | left | right"},
-            {"color", "primary | secondary | tertiary | error (default: secondary) — the trigger"},
+            {"color", "primary | secondary | accent | error (default: secondary) — the trigger"},
             {"size", "sm | md | lg (default: md) — the trigger"},
             {"default_open", "boolean (default: false)"},
             {":icon / :open_icon", "closed icon (default hero-plus, rotates 45°) / cross-fade icon when open"},
@@ -1302,7 +1355,7 @@ defmodule PhoenixPaperDemo do
           description="A button with a boolean pressed state, filled when pressed. Combine several inside a Button Group for a segmented toggle."
           props={[
             {"pressed", "boolean (default: false)"},
-            {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"color", "primary | secondary | accent | error (default: primary)"},
             {"shape", "corner radius token (default: :md)"},
             {"ripple", "boolean (default: true)"},
             {"disabled", "boolean (default: false)"}
@@ -1315,7 +1368,7 @@ defmodule PhoenixPaperDemo do
             </.pp_toggle_button>
             <div class="flex flex-wrap items-center gap-3 border-t border-pp-outline/20 pt-4">
               <span class="w-16 shrink-0 text-xs uppercase opacity-60">pressed</span>
-              <.pp_toggle_button :for={color <- ~w(primary secondary tertiary error)} pressed color={color}>
+              <.pp_toggle_button :for={color <- ~w(primary secondary accent error)} pressed color={color}>
                 {color}
               </.pp_toggle_button>
             </div>
@@ -1330,7 +1383,7 @@ defmodule PhoenixPaperDemo do
             {"label / value / name / id", "standard text field attrs"},
             {"type", "any input type, e.g. text | email | password (default: text)"},
             {"variant", "outlined | filled | standard (default: outlined)"},
-            {"color", "primary | secondary | tertiary | error (default: primary) — focus/label accent"},
+            {"color", "primary | secondary | accent | error (default: primary) — focus/label accent"},
             {"size", "medium | small (default: medium)"},
             {"shape", "corner radius token (default: :sm) — ignored for variant=\"standard\""},
             {"multiline / rows", "renders a <textarea rows={@rows}> instead of <input>"},
@@ -1353,7 +1406,7 @@ defmodule PhoenixPaperDemo do
             <.pp_input label="Disabled" name="disabled_demo" value="Can't touch this" disabled />
             <.pp_input color="primary" label="Primary" name="color_primary_demo" />
             <.pp_input color="secondary" label="Secondary" name="color_secondary_demo" />
-            <.pp_input color="tertiary" label="Tertiary" name="color_tertiary_demo" />
+            <.pp_input color="accent" label="Accent" name="color_accent_demo" />
             <.pp_input size="medium" label="Medium (default)" name="size_medium_demo" />
             <.pp_input size="small" label="Small" name="size_small_demo" />
             <.pp_input label="Amount" name="amount_demo" value="42.00">
@@ -1488,7 +1541,7 @@ defmodule PhoenixPaperDemo do
           props={[
             {"min / max / step", "default 0 / 100 / 1"},
             {"value", "a number, or a {low, high} tuple for a range slider (two thumbs)"},
-            {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"color", "primary | secondary | accent | error (default: primary)"},
             {"size", "medium | small (default: medium)"},
             {"orientation", "horizontal | vertical (default: horizontal)"},
             {"track", "normal | none | inverted (default: normal) — ignored for range sliders"},
@@ -1503,7 +1556,7 @@ defmodule PhoenixPaperDemo do
             <.pp_slider name="volume_small_demo" label="Small" value={60} size="small" />
 
             <.pp_slider
-              :for={color <- ~w(primary secondary tertiary error)}
+              :for={color <- ~w(primary secondary accent error)}
               name={"volume_#{color}_demo"}
               label={color}
               value={60}
@@ -1602,7 +1655,7 @@ defmodule PhoenixPaperDemo do
           title="App Bar"
           description="A horizontal app bar with a leading slot, a title, and trailing actions. The one at the top of this page is a live sticky instance — fixed/absolute aren't demoed inline since they'd overlay the rest of this page."
           props={[
-            {"color", "primary | secondary | tertiary | surface | transparent (default: primary)"},
+            {"color", "primary | secondary | accent | surface | transparent (default: primary)"},
             {"elevation", "resting elevation, 0-24 (default: 4) — ignored for color=\"transparent\""},
             {"position", "static | relative | sticky | fixed | absolute (default: static)"},
             {"variant", "regular | dense (default: regular) — dense shrinks the toolbar row"},
@@ -1613,7 +1666,7 @@ defmodule PhoenixPaperDemo do
           code={@app_bar_code}
         >
           <div class="flex flex-col gap-3">
-            <.pp_app_bar :for={color <- ~w(primary secondary tertiary surface transparent)} class="!static" color={color}>
+            <.pp_app_bar :for={color <- ~w(primary secondary accent surface transparent)} class="!static" color={color}>
               {color}
               <:actions>
                 <.pp_button variant="icon"><span class="hero-bell" /></.pp_button>
@@ -1637,16 +1690,23 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="drawer"
           title="Drawer"
-          description="A navigation drawer, persistent on large screens and toggled by a hamburger button below that breakpoint — pure CSS via a hidden checkbox, no JS. The drawer on the left of this page is a live, primary-colored instance; try shrinking your window."
+          description="A navigation drawer, persistent on large screens and toggled by a hamburger button below that breakpoint — pure CSS via a hidden checkbox, no JS. The drawer on the left of this page is a live, primary-colored instance; try shrinking your window. On lg: and up the panel is sticky (in-flow, not fixed), so wrapping it and your main content as flex siblings pushes the content over for free — no separate prop for that."
           props={[
             {"id", "required — builds the mobile toggle checkbox's id as \"\#{id}-toggle\""},
-            {"color", "primary | secondary | tertiary | surface (default: surface) — also restyles nested List/ListItem for contrast"},
+            {"color", "primary | secondary | accent | surface (default: surface) — also restyles nested List/ListItem for contrast"},
+            {"width", "sm | md | lg | xl (default: md, w-64) — applies at both the mobile and desktop breakpoint together"},
             {"paperize", "boolean (default: true)"},
             {"pp_drawer_toggle for=", "a hamburger <label> pointing at the given drawer's id — works from anywhere on the page, not just inside the drawer"}
           ]}
           code={@drawer_code}
         >
           <p class="text-sm opacity-70">See the left edge of this page — that's this exact component, live.</p>
+          <div class="mt-4 flex flex-wrap items-end gap-3 border-t border-pp-outline/20 pt-4">
+            <div :for={width <- ~w(sm md lg xl)} class="flex flex-col items-center gap-1">
+              <div class={["h-24 rounded bg-pp-surface-variant", width_preview_class(width)]} />
+              <span class="text-xs opacity-60">width="{width}"</span>
+            </div>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -1660,7 +1720,7 @@ defmodule PhoenixPaperDemo do
             {"pp_tabs centered", "boolean — horizontal + variant=\"standard\" only"},
             {"pp_tab id / value", "id matches the parent Tabs; value must be unique within the group"},
             {"pp_tab default_selected", "boolean — initial selection, uncontrolled (default: false)"},
-            {"pp_tab color", "primary | secondary | tertiary | error (default: primary) — doesn't cascade from Tabs, set per Tab"},
+            {"pp_tab color", "primary | secondary | accent | error (default: primary) — doesn't cascade from Tabs, set per Tab"},
             {"pp_tab orientation", "must match the parent Tabs' own orientation"},
             {"pp_tab :icon", "optional leading icon slot"},
             {"pp_tab disabled / ripple / paperize", "same as Button"},
@@ -1686,12 +1746,12 @@ defmodule PhoenixPaperDemo do
               <.pp_tabs id="color-tabs">
                 <.pp_tab id="color-tabs" value="primary" default_selected color="primary">Primary</.pp_tab>
                 <.pp_tab id="color-tabs" value="secondary" color="secondary">Secondary</.pp_tab>
-                <.pp_tab id="color-tabs" value="tertiary" color="tertiary">Tertiary</.pp_tab>
+                <.pp_tab id="color-tabs" value="accent" color="accent">Accent</.pp_tab>
                 <.pp_tab id="color-tabs" value="error" color="error">Error</.pp_tab>
               </.pp_tabs>
               <.pp_tab_panel id="color-tabs" value="primary" default_selected>Primary content.</.pp_tab_panel>
               <.pp_tab_panel id="color-tabs" value="secondary">Secondary content.</.pp_tab_panel>
-              <.pp_tab_panel id="color-tabs" value="tertiary">Tertiary content.</.pp_tab_panel>
+              <.pp_tab_panel id="color-tabs" value="accent">Accent content.</.pp_tab_panel>
               <.pp_tab_panel id="color-tabs" value="error">Error content.</.pp_tab_panel>
             </div>
 
@@ -1758,6 +1818,40 @@ defmodule PhoenixPaperDemo do
                 <:item>Five</:item>
               </.pp_breadcrumbs>
             </div>
+          </div>
+        </.demo_section>
+
+        <.demo_section
+          id="menu"
+          title="Menu"
+          description="A trigger that reveals a small anchored popover list of actions (MUI's Menu/MenuItem) — an overflow menu, a profile menu. Closes on selecting an item, clicking outside, or Escape (Phoenix.LiveView.JS + phx-click-away, not the checkbox/peer-checked: trick most other reveal components in this library use — see AGENTS.md)."
+          props={[
+            {"id", "required"},
+            {"anchor", "bottom-start (default) | bottom-end | top-start | top-end — fixed corner relative to the trigger"},
+            {"elevation", "resting elevation, 0-24 (default: 8)"},
+            {"shape", ":none | :xs | :sm | :md | :lg | :xl | :full (default: :sm)"},
+            {":trigger", "required slot — the clickable content that opens the menu"},
+            {"paperize", "boolean (default: true) — positioning stays even when false, only the surface/cosmetic classes drop"}
+          ]}
+          code={@menu_code}
+        >
+          <div class="flex flex-wrap items-center gap-6">
+            <.pp_menu id="profile-menu-demo">
+              <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
+              <.pp_list>
+                <.pp_list_item phx-click="dismiss">Profile</.pp_list_item>
+                <.pp_list_item phx-click="dismiss">Settings</.pp_list_item>
+                <.pp_list_item phx-click="dismiss">Log out</.pp_list_item>
+              </.pp_list>
+            </.pp_menu>
+
+            <.pp_menu id="new-menu-demo" anchor="bottom-end">
+              <:trigger><.pp_button>New</.pp_button></:trigger>
+              <.pp_list>
+                <.pp_list_item phx-click="dismiss">Document</.pp_list_item>
+                <.pp_list_item phx-click="dismiss">Spreadsheet</.pp_list_item>
+              </.pp_list>
+            </.pp_menu>
           </div>
         </.demo_section>
 
@@ -1957,7 +2051,7 @@ defmodule PhoenixPaperDemo do
             {"max", "caps a numeric content at max+, e.g. 99+ (default: 99)"},
             {"show_zero", "show the badge when content is the integer 0 (default: false)"},
             {"variant", "\"standard\" | \"dot\" (default: \"standard\")"},
-            {"color", "primary | secondary | tertiary | error | success | warning | info (default: \"error\")"},
+            {"color", "primary | secondary | accent | error | success | warning | info (default: \"error\")"},
             {"overlap", "\"rectangular\" | \"circular\" — pulls the badge inward onto a circular child (default: \"rectangular\")"},
             {"anchor_origin", "which corner (default: \"top-right\")"},
             {"invisible", "force-hide the badge (default: false)"}
@@ -1988,7 +2082,7 @@ defmodule PhoenixPaperDemo do
           description="A compact element for input, attribute, or action, in the spirit of MUI's Chip."
           props={[
             {"variant", "\"filled\" | \"outlined\" (default: \"filled\")"},
-            {"color", "default | primary | secondary | tertiary | error | success | warning | info (default: \"default\")"},
+            {"color", "default | primary | secondary | accent | error | success | warning | info (default: \"default\")"},
             {"size", "\"small\" | \"medium\" (default: \"medium\")"},
             {"clickable", "renders a real <button> with a ripple, for filter/action chips (default: false)"},
             {"deletable", "renders a trailing delete control wired to on_delete (default: false)"},
@@ -2050,7 +2144,7 @@ defmodule PhoenixPaperDemo do
           code={@icon_code}
         >
           <div class="flex items-center gap-4">
-            <.pp_icon name="hero-check" class="text-pp-tertiary" />
+            <.pp_icon name="hero-check" class="text-pp-accent" />
             <.pp_icon name="hero-star" class="text-pp-secondary" />
             <.pp_icon name="hero-home" class="text-pp-primary" />
             <.pp_icon name="hero-bell" class="text-pp-error" />
@@ -2242,7 +2336,7 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="alert"
           title="Alert"
-          description="A colored, icon-led message for status feedback. severity is a distinct color axis from every other component's color (success/info/warning/error status colors, not primary/secondary/tertiary/error brand colors) — see AGENTS.md."
+          description="A colored, icon-led message for status feedback. severity is a distinct color axis from every other component's color (success/info/warning/error status colors, not primary/secondary/accent/error brand colors) — see AGENTS.md."
           props={[
             {"severity", "success | info | warning | error (default: info) — picks the color and icon"},
             {"variant", "standard (tinted) | outlined | filled (default: standard)"},
@@ -2316,7 +2410,7 @@ defmodule PhoenixPaperDemo do
           props={[
             {"variant", "linear | circular (default: linear)"},
             {"value", "0-100, nil for indeterminate (default: nil)"},
-            {"color", "primary | secondary | tertiary | error (default: primary)"},
+            {"color", "primary | secondary | accent | error (default: primary)"},
             {"size", "circular only — diameter in pixels (default: 40)"},
             {"paperize", "boolean (default: true)"}
           ]}
@@ -2332,7 +2426,7 @@ defmodule PhoenixPaperDemo do
               <.pp_progress />
             </div>
             <div class="flex items-center gap-6 border-t border-pp-outline/20 pt-4">
-              <div :for={color <- ~w(primary secondary tertiary error)} class="flex flex-col items-center gap-2">
+              <div :for={color <- ~w(primary secondary accent error)} class="flex flex-col items-center gap-2">
                 <.pp_progress variant="circular" value={65} color={color} />
                 <span class="text-xs opacity-60">{color}</span>
               </div>
@@ -2372,13 +2466,14 @@ defmodule PhoenixPaperDemo do
         <.demo_section
           id="snackbar"
           title="Snackbar"
-          description="A brief toast on an inverted-surface chip. Server-owned dismissal (a Process.send_after/3 clearing the open assign) is still the default, but auto_hide_duration + on_close give a hook-free client-side auto-dismiss for the no-round-trip case. No exit transition — only entrance, see AGENTS.md. For Phoenix flash messages, use Flash below."
+          description="A brief toast on an inverted-surface chip by default, or a brand-colored one via color. Server-owned dismissal (a Process.send_after/3 clearing the open assign) is still the default, but auto_hide_duration + on_close give a hook-free client-side auto-dismiss for the no-round-trip case — the same timer that drives the dismissal doubles as the visible countdown bar along the chip's bottom edge. No exit transition — only entrance, see AGENTS.md. For Phoenix flash messages, use Flash below."
           props={[
             {"open", "boolean (default: true)"},
+            {"color", "default (default, inverted monochrome) | primary | secondary | accent | error"},
             {"anchor_origin", "bottom-left (default) | bottom-center | bottom-right | top-left | top-center | top-right"},
             {"transition", "grow (default) | fade | slide | none — mount-in animation only"},
             {"on_close", "a JS — renders a trailing ✕ button running it (MUI's close-IconButton)"},
-            {"auto_hide_duration", "ms after which the snackbar triggers on_close itself (needs on_close; client-side)"},
+            {"auto_hide_duration", "ms after which the snackbar triggers on_close itself and shows a shrinking timer bar (needs on_close; client-side)"},
             {"positioned", "boolean (default: true) — keep the fixed viewport anchoring, or drop it to place the chip yourself"},
             {":action", "optional slot — e.g. an \"Undo\" button"},
             {"elevation", "resting elevation, 0-24 (default: 6)"},
@@ -2397,6 +2492,17 @@ defmodule PhoenixPaperDemo do
               Link copied
             </.pp_snackbar>
           </div>
+          <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-pp-outline/20 pt-4">
+            <.pp_snackbar
+              :for={color <- ~w(primary secondary accent error)}
+              color={color}
+              positioned={false}
+              on_close={JS.push("dismiss")}
+              auto_hide_duration={6000}
+            >
+              {color}
+            </.pp_snackbar>
+          </div>
         </.demo_section>
 
         <.demo_section
@@ -2406,7 +2512,7 @@ defmodule PhoenixPaperDemo do
           props={[
             {"flash", "the @flash map"},
             {"kinds", "flash keys to render, in stacking order (default: [:info, :error])"},
-            {"anchor_origin", "corner/edge of the viewport the stack sits at (default: bottom-right)"},
+            {"anchor_origin", "corner/edge of the viewport the stack sits at (default: top-right)"},
             {"auto_hide_duration", "ms after which each chip clears itself via lv:clear-flash (opt-in)"},
             {"transition", "grow | fade | slide (default) | none"},
             {"paperize", "boolean (default: true)"}
@@ -2491,6 +2597,15 @@ defmodule PhoenixPaperDemo do
     </div>
     """
   end
+
+  # Drawer's width demo — literal per AGENTS.md's "Tailwind class safety"
+  # (also already present verbatim in lib/phoenix_paper/drawer.ex, which
+  # this Tailwind build already scans, but kept literal here too rather
+  # than interpolating "w-#{...}").
+  defp width_preview_class("sm"), do: "w-14"
+  defp width_preview_class("md"), do: "w-16"
+  defp width_preview_class("lg"), do: "w-20"
+  defp width_preview_class("xl"), do: "w-24"
 end
 
 PhoenixPlayground.start(live: PhoenixPaperDemo, open_browser: false)

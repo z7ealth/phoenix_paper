@@ -60,4 +60,28 @@ defmodule PhoenixPaper.FlashTest do
     assert html =~ "Careful"
     assert html =~ "hero-exclamation-triangle-mini"
   end
+
+  test "defaults to the top-right corner" do
+    html = render_group(%{"info" => "Saved!"})
+
+    assert html =~ "top-4"
+    refute html =~ "bottom-4"
+  end
+
+  test "anchor_origin overrides the default corner" do
+    assigns = %{flash: %{"info" => "Saved!"}}
+
+    html =
+      render_component(
+        fn assigns ->
+          ~H"""
+          <.pp_flash_group flash={@flash} anchor_origin="bottom-left" />
+          """
+        end,
+        assigns
+      )
+
+    assert html =~ "bottom-4"
+    refute html =~ "top-4"
+  end
 end

@@ -72,4 +72,32 @@ defmodule PhoenixPaper.DrawerTest do
     </.pp_drawer>
     """
   end
+
+  test "width defaults to md (w-64), unchanged from before the attr existed" do
+    html = render_component(&drawer/1)
+
+    assert html =~ "w-64"
+    assert html =~ "lg:w-64"
+  end
+
+  test "width=\"xl\" widens both the mobile and desktop panel together" do
+    html = render_component(&wide/1)
+
+    assert html =~ "w-80"
+    assert html =~ "lg:w-80"
+    refute html =~ "w-64"
+  end
+
+  defp wide(assigns) do
+    ~H"""
+    <.pp_drawer id="app-drawer" width="xl">Home</.pp_drawer>
+    """
+  end
+
+  test "backdrop reveal is scoped to max-lg, not a separate lg:hidden that a peer-checked: specificity fight could beat" do
+    html = render_component(&drawer/1)
+
+    assert html =~ "max-lg:peer-checked:block"
+    refute html =~ "peer-checked:block lg:hidden"
+  end
 end
