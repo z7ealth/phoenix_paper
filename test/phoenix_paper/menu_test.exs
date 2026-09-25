@@ -104,4 +104,63 @@ defmodule PhoenixPaper.MenuTest do
     </.pp_menu>
     """
   end
+
+  describe "trigger" do
+    test "is a pp_button (icon variant by default) carrying the toggle wiring" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.pp_menu id="m"><:trigger>T</:trigger>items</.pp_menu>
+        """)
+
+      [trigger] = Regex.run(~r/<button[^>]*id="m-trigger"[^>]*>/, html)
+      assert trigger =~ ~s(data-pp-component="button")
+      assert trigger =~ ~s(data-pp-variant="icon")
+      assert trigger =~ "text-pp-primary hover:bg-pp-primary/10"
+      assert trigger =~ ~s(aria-haspopup="true")
+      assert trigger =~ ~s(aria-expanded="false")
+      assert trigger =~ ~s(aria-controls="m-panel")
+      assert trigger =~ "phx-click="
+      assert trigger =~ "m-panel"
+    end
+
+    test "trigger_variant/color/size/class pass through to the button" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.pp_menu
+          id="m"
+          trigger_variant="outlined"
+          trigger_color="inherit"
+          trigger_size="small"
+          trigger_class="mine"
+        >
+          <:trigger>Export</:trigger>
+          items
+        </.pp_menu>
+        """)
+
+      [trigger] = Regex.run(~r/<button[^>]*id="m-trigger"[^>]*>/, html)
+      assert trigger =~ ~s(data-pp-variant="outlined")
+      assert trigger =~ "border-current"
+      assert trigger =~ "text-xs"
+      assert trigger =~ "mine"
+    end
+
+    test "trigger_variant=none keeps the bare button" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.pp_menu id="m" trigger_variant="none" trigger_class="mine"><:trigger>T</:trigger>i</.pp_menu>
+        """)
+
+      [trigger] = Regex.run(~r/<button[^>]*id="m-trigger"[^>]*>/, html)
+      assert trigger =~ ~s(class="cursor-pointer mine")
+      refute trigger =~ "data-pp-component"
+      assert trigger =~ "phx-click="
+    end
+  end
 end

@@ -66,4 +66,23 @@ defmodule PhoenixPaper.PaperTest do
 
     refute html =~ "pp-surface-overlay"
   end
+
+  test "color picks the background/foreground pair, surface by default" do
+    assigns = %{}
+
+    assert rendered_to_string(~H"<PhoenixPaper.Paper.pp_paper>x</PhoenixPaper.Paper.pp_paper>") =~
+             "bg-pp-surface text-pp-on-surface"
+
+    for color <- ~w(primary secondary accent error) do
+      assigns = %{color: color}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Paper.pp_paper color={@color}>x</PhoenixPaper.Paper.pp_paper>"
+        )
+
+      assert html =~ "bg-pp-#{color} text-pp-on-#{color}"
+      refute html =~ "bg-pp-surface"
+    end
+  end
 end

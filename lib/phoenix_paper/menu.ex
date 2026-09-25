@@ -81,13 +81,42 @@ defmodule PhoenixPaper.Menu do
   `paperize={false}` drops the popover's `PhoenixPaper.Paper` surface (its
   background/elevation/rounded corners) and its cosmetic sizing, same as
   everywhere else — but the panel's `absolute`/anchor-offset positioning
-  and the trigger's `cursor-pointer` stay unconditional. That positioning
+  stays unconditional. `paperize` is also passed on to the trigger
+  `pp_button`, so `paperize={false}` gives an unstyled trigger too (style
+  it with `trigger_class`); the `trigger_variant="none"` button keeps its
+  `cursor-pointer` either way. That positioning
   is plumbing the popover can't work without (without it the panel would
   render in normal document flow instead of anchored under its trigger),
   not part of the visual skin — the same reasoning `PhoenixPaper.Badge`'s
   wrapping `<span>` and `PhoenixPaper.Autocomplete`'s anchor `<div>` give
   for their own hardcoded structural classes (see AGENTS.md, "The
   `paperize` contract").
+
+  ## The trigger
+
+  The trigger is a real `PhoenixPaper.Button`, so it looks and behaves
+  like every other button (hover tint, focus ring, ripple) with no custom
+  CSS. `:trigger` is only its content — an icon or a label — and
+  `trigger_variant`/`trigger_color`/`trigger_size` (plus `trigger_class`)
+  pass straight through to that button:
+
+      <.pp_menu id="row-menu">
+        <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
+        ...
+      </.pp_menu>
+
+      <.pp_menu id="export-menu" trigger_variant="outlined">
+        <:trigger>Export <.pp_icon name="hero-chevron-down-mini" /></:trigger>
+        ...
+      </.pp_menu>
+
+  `trigger_variant` defaults to `"icon"` (the overflow-"⋮" case); any
+  `pp_button` variant works. Inside a colored `PhoenixPaper.AppBar` use
+  `trigger_color="inherit"` so the trigger doesn't vanish into the bar.
+  `trigger_variant="none"` renders a bare, unstyled `<button>` (only
+  `cursor-pointer`) for a fully custom trigger. Never put your own button
+  or link inside `:trigger` — it's already rendered inside one, and a
+  button inside a button is invalid HTML.
 
   ## `anchor`
 
@@ -104,6 +133,7 @@ defmodule PhoenixPaper.Menu do
   alias PhoenixPaper.Helpers
 
   import PhoenixPaper.Paper, only: [pp_paper: 1]
+  import PhoenixPaper.Button, only: [pp_button: 1]
 
   attr(:id, :string, required: true)
 
@@ -121,11 +151,34 @@ defmodule PhoenixPaper.Menu do
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
+  attr(:trigger_variant, :string,
+    default: "icon",
+    values: ~w(icon text outlined raised flat none),
+    doc: "the trigger pp_button's variant; none = bare unstyled button"
+  )
+
+  attr(:trigger_color, :string,
+    default: "primary",
+    values: ~w(primary secondary accent error inherit),
+    doc: "the trigger pp_button's color"
+  )
+
+  attr(:trigger_size, :string,
+    default: "medium",
+    values: ~w(small medium large),
+    doc: "the trigger pp_button's size"
+  )
+
+  attr(:trigger_class, :any, default: nil, doc: "extra classes for the trigger button")
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
 
-  slot(:trigger, required: true, doc: "the clickable content that opens the menu")
+  slot(:trigger,
+    required: true,
+    doc: "the trigger button's content (an icon or label) — not a button itself"
+  )
+
   slot(:inner_block, required: true, doc: "the popover's content, typically a PhoenixPaper.List")
 
   @doc "Renders a menu trigger and its popover. See the module doc."
@@ -133,16 +186,32 @@ defmodule PhoenixPaper.Menu do
     ~H"""
     <div class="relative inline-block" data-pp-component="menu">
       <button
+        :if={@trigger_variant == "none"}
         type="button"
         id={"#{@id}-trigger"}
         aria-haspopup="true"
         aria-expanded="false"
         aria-controls={"#{@id}-panel"}
         phx-click={toggle(@id)}
-        class="cursor-pointer"
+        class={["cursor-pointer", @trigger_class]}
       >
         {render_slot(@trigger)}
       </button>
+      <.pp_button
+        :if={@trigger_variant != "none"}
+        id={"#{@id}-trigger"}
+        variant={@trigger_variant}
+        color={@trigger_color}
+        size={@trigger_size}
+        paperize={@paperize}
+        class={@trigger_class}
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls={"#{@id}-panel"}
+        phx-click={toggle(@id)}
+      >
+        {render_slot(@trigger)}
+      </.pp_button>
       <div
         id={"#{@id}-panel"}
         phx-click-away={close(@id)}

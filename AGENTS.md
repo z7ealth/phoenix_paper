@@ -374,6 +374,21 @@ literally, so the one from `rest` would just render as an ignored
 duplicate rather than replacing it; only the first `data-pp-component` a
 browser sees wins.
 
+**`Card`'s link mode is a "stretched link"** (since 0.2.5). The title +
+body `<a>` gets an `after:absolute after:inset-0` overlay against the
+now-`relative` card root, so the whole card, actions row included, is
+the click/hover/focus target, while `:actions` stays outside the `<a>`
+(a button inside a link is invalid). The hover tint and focus ring are
+drawn on that `::after` (`hover:after:bg-...`), not the link box. The
+actions row is `relative z-10` to sit above the overlay, plus
+`pointer-events-none [&>*]:pointer-events-auto` so its buttons keep their
+clicks but the gaps between them fall through to the link. Verified with
+`document.elementFromPoint` in Chromium: title, body and the actions-row
+gap all hit the card link, and the action button hits itself. The ripple
+still spawns from the link element, and its span is positioned against the
+`relative` card root, which works because the link's box starts at the
+root's top-left corner.
+
 ## Surfaces: `Accordion`, `AccordionSummary`, `AccordionDetails`, `AccordionActions`
 
 Modeled on MUI's `Accordion` — pure CSS, no JS/LiveView, the same hidden-
@@ -401,6 +416,15 @@ Two things worth remembering if you touch this family:
   `peer-*` vs `has-[:checked]:` documented above, just easy to get backwards
   mid-refactor when three other classes in the same file correctly use
   `peer-checked:` for a *different* relationship.
+- **Colors and styles live on `pp_accordion/1` only** (since 0.2.5):
+  `variant` (`raised`/`flat`/`outlined`) and `color`. The filled
+  background comes from `Paper`'s new `color` attr, *not* a `bg-pp-*`
+  passed through `class`: `Paper` already emits `bg-pp-surface`, and with
+  no class merging the two would tie. The parts (summary/details/actions)
+  have no color attr; the root reaches them with
+  `[&>[data-pp-component=accordion-details]]:border-pp-on-primary/20`-style
+  child selectors, the same technique `Drawer`'s colored variants use.
+  Buttons in a filled accordion's actions need `color="inherit"`.
 - **Exclusive single-panel groups are `type="radio"`, not JS/LiveView
   state.** Give every accordion in a group the same `name` and
   `pp_accordion/1` renders a radio instead of a checkbox — same-named radios
@@ -754,6 +778,20 @@ routed through `Helpers.classes/3` — same reasoning as `Badge`'s wrapping
 contract"): it's positioning plumbing the popover can't function without,
 not visual skin. Only the inner `PhoenixPaper.Paper` surface (background,
 elevation, rounded corners, cosmetic padding/min-width) is paperize-gated.
+
+**The trigger is a `pp_button`** (since 0.2.5): `:trigger` supplies only
+its content, and `trigger_variant` (default `"icon"`)/`trigger_color`/
+`trigger_size`/`trigger_class` pass through to it, so a menu trigger gets
+the same hover/focus/ripple as every button without custom CSS. It used
+to be a bare `<button class="cursor-pointer">`, which pushed callers into
+styling it by hand or nesting their own `pp_button` inside it (invalid:
+button in button). `trigger_variant="none"` keeps the bare button. The
+wiring (`id="<id>-trigger"`, `aria-haspopup`/`aria-expanded`/
+`aria-controls`, `phx-click={toggle(id)}`) goes through `pp_button`'s
+global `rest`. Headless-Chromium note: `JS.toggle` applies `display` in a
+`requestAnimationFrame`, which `--dump-dom` never runs, so the panel
+reads `display: none` there even though a `--screenshot` of the same page
+shows it open; check `aria-expanded` (set synchronously) or screenshot.
 
 `anchor` (`bottom-start`/`bottom-end`/`top-start`/`top-end`, default
 `bottom-start`) is a fixed offset picked once, the same "no collision

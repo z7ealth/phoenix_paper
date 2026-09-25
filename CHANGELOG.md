@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-09-25
+
+### Added
+
+- `pp_accordion/1` gains `variant` (`"raised"` default / `"flat"` /
+  `"outlined"`) and `color` (`"default"` / `"primary"` / `"secondary"` /
+  `"accent"` / `"error"`), like `pp_button`/`pp_tooltip`. Filled variants
+  with a brand color fill the whole panel (with matching divider tints);
+  `outlined` colors the border and the summary text. Defaults unchanged.
+- `pp_paper/1` gains `color` (`"surface"` default / `"primary"` /
+  `"secondary"` / `"accent"` / `"error"`), the background/foreground pair
+  of the surface.
+
+### Changed
+
+- `pp_menu/1`'s trigger is now a real `pp_button` (hover tint, focus
+  ring, ripple) instead of a bare unstyled `<button>`: `:trigger` is just
+  its content, and `trigger_variant` (default `"icon"`), `trigger_color`,
+  `trigger_size` and `trigger_class` style it. `trigger_variant="none"`
+  keeps the old bare button for a fully custom trigger. Don't put a
+  button or link inside `:trigger` (it would be nested in the trigger
+  button).
+- A linked `pp_card/1` (`href`/`navigate`/`patch`) is now clickable as a
+  whole, actions row included: the hover tint and focus ring cover the
+  entire card, and a click anywhere except on an action button follows
+  the link. Before, only the title/body area reacted. The actions are
+  still outside the `<a>` (valid HTML); the link is "stretched" over the
+  card with an `::after` overlay, and the actions row sits above it.
+
 ## [0.2.4] - 2026-09-25
 
 ### Added
@@ -223,7 +252,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...v0.2.2

@@ -55,11 +55,39 @@ defmodule PhoenixPaper.CardTest do
       [link] = Regex.run(~r/<a[^>]*data-pp-card-action-area[^>]*>/, html)
       assert link =~ ~s(href="/components")
       assert link =~ "data-phx-link"
-      assert link =~ "hover:bg-pp-on-surface/5"
-      assert link =~ "focus-visible:outline-pp-primary"
+      assert link =~ "hover:after:bg-pp-on-surface/5"
+      assert link =~ "focus-visible:after:outline-pp-primary"
       assert link =~ "p-6"
       assert link =~ "onclick="
       assert html =~ "overflow-hidden"
+    end
+
+    test "the link is stretched over the whole card, actions row included" do
+      html = render_component(&linked_card/1)
+
+      [root] = Regex.run(~r/<div[^>]*data-pp-component="card"[^>]*>/, html)
+      assert root =~ ~r/[" ]relative[" ]/
+
+      [link] = Regex.run(~r/<a[^>]*data-pp-card-action-area[^>]*>/, html)
+      assert link =~ "after:absolute after:inset-0"
+
+      [actions] = Regex.run(~r/<div[^>]*data-pp-card-actions[^>]*>/, html)
+      assert actions =~ "relative z-10 pointer-events-none [&amp;&gt;*]:pointer-events-auto"
+    end
+
+    test "paperize: false keeps the stretch (it's what's clickable) but drops the skin" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <PhoenixPaper.Card.pp_card href="/x" paperize={false}>
+          Body<:actions><button>A</button></:actions>
+        </PhoenixPaper.Card.pp_card>
+        """)
+
+      assert html =~ "after:absolute after:inset-0"
+      assert html =~ "relative z-10"
+      refute html =~ "hover:after:bg"
     end
 
     test "keeps actions outside the link" do

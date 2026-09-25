@@ -15,14 +15,19 @@ defmodule PhoenixPaper.Card do
         Raised, outlined, text and icon buttons.
       </.pp_card>
 
-  The `:actions` slot stays **outside** the link, below it, the way MUI
-  puts `CardActions` next to `CardActionArea` rather than inside it. A
-  `<button>` or second link nested inside an `<a>` is invalid HTML, so
-  this keeps action buttons usable on a linked card.
+  The **whole card** is the clickable area, actions row included: hover
+  anywhere tints the whole card, a click anywhere that isn't an action
+  button follows the link, and the focus ring outlines the whole card.
+  The `:actions` markup still stays **outside** the `<a>` (a `<button>` or
+  second link nested inside an `<a>` is invalid HTML): the link uses the
+  "stretched link" technique instead, an `::after` overlay covering the
+  whole card (`relative` root, `after:absolute after:inset-0`). The actions
+  row sits above that overlay so its buttons keep their own clicks, and
+  passes clicks in the gaps between buttons through to the overlay.
 
   In link mode the padding moves from the card root onto the link (and the
-  actions row), so the hover tint and ripple fill the whole clickable area
-  up to the card's rounded edge.
+  actions row). The stretch itself is unconditional (it defines what's
+  clickable); the tint, focus ring and ripple are paperize-gated as usual.
   """
   use Phoenix.Component
 
@@ -92,7 +97,7 @@ defmodule PhoenixPaper.Card do
       shape={@shape}
       paperize={@paperize}
       component="card"
-      class={Helpers.classes(@paperize, "overflow-hidden", @class)}
+      class={["relative", Helpers.classes(@paperize, "overflow-hidden", @class)]}
       {@rest}
     >
       <.link
@@ -101,11 +106,10 @@ defmodule PhoenixPaper.Card do
         patch={@patch}
         data-pp-card-action-area
         class={
-          Helpers.classes(
-            @paperize,
-            [action_area_classes(), Spacing.padding(@padding), Ripple.container_classes(@ripple?)],
-            nil
-          )
+          [
+            stretch_classes(),
+            Helpers.classes(@paperize, [action_area_classes(), Spacing.padding(@padding)], nil)
+          ]
         }
         onclick={Ripple.on_click(@ripple?)}
       >
@@ -118,13 +122,15 @@ defmodule PhoenixPaper.Card do
 
       <div
         :if={@actions != []}
-        class={
+        data-pp-card-actions
+        class={[
+          actions_layer_classes(),
           Helpers.classes(
             @paperize,
             ["flex items-center justify-end gap-2 !pt-0", Spacing.padding(@padding)],
             nil
           )
-        }
+        ]}
       >
         {render_slot(@actions)}
       </div>
@@ -132,7 +138,25 @@ defmodule PhoenixPaper.Card do
     """
   end
 
+  # The "stretched link": the link's ::after covers the whole card (the
+  # root is `relative`), so the card is clickable everywhere, actions row
+  # included. Unconditional like Menu's positioning — it defines what's
+  # clickable, it isn't skin.
+  defp stretch_classes do
+    "block after:absolute after:inset-0 after:content-['']"
+  end
+
+  # The hover tint and focus ring are painted on that same ::after overlay,
+  # so they cover the whole card too.
   defp action_area_classes do
-    "block text-inherit no-underline transition-colors hover:bg-pp-on-surface/5 focus-visible:bg-pp-on-surface/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-pp-primary"
+    "text-inherit no-underline outline-none after:transition-colors hover:after:bg-pp-on-surface/5 focus-visible:after:bg-pp-on-surface/10 focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-pp-primary"
+  end
+
+  # The actions row sits above the overlay (`relative z-10`) so its own
+  # buttons get their clicks, but ignores the pointer itself so a click in
+  # the gaps between buttons falls through to the overlay and follows the
+  # card's link.
+  defp actions_layer_classes do
+    "relative z-10 pointer-events-none [&>*]:pointer-events-auto"
   end
 end

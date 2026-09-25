@@ -15,12 +15,25 @@ defmodule PhoenixPaper.Paper do
   opacity each `pp-elevation-N` class sets (see `phoenix_paper.css`). In
   light mode the tint is transparent, so nothing changes there.
   `elevation={0}` gets no tint at all.
+
+  `color` (`"surface"` default, or `"primary"`/`"secondary"`/`"accent"`/
+  `"error"`) picks the background/foreground pair — `bg-pp-primary
+  text-pp-on-primary`, ... A component that needs a colored surface
+  (`PhoenixPaper.Accordion`'s filled variants) passes it here rather than
+  overriding `bg-pp-surface` through `class`, which PhoenixPaper doesn't
+  merge (see AGENTS.md).
   """
   use Phoenix.Component
 
   alias PhoenixPaper.{Elevation, Helpers, Shape}
 
   attr(:elevation, :integer, default: 1)
+
+  attr(:color, :string,
+    default: "surface",
+    values: ~w(surface primary secondary accent error),
+    doc: "background/foreground pair; surface is the neutral default"
+  )
 
   attr(:shape, :atom,
     default: :lg,
@@ -46,7 +59,7 @@ defmodule PhoenixPaper.Paper do
     ~H"""
     <div
       data-pp-component={@component}
-      class={Helpers.classes(@paperize, paper_classes(@elevation, @shape), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@elevation, @shape, @color), @class)}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -54,11 +67,18 @@ defmodule PhoenixPaper.Paper do
     """
   end
 
-  defp paper_classes(elevation, shape) do
+  defp paper_classes(elevation, shape, color) do
     [
-      "block bg-pp-surface pp-surface-overlay text-pp-on-surface",
+      "block pp-surface-overlay",
+      color_classes(color),
       Shape.class(shape),
       Elevation.class(elevation)
     ]
   end
+
+  defp color_classes("surface"), do: "bg-pp-surface text-pp-on-surface"
+  defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
+  defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
+  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
+  defp color_classes("error"), do: "bg-pp-error text-pp-on-error"
 end

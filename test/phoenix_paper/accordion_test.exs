@@ -123,4 +123,54 @@ defmodule PhoenixPaper.AccordionTest do
     </.pp_accordion>
     """
   end
+
+  describe "colors and styles" do
+    defp styled(assigns) do
+      ~H"""
+      <.pp_accordion id="s" variant={@variant} color={@color}>
+        <.pp_accordion_summary id="s">H</.pp_accordion_summary>
+      </.pp_accordion>
+      """
+    end
+
+    defp root(variant, color) do
+      html = render_component(&styled/1, variant: variant, color: color)
+      [root] = Regex.run(~r/<div[^>]*data-pp-component="accordion"[^>]*>/, html)
+      root
+    end
+
+    test "defaults are unchanged: raised, neutral surface, elevation 1" do
+      root = root("raised", "default")
+      assert root =~ "bg-pp-surface text-pp-on-surface"
+      assert root =~ "pp-elevation-1"
+      assert root =~ ~s(data-pp-variant="raised")
+      refute root =~ "border"
+    end
+
+    test "raised/flat with a brand color fill the panel and tint the dividers" do
+      for color <- ~w(primary secondary accent error) do
+        raised = root("raised", color)
+        assert raised =~ "bg-pp-#{color} text-pp-on-#{color}"
+        assert raised =~ "pp-elevation-1"
+        refute raised =~ "bg-pp-surface"
+        assert raised =~ "accordion-details]]:border-pp-on-#{color}/20"
+
+        flat = root("flat", color)
+        assert flat =~ "bg-pp-#{color}"
+        assert flat =~ "pp-elevation-0"
+      end
+    end
+
+    test "outlined keeps the surface, borders it and colors the summary" do
+      assert root("outlined", "default") =~ "border border-pp-outline"
+
+      for color <- ~w(primary secondary accent error) do
+        root = root("outlined", color)
+        assert root =~ "bg-pp-surface"
+        assert root =~ "pp-elevation-0"
+        assert root =~ "border border-pp-#{color}"
+        assert root =~ "accordion-summary]]:text-pp-#{color}"
+      end
+    end
+  end
 end
