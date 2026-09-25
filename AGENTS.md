@@ -342,11 +342,6 @@ literally, so the one from `rest` would just render as an ignored
 duplicate rather than replacing it; only the first `data-pp-component` a
 browser sees wins.
 
-There is no shipped `CodeSnippet` component — `dev.exs`'s catalog is the
-only place PhoenixPaper renders source code, and it does that with
-highlight.js (a real, established syntax highlighter) rather than a
-hand-rolled component; see "Dev / live preview" below.
-
 ## Surfaces: `Accordion`, `AccordionSummary`, `AccordionDetails`, `AccordionActions`
 
 Modeled on MUI's `Accordion` — pure CSS, no JS/LiveView, the same hidden-
@@ -391,9 +386,7 @@ Renamed to match MUI's own component name (`Navbar` was this library's own
 earlier, non-MUI name for the same thing) — the rename touched every
 reference across the repo: the module/file/test file, `components.ex`'s
 import, `Drawer`'s moduledoc example (`AppBar` is the usual home for
-`Drawer.pp_drawer_toggle/1`), `dev.exs` (including the live app bar at the
-top of that catalog page itself, not just its own demo section), and
-`README.md`. If you're hunting for old `Navbar`/`pp_navbar` references
+`Drawer.pp_drawer_toggle/1`), and `README.md`. If you're hunting for old `Navbar`/`pp_navbar` references
 after a `git blame` or an old branch, this is why they're gone.
 
 Added full parity with MUI's `AppBar` props while renaming: `position` now
@@ -444,8 +437,8 @@ or care what they're sitting on. Put one inside an `AppBar` with
 (`text-pp-primary`) exactly matches the app bar's own background
 (`bg-pp-primary`) — not just low-contrast, *mathematically the same
 color*, so the button is entirely invisible, not merely hard to read. This
-bit `dev.exs`'s own theme-switcher buttons (`Indigo`/`Teal`/`Light`/`Dark`)
-in the live top app bar — found from a user screenshot showing a blank
+bit the theme-switcher buttons (`Indigo`/`Teal`/`Light`/`Dark`) in the
+former live-preview catalog's top app bar — found from a user screenshot showing a blank
 colored bar, not from any test (rendering the class list in isolation
 looks completely fine; the bug only exists in the *combination* of two
 components' independent, individually-correct defaults). Fixed by adding
@@ -910,8 +903,7 @@ than interpolated, same rule as everywhere else).
 
 ## Data display: `Avatar`, `Badge`, `Chip`, and `Tooltip`
 
-Four MUI-parity components added together, all under "Data display" in
-`dev.exs`'s nav.
+Four MUI-parity components added together.
 
 - **`Avatar`** layers an `<img>` (when `src` is given) over an always-
   rendered fallback (the `:inner_block` slot — initials or an icon — or,
@@ -1165,8 +1157,7 @@ in `priv/static/phoenix_paper.css`:
 - **"System" default**: when `data-theme` isn't set at all, a
   `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ... } }`
   block (mirroring `[data-theme="dark"]`'s own values) makes the page follow
-  the OS/browser preference automatically — `dev.exs` and any consuming app
-  get a correctly-themed first paint with zero clicks. An explicit
+  the OS/browser preference automatically — any consuming app gets a correctly-themed first paint with zero clicks. An explicit
   `data-theme="dark"` or `data-theme="light"` always wins over the system
   preference in either direction; the media query is purely the fallback for
   "no explicit choice made yet." `PhoenixPaper.ThemeToggle` (below) is built
@@ -1342,7 +1333,7 @@ literal `{`/`}` characters entirely (write `paperize: false`, not
 ## More HEEx gotchas: nested heredocs, and `<`/escaped `"` in plain string attrs
 
 Two more ways to corrupt a `~H"""..."""` template without a compile error
-that points at the real cause, both hit while building `dev.exs`'s catalog:
+that points at the real cause, both hit while building a (since-removed) live-preview catalog:
 
 - **A `~S"""..."""` (or any other triple-quoted heredoc/sigil) written
   directly inside a `~H"""..."""` collides with it.** Elixir's tokenizer
@@ -1391,108 +1382,6 @@ library favors:
   content containing parens, as `Chip`'s `on_delete` doc does for its
   `JS.push("remove_chip")` example), rather than trying to escape the
   inner parens.
-
-## Dev / live preview
-
-`dev.exs` at the project root is a self-contained script (`Mix.install`,
-`path: "."` back to this checkout, `phoenix_playground`, and the real
-Tailwind v4 CLI via the `tailwind` hex package — see "Tailwind class
-safety" isn't relevant here since it compiles for real, not via a CDN) that
-boots a real Phoenix + LiveView server rendering a docs-site catalog: a
-left `PhoenixPaper.Drawer` for navigation, a sticky `PhoenixPaper.AppBar`,
-and one section per component with a live example, its options, and the
-HEEx snippet that produced it. Run it with:
-
-```
-elixir dev.exs
-```
-
-CSS is compiled once at boot (see the file's own header comment for the
-`.dev_tailwind_input.css`/`@source` mechanics — same approach as before,
-nothing new there), so a **new** Tailwind class name needs a restart to
-show up; structural/logic edits still hot-reload live via
-`phoenix_live_reload`. When adding a component, add a section for it here
-in the same change — a demo, its `props` list, and a `@<name>_code` module
-attribute with the snippet — so the catalog stays complete.
-
-**`hero-*` icon names used anywhere in this file must also be added to
-`@demo_icon_css`** (a small hand-rolled `mask-image` rule per icon, right
-above `@style_tag` — this script has no real asset pipeline, so it can't
-get `hero-*` classes for free from `mix phx.new`'s vendored heroicons the
-way a real consuming app does). Forgetting this doesn't error or warn
-anywhere — `<.pp_icon name="hero-whatever">` renders a perfectly valid,
-empty `<span class="hero-whatever">` with no visual definition at all, so
-the icon is just silently invisible. This has happened more than once
-(`hero-chevron-right`, `hero-user`, `hero-sun-mini`, `hero-moon-mini` were
-all added to component demos before being added here, and stayed
-invisible until a user reported it) — when adding a demo that uses an
-icon name not already in that list, check it first.
-
-Each section's snippet is hidden behind a "Show code"/"Hide code" toggle
-(matching MUI's docs-site pattern), implemented the same CSS-only way as
-everything else here: a hidden checkbox, a `<label>`, and the code panel
-`<div>` as flat siblings (`peer-*` needs that — see above), all inside
-`demo_section/1` in the `PhoenixPaperDemo.UI` module. The label itself has
-two child `<span>`s ("▸ Show code" / "▾ Hide code") and swaps which one is
-visible via an arbitrary child-selector variant on the *label*, keyed off
-its own sibling checkbox —
-`peer-checked:[&>.pp-show-code]:hidden peer-checked:[&>.pp-hide-code]:inline`
-— rather than the usual pattern of `peer-checked:` toggling a single
-sibling's own visibility.
-
-The revealed panel is a plain `<pre><code class="language-elixir">{@code}</code></pre>`
-(HEEx-escaped, same as before), colored by **highlight.js** plus its
-official **highlightjs-copy** plugin (the "Copy" button) — real, established
-JS libraries loaded from cdnjs/jsdelivr in `@hljs_assets`, rather than
-building highlighting or a copy button by hand.
-
-Two non-obvious things had to be gotten right for this to actually render
-colored, not just plain text with a dark background (which looks *close*
-enough to "working" at a glance to be easy to ship broken):
-
-- **Language is `elixir`, not `xml`/`html`,** even though every snippet is
-  a HEEx template and looks tag-shaped. HEEx's function-component syntax
-  (`<.pp_button ...>`) is not valid XML — a tag name can't start with `.`
-  — and highlight.js's strict XML/HTML grammar throws on it per element;
-  hljs catches that internally and silently falls back to *plain,
-  uncolored* text for that block (still sets `class="hljs"` and
-  `data-highlighted="yes"`, so nothing *looks* like an error — it just
-  never colors anything). That hit almost every snippet on this page; only
-  the couple using bare `<div>`/`<button>` happened to parse as valid XML
-  and came out colored. `elixir`'s regex-based lexer doesn't choke on `<`
-  or the leading dot — it just treats them as punctuation — so every
-  snippet highlights safely, at the cost of not coloring the tags
-  themselves as tags (there's no dedicated HEEx grammar to reach for;
-  strings/atoms/keywords/numbers still color correctly). `highlight.min.js`'s
-  bundled core only ships xml/html/css/js, so the elixir grammar is loaded
-  separately from `/languages/elixir.min.js`.
-- **The init script must run *after* the `<pre><code>` markup exists in
-  the DOM**, not just after the hljs library loads. `@hljs_assets` is
-  emitted near the top of the body (next to `@style_tag`), before any code
-  panel — a classic (non-async/defer) `<script>` pauses the HTML parser
-  and runs immediately at that point in the document, so calling
-  `hljs.highlightAll()` directly there finds zero elements every time
-  (irrelevant that the whole HTTP response already arrived — the parser
-  still walks it as a left-to-right token stream and hasn't built the
-  later DOM nodes yet). Wrapping the call in a `DOMContentLoaded` listener
-  defers it until parsing has finished the whole document. The `<script
-  src>` tags themselves are fine staying where they are — loading the
-  libraries early just means they're ready sooner.
-
-`hljs.highlightAll()` runs once, mutating each `<code>`'s DOM (adds
-classes, wraps tokens in `<span>`s; the copy plugin inserts a button into
-the `<pre>`). That `<pre>` also needs `id={"#{@id}-code"} phx-update="ignore"`
-— without it, the flow is: disconnected HTTP render → browser paints plain
-text → hljs runs and colors it → LiveSocket connects → LiveView's *first*
-connected render has no prior client state to diff against, so it
-re-patches the whole page from the server's (unhighlighted) view of the
-template, wiping hljs's DOM mutations back to plain text a moment after
-they appeared (a visible flash, then revert — the assign-unchanged-means-
-untouched optimization only applies to diffs *after* that first connected
-patch, not to it). `phx-update="ignore"` tells the client to never patch
-that element's subtree at all, at any point, so hljs's mutations are the
-only thing that ever touches it. This is the one place this page reaches
-an external CDN — see the file's header comment.
 
 ## Major gotcha: `assign_new/3` does nothing for an attr that already has a `default`
 

@@ -19,19 +19,6 @@ See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 helpers, and the icon strategy (reusing the heroicons every `mix phx.new`
 app already vendors, no extra dependency).
 
-## Try it live
-
-No app, no asset pipeline needed:
-
-```
-elixir dev.exs
-```
-
-This boots a real Phoenix + LiveView server on <http://localhost:4000> with
-a full catalog of every component: a navigation drawer on the left, and
-for each component a live example, its options, and the HEEx snippet that
-produced it.
-
 ## Installation
 
 Add `phoenix_paper` to your `mix.exs` deps:
