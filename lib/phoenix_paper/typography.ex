@@ -23,6 +23,29 @@ defmodule PhoenixPaper.Typography do
   | `subtitle1`, `subtitle2`, `body1`, `body2` | `p` |
   | `caption`, `overline`, `button`     | `span`   |
   | `code`                              | `code`   |
+
+  `caption` and `overline` render a `<span>` (so they stay valid inside a
+  `<p>` or a heading) but are **block-level** (`block`), so an eyebrow
+  above a heading or a caption under an image sits on its own line without
+  a wrapper. Use `class="!inline"` to put one back inline. `button` stays
+  an inline span.
+
+  ## `color`
+
+  Leave `color` unset to inherit the surrounding text color (`caption`
+  keeps its own muted default). Otherwise pick one of the theme colors,
+  MUI's `color="primary"`/`"text.secondary"`:
+
+      <.pp_typography variant="overline" color="primary">New</.pp_typography>
+      <.pp_typography variant="body2" color="muted">Secondary text.</.pp_typography>
+
+  | `color`     | class                    |
+  |-------------|--------------------------|
+  | `primary`   | `text-pp-primary`        |
+  | `secondary` | `text-pp-secondary`      |
+  | `accent`    | `text-pp-accent`         |
+  | `error`     | `text-pp-error`          |
+  | `muted`     | `text-pp-on-surface/70`  |
   """
   use Phoenix.Component
 
@@ -31,6 +54,12 @@ defmodule PhoenixPaper.Typography do
   attr(:variant, :string,
     default: "body1",
     values: ~w(h1 h2 h3 h4 h5 h6 subtitle1 subtitle2 body1 body2 caption overline button code)
+  )
+
+  attr(:color, :string,
+    default: nil,
+    values: [nil, "primary", "secondary", "accent", "error", "muted"],
+    doc: "text color; unset inherits (caption stays muted)"
   )
 
   attr(:paperize, :boolean, default: true)
@@ -42,17 +71,28 @@ defmodule PhoenixPaper.Typography do
   @doc "Renders text styled by the type scale. See the module doc."
   def pp_typography(assigns) do
     ~H"""
-    <h1 :if={@variant == "h1"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h1>
-    <h2 :if={@variant == "h2"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h2>
-    <h3 :if={@variant == "h3"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h3>
-    <h4 :if={@variant == "h4"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h4>
-    <h5 :if={@variant == "h5"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h5>
-    <h6 :if={@variant == "h6"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</h6>
-    <p :if={@variant in ~w(subtitle1 subtitle2 body1 body2)} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</p>
-    <span :if={@variant in ~w(caption overline button)} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</span>
-    <code :if={@variant == "code"} class={Helpers.classes(@paperize, variant_classes(@variant), @class)} {@rest}>{render_slot(@inner_block)}</code>
+    <h1 :if={@variant == "h1"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h1>
+    <h2 :if={@variant == "h2"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h2>
+    <h3 :if={@variant == "h3"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h3>
+    <h4 :if={@variant == "h4"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h4>
+    <h5 :if={@variant == "h5"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h5>
+    <h6 :if={@variant == "h6"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h6>
+    <p :if={@variant in ~w(subtitle1 subtitle2 body1 body2)} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</p>
+    <span :if={@variant in ~w(caption overline button)} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</span>
+    <code :if={@variant == "code"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</code>
     """
   end
+
+  defp paper_classes(variant, color),
+    do: [variant_classes(variant), color_classes(color, variant)]
+
+  defp color_classes(nil, "caption"), do: "text-pp-on-surface/70"
+  defp color_classes(nil, _variant), do: ""
+  defp color_classes("primary", _variant), do: "text-pp-primary"
+  defp color_classes("secondary", _variant), do: "text-pp-secondary"
+  defp color_classes("accent", _variant), do: "text-pp-accent"
+  defp color_classes("error", _variant), do: "text-pp-error"
+  defp color_classes("muted", _variant), do: "text-pp-on-surface/70"
 
   defp variant_classes("h1"), do: "text-5xl font-normal tracking-tight"
   defp variant_classes("h2"), do: "text-4xl font-normal tracking-tight"
@@ -64,8 +104,8 @@ defmodule PhoenixPaper.Typography do
   defp variant_classes("subtitle2"), do: "text-sm font-medium"
   defp variant_classes("body1"), do: "text-base font-normal"
   defp variant_classes("body2"), do: "text-sm font-normal"
-  defp variant_classes("caption"), do: "text-xs font-normal text-pp-on-surface/70"
-  defp variant_classes("overline"), do: "text-xs font-medium uppercase tracking-wide"
+  defp variant_classes("caption"), do: "block text-xs font-normal"
+  defp variant_classes("overline"), do: "block text-xs font-medium uppercase tracking-wide"
   defp variant_classes("button"), do: "text-sm font-medium uppercase tracking-wide"
   defp variant_classes("code"), do: "font-mono text-xs"
 end

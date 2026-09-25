@@ -67,4 +67,69 @@ defmodule PhoenixPaper.TypographyTest do
     <.pp_typography variant="h2" paperize={false} class="my-heading">Title</.pp_typography>
     """
   end
+
+  describe "color" do
+    test "unset inherits, except caption which stays muted" do
+      assigns = %{}
+
+      body =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Typography.pp_typography>x</PhoenixPaper.Typography.pp_typography>"
+        )
+
+      refute body =~ "text-pp-"
+
+      caption =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Typography.pp_typography variant='caption'>x</PhoenixPaper.Typography.pp_typography>"
+        )
+
+      assert caption =~ "text-pp-on-surface/70"
+    end
+
+    test "maps each color to a theme text class" do
+      for {color, class} <- [
+            {"primary", "text-pp-primary"},
+            {"secondary", "text-pp-secondary"},
+            {"accent", "text-pp-accent"},
+            {"error", "text-pp-error"},
+            {"muted", "text-pp-on-surface/70"}
+          ] do
+        assigns = %{color: color}
+
+        html =
+          rendered_to_string(
+            ~H"<PhoenixPaper.Typography.pp_typography variant='overline' color={@color}>x</PhoenixPaper.Typography.pp_typography>"
+          )
+
+        assert html =~ class
+      end
+    end
+
+    test "a color on caption replaces its muted default" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Typography.pp_typography variant='caption' color='primary'>x</PhoenixPaper.Typography.pp_typography>"
+        )
+
+      assert html =~ "text-pp-primary"
+      refute html =~ "text-pp-on-surface/70"
+    end
+  end
+
+  test "caption and overline are block-level spans, button stays inline" do
+    for {variant, block?} <- [{"caption", true}, {"overline", true}, {"button", false}] do
+      assigns = %{variant: variant}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Typography.pp_typography variant={@variant}>x</PhoenixPaper.Typography.pp_typography>"
+        )
+
+      assert html =~ "<span"
+      assert Regex.match?(~r/class="block /, html) == block?
+    end
+  end
 end

@@ -20,6 +20,12 @@ defmodule PhoenixPaper.Avatar do
   further still, to a generic person icon — MUI's own default `Avatar`
   fallback.
 
+  `color` (`"default"`/`"primary"`/`"secondary"`/`"accent"`/`"error"`,
+  default `"default"`, the neutral grey) paints the fallback background
+  and its initials/icon with a theme color pair, e.g. `bg-pp-primary
+  text-pp-on-primary`. It has no effect on a loaded image, which covers
+  the background completely.
+
   `size` (`"small"`/`"medium"`/`"large"`, default `"medium"`) is a
   convenience this library adds — MUI's own `Avatar` has no `size` prop at
   all, expecting `sx`/`className` for arbitrary sizing instead. Three
@@ -49,6 +55,13 @@ defmodule PhoenixPaper.Avatar do
   attr(:alt, :string, default: "", doc: "for the <img>, when src is given")
   attr(:variant, :string, default: "circular", values: ~w(circular rounded square))
   attr(:size, :string, default: "medium", values: ~w(small medium large))
+
+  attr(:color, :string,
+    default: "default",
+    values: ~w(default primary secondary accent error),
+    doc: "background/foreground of the fallback; default is neutral grey"
+  )
+
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -63,7 +76,7 @@ defmodule PhoenixPaper.Avatar do
     <span
       data-pp-component="avatar"
       data-pp-variant={@variant}
-      class={Helpers.classes(@paperize, paper_classes(@variant, @size), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@variant, @size, @color), @class)}
       {@rest}
     >
       <span :if={@inner_block != []} class="flex size-full select-none items-center justify-center leading-none">
@@ -81,13 +94,20 @@ defmodule PhoenixPaper.Avatar do
     """
   end
 
-  defp paper_classes(variant, size) do
+  defp paper_classes(variant, size, color) do
     [
-      "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-pp-surface-variant text-pp-on-surface",
+      "relative inline-flex shrink-0 items-center justify-center overflow-hidden",
+      color_classes(color),
       size_classes(size),
       variant_classes(variant)
     ]
   end
+
+  defp color_classes("default"), do: "bg-pp-surface-variant text-pp-on-surface"
+  defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
+  defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
+  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
+  defp color_classes("error"), do: "bg-pp-error text-pp-on-error"
 
   defp size_classes("small"), do: "size-8 text-xs"
   defp size_classes("medium"), do: "size-10 text-base"

@@ -84,4 +84,38 @@ defmodule PhoenixPaper.FlashTest do
     assert html =~ "bottom-4"
     refute html =~ "top-4"
   end
+
+  describe "connection_notices" do
+    defp render_notices(assigns) do
+      ~H"""
+      <.pp_flash_group flash={%{}} connection_notices client_error_title="Offline" />
+      """
+    end
+
+    test "are off by default" do
+      html = render_group(%{})
+      refute html =~ "pp-flash-client-error"
+      refute html =~ "pp-flash-server-error"
+    end
+
+    test "render hidden client/server chips toggled by phx-disconnected/phx-connected" do
+      html = render_component(&render_notices/1)
+
+      for {id, error_class} <- [
+            {"pp-flash-client-error", "phx-client-error"},
+            {"pp-flash-server-error", "phx-server-error"}
+          ] do
+        [tag] = Regex.run(~r/<div[^>]*id="#{id}"[^>]*>/, html)
+        assert tag =~ " hidden"
+        assert tag =~ "phx-disconnected="
+        assert tag =~ "phx-connected="
+        assert tag =~ error_class
+        assert tag =~ ~s(role="alert")
+      end
+
+      assert html =~ "Offline"
+      assert html =~ "Something went wrong!"
+      assert html =~ "Attempting to reconnect"
+    end
+  end
 end

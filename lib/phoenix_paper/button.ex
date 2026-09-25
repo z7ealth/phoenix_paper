@@ -33,6 +33,30 @@ defmodule PhoenixPaper.Button do
   Material 3's relaxed button typography and letting a caller's own
   ancestor `text-transform` (or lack of one) come through unchanged.
 
+  ## `color="inherit"`
+
+  Every other `color` is a fixed brand color, which disappears on a
+  surface of that same color: a `text`/`icon` button left at the default
+  `color="primary"` inside a `color="primary"` `PhoenixPaper.AppBar` has
+  text exactly the color of the bar behind it. `color="inherit"` (MUI's
+  own `color="inherit"`) takes the text color of whatever it sits in
+  instead (`text-inherit`, with the hover tint, border and focus ring all
+  `currentColor`-based), so it reads on any surface with no `class`
+  override:
+
+      <.pp_app_bar>
+        My App
+        <:actions>
+          <.pp_button variant="icon" color="inherit" aria-label="Settings">
+            <.pp_icon name="hero-cog-6-tooth" />
+          </.pp_button>
+        </:actions>
+      </.pp_app_bar>
+
+  It's meant for `text`, `outlined` and `icon`. On `raised`/`flat`, which
+  need a filled background, `inherit` falls back to a neutral
+  `bg-pp-surface-variant` chip (MUI's grey "inherit" contained button).
+
   ## Link mode
 
   Pass `href`, `navigate` or `patch` and `pp_button/1` renders a
@@ -60,7 +84,13 @@ defmodule PhoenixPaper.Button do
 
   attr(:paperize, :boolean, default: true, doc: "apply PhoenixPaper's Material styling")
   attr(:variant, :string, default: "raised", values: ~w(raised flat outlined text icon))
-  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
+
+  attr(:color, :string,
+    default: "primary",
+    values: ~w(primary secondary accent error inherit),
+    doc: "inherit follows the surrounding text color — see the module doc"
+  )
+
   attr(:size, :string, default: "medium", values: ~w(small medium large))
   attr(:elevation, :integer, default: nil, doc: "override the resting elevation (0-24)")
 
@@ -285,6 +315,22 @@ defmodule PhoenixPaper.Button do
 
   defp color_classes("icon", "error"),
     do: "text-pp-error hover:bg-pp-error/10 focus-visible:outline-pp-error"
+
+  defp color_classes("raised", "inherit"),
+    do: "bg-pp-surface-variant text-pp-on-surface focus-visible:outline-pp-on-surface"
+
+  defp color_classes("flat", "inherit"),
+    do: "bg-pp-surface-variant text-pp-on-surface focus-visible:outline-pp-on-surface"
+
+  defp color_classes("outlined", "inherit"),
+    do:
+      "bg-transparent text-inherit border border-current hover:bg-current/10 focus-visible:outline-current"
+
+  defp color_classes("text", "inherit"),
+    do: "bg-transparent text-inherit hover:bg-current/10 focus-visible:outline-current"
+
+  defp color_classes("icon", "inherit"),
+    do: "text-inherit hover:bg-current/10 focus-visible:outline-current"
 
   # Default elevation is only animated (hover boost) when the caller hasn't
   # pinned an explicit level — see the "Tailwind class safety" note in

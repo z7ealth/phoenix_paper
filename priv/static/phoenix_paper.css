@@ -72,6 +72,8 @@
   --color-pp-on-warning: #2b1500;
   --color-pp-info: #81d4fa;
   --color-pp-on-info: #01324a;
+
+  --pp-surface-tint: 255 255 255;
 }
 
 /*
@@ -111,6 +113,8 @@
     --color-pp-on-warning: #2b1500;
     --color-pp-info: #81d4fa;
     --color-pp-on-info: #01324a;
+
+    --pp-surface-tint: 255 255 255;
   }
 }
 
@@ -166,8 +170,10 @@
  * ever affects the very first, pre-click paint). Scoped to
  * `html:not([data-theme])` — absence only, not `:not([data-theme="light"])`
  * like the color tokens above — because the moment there's *any* explicit
- * `data-theme` (including an explicit `"dark"` from a previous click),
- * the toggle's own real `peer-checked:` styling takes over identically,
+ * `data-theme`, the component's own `[[data-theme=dark]_&]:!...` /
+ * `[[data-theme=light]_&]:!...` classes take over (keyed off the
+ * attribute, not the checkbox, which the server always renders at
+ * `default_checked` and so is wrong after a reload with a saved theme),
  * and this block should get out of the way entirely rather than overlap
  * with it.
  */
@@ -202,105 +208,159 @@
  * two-layer shadow. See `PhoenixPaper.Elevation` for the Elixir-side class
  * helper. These are static utilities (not a wildcard `pp-elevation-*`
  * matcher) because the shadow values aren't derivable from the number alone.
+ *
+ * Each level also sets `--pp-elevation-overlay`, the opacity of the
+ * dark-mode surface tint below — MUI's own formula,
+ * `(4.5 * ln(elevation + 1) + 2)%`, rounded to one decimal.
  */
+@property --pp-elevation-overlay {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
 @utility pp-elevation-0 {
   box-shadow: none;
+  --pp-elevation-overlay: 0%;
 }
 
 @utility pp-elevation-1 {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.16), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 5.1%;
 }
 
 @utility pp-elevation-2 {
   box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 6.9%;
 }
 
 @utility pp-elevation-3 {
   box-shadow: 0 3px 9px 0 rgba(0, 0, 0, 0.16), 0 2px 4px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 8.2%;
 }
 
 @utility pp-elevation-4 {
   box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.16), 0 2px 6px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 9.2%;
 }
 
 @utility pp-elevation-5 {
   box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.16), 0 2px 8px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 10.1%;
 }
 
 @utility pp-elevation-6 {
   box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.16), 0 3px 9px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 10.8%;
 }
 
 @utility pp-elevation-7 {
   box-shadow: 0 7px 21px 0 rgba(0, 0, 0, 0.16), 0 4px 10px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 11.4%;
 }
 
 @utility pp-elevation-8 {
   box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.16), 0 4px 12px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 11.9%;
 }
 
 @utility pp-elevation-9 {
   box-shadow: 0 9px 27px 0 rgba(0, 0, 0, 0.16), 0 4px 14px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 12.4%;
 }
 
 @utility pp-elevation-10 {
   box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.16), 0 5px 15px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 12.8%;
 }
 
 @utility pp-elevation-11 {
   box-shadow: 0 11px 33px 0 rgba(0, 0, 0, 0.16), 0 6px 16px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 13.2%;
 }
 
 @utility pp-elevation-12 {
   box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.16), 0 6px 18px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 13.5%;
 }
 
 @utility pp-elevation-13 {
   box-shadow: 0 13px 39px 0 rgba(0, 0, 0, 0.16), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 13.9%;
 }
 
 @utility pp-elevation-14 {
   box-shadow: 0 14px 42px 0 rgba(0, 0, 0, 0.16), 0 7px 21px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 14.2%;
 }
 
 @utility pp-elevation-15 {
   box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.16), 0 8px 22px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 14.5%;
 }
 
 @utility pp-elevation-16 {
   box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.16), 0 8px 24px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 14.7%;
 }
 
 @utility pp-elevation-17 {
   box-shadow: 0 17px 51px 0 rgba(0, 0, 0, 0.16), 0 8px 26px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 15.0%;
 }
 
 @utility pp-elevation-18 {
   box-shadow: 0 18px 54px 0 rgba(0, 0, 0, 0.16), 0 9px 27px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 15.2%;
 }
 
 @utility pp-elevation-19 {
   box-shadow: 0 19px 57px 0 rgba(0, 0, 0, 0.16), 0 10px 28px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 15.5%;
 }
 
 @utility pp-elevation-20 {
   box-shadow: 0 20px 60px 0 rgba(0, 0, 0, 0.16), 0 10px 30px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 15.7%;
 }
 
 @utility pp-elevation-21 {
   box-shadow: 0 21px 63px 0 rgba(0, 0, 0, 0.16), 0 10px 32px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 15.9%;
 }
 
 @utility pp-elevation-22 {
   box-shadow: 0 22px 66px 0 rgba(0, 0, 0, 0.16), 0 11px 33px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 16.1%;
 }
 
 @utility pp-elevation-23 {
   box-shadow: 0 23px 69px 0 rgba(0, 0, 0, 0.16), 0 12px 34px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 16.3%;
 }
 
 @utility pp-elevation-24 {
   box-shadow: 0 24px 72px 0 rgba(0, 0, 0, 0.16), 0 12px 36px 0 rgba(0, 0, 0, 0.12);
+  --pp-elevation-overlay: 16.5%;
+}
+
+/*
+ * Dark-mode elevation overlay. A dark shadow on a dark page is invisible,
+ * so in dark mode a raised surface is told apart by being *lighter*
+ * instead: MUI's approach, a translucent white layer whose opacity grows
+ * with elevation (`--pp-elevation-overlay`, set by `pp-elevation-N`
+ * above). `--pp-surface-tint` is white (`255 255 255`, rgb channels) in
+ * the dark blocks and unset in light mode, where the unset variable makes
+ * the whole declaration invalid, so no background image at all. Plain
+ * `rgb(channels / alpha)` rather than `color-mix()` on purpose: Tailwind's
+ * build adds a no-`color-mix()` fallback that would paint the tint solid. `PhoenixPaper.Paper` applies
+ * this, so Card, Accordion, Dialog, Menu and TableContainer get it too.
+ */
+@utility pp-surface-overlay {
+  background-image: linear-gradient(
+    rgb(var(--pp-surface-tint) / var(--pp-elevation-overlay)),
+    rgb(var(--pp-surface-tint) / var(--pp-elevation-overlay))
+  );
 }
 
 /*

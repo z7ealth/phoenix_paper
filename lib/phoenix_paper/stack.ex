@@ -9,6 +9,27 @@ defmodule PhoenixPaper.Stack do
   component only gets one opaque `inner_block` slot, it can't see individual
   children to insert between them. Add `<.pp_divider />` between children
   yourself where you want one.
+
+  ## Use the attrs, not `class`, for direction and spacing
+
+  `direction`, `spacing` and `wrap` each emit a built-in class
+  (`flex-col`/`flex-row`, `gap-*`, `flex-wrap`). PhoenixPaper doesn't merge
+  classes (see AGENTS.md, "Overriding built-in classes via `class`"), so
+  `class="flex-row"` on a default (`direction="column"`) stack renders
+  *both* `flex-col` and `flex-row`, and which one wins is down to
+  Tailwind's stylesheet order, not your markup. Nothing warns you. Set the
+  attr instead:
+
+      <.pp_stack direction="row" spacing={:sm}>...</.pp_stack>
+
+  | Instead of `class=`              | use                           |
+  |----------------------------------|-------------------------------|
+  | `flex-row` / `flex-col`          | `direction="row"` / `"column"` |
+  | `gap-*`                          | `spacing={:xs .. :"2xl"}` (or `:none`) |
+  | `flex-wrap`                      | `wrap`                        |
+
+  Responsive changes (`md:flex-row`) have no attr; they add a *different*
+  class rather than replacing one, so they're safe to pass in `class`.
   """
   use Phoenix.Component
 

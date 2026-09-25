@@ -1,7 +1,7 @@
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
-  @version "0.2.3"
+  @version "0.2.4"
   @source_url "https://github.com/z7ealth/phoenix_paper"
   @description "A Material Design component library for Phoenix and LiveView, styled with Tailwind CSS."
 

@@ -43,4 +43,27 @@ defmodule PhoenixPaper.PaperTest do
     <.pp_paper paperize={false} class="my-paper">Content</.pp_paper>
     """
   end
+
+  test "applies the dark-mode elevation overlay utility" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(
+        ~H"<PhoenixPaper.Paper.pp_paper elevation={4}>x</PhoenixPaper.Paper.pp_paper>"
+      )
+
+    assert html =~ "pp-surface-overlay"
+    assert html =~ "pp-elevation-4"
+  end
+
+  test "paperize={false} drops the overlay too" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(
+        ~H"<PhoenixPaper.Paper.pp_paper paperize={false}>x</PhoenixPaper.Paper.pp_paper>"
+      )
+
+    refute html =~ "pp-surface-overlay"
+  end
 end

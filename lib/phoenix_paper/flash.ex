@@ -41,10 +41,23 @@ defmodule PhoenixPaper.Flash do
   background colour here (use `PhoenixPaper.Alert` inside a bare
   `pp_snackbar` if you want coloured severity surfaces).
 
-  The `:client-error` / `:server-error` connection-lost flashes that
-  `core_components.ex` renders with `phx-disconnected` are a different
-  mechanism (no server flash entry backs them) and aren't handled here —
-  keep the generated `<.flash>` for those, or add your own.
+  ## Connection-lost notices
+
+  `connection_notices` also renders the two "connection lost" chips a
+  generated `core_components.ex` `flash_group/1` shows, so you don't have
+  to keep the generated `<.flash>` around (or hand-build `pp_snackbar`s)
+  just for them:
+
+      <.pp_flash_group flash={@flash} connection_notices />
+
+  These aren't flash messages (no server flash entry backs them — the
+  server is exactly what's unreachable). Both chips are rendered `hidden`
+  and toggled purely client-side: `phx-disconnected` removes `hidden` and
+  `phx-connected` puts it back, each scoped to the LiveView container's
+  `.phx-client-error` / `.phx-server-error` class, the same way the
+  generated component does. `client_error_title`/`server_error_title` and
+  `reconnecting_text` override the English defaults (e.g. with `gettext`).
+  They have no ✕ — they go away on their own when the socket reconnects.
   """
   use Phoenix.Component
 
@@ -73,6 +86,15 @@ defmodule PhoenixPaper.Flash do
   )
 
   attr(:transition, :string, default: "slide", values: ~w(grow fade slide none))
+
+  attr(:connection_notices, :boolean,
+    default: false,
+    doc: "also render the hidden client/server connection-lost chips (see the module doc)"
+  )
+
+  attr(:client_error_title, :string, default: "We can't find the internet")
+  attr(:server_error_title, :string, default: "Something went wrong!")
+  attr(:reconnecting_text, :string, default: "Attempting to reconnect")
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -94,7 +116,54 @@ defmodule PhoenixPaper.Flash do
         transition={@transition}
         paperize={@paperize}
       />
+      <.connection_notice
+        :if={@connection_notices}
+        id="pp-flash-client-error"
+        error_class="phx-client-error"
+        title={@client_error_title}
+        text={@reconnecting_text}
+        anchor_origin={@anchor_origin}
+        transition={@transition}
+        paperize={@paperize}
+      />
+      <.connection_notice
+        :if={@connection_notices}
+        id="pp-flash-server-error"
+        error_class="phx-server-error"
+        title={@server_error_title}
+        text={@reconnecting_text}
+        anchor_origin={@anchor_origin}
+        transition={@transition}
+        paperize={@paperize}
+      />
     </div>
+    """
+  end
+
+  defp connection_notice(assigns) do
+    ~H"""
+    <.pp_snackbar
+      id={@id}
+      role="alert"
+      positioned={false}
+      anchor_origin={@anchor_origin}
+      transition={@transition}
+      paperize={@paperize}
+      hidden
+      phx-disconnected={JS.remove_attribute("hidden", to: ".#{@error_class} ##{@id}")}
+      phx-connected={JS.set_attribute({"hidden", ""}, to: "##{@id}")}
+    >
+      <span class="flex items-center gap-3">
+        <.pp_icon name="hero-exclamation-circle-mini" class="!size-5 shrink-0" />
+        <span>
+          <span class="block font-medium">{@title}</span>
+          <span class="flex items-center gap-1">
+            {@text}
+            <.pp_icon name="hero-arrow-path-mini" class="!size-3 motion-safe:animate-spin" />
+          </span>
+        </span>
+      </span>
+    </.pp_snackbar>
     """
   end
 

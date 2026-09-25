@@ -100,4 +100,16 @@ defmodule PhoenixPaper.DrawerTest do
     assert html =~ "max-lg:peer-checked:block"
     refute html =~ "peer-checked:block lg:hidden"
   end
+
+  test "the desktop drawer stacks above the app bar's z-20" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <PhoenixPaper.Drawer.pp_drawer id="d">x</PhoenixPaper.Drawer.pp_drawer>
+      """)
+
+    assert html =~ "lg:z-30"
+    refute html =~ "lg:z-auto"
+  end
 end

@@ -25,7 +25,7 @@ adding or changing a component.
   `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
   `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Menu`, `Progress`, `Skeleton`,
   `Snackbar`, `Flash`, `SpeedDial`, `Accordion`, `AccordionSummary`,
-  `AccordionDetails`, `AccordionActions`, ...), plus `Helpers`, `Elevation`,
+  `AccordionDetails`, `AccordionActions`, `Collapse`, ...), plus `Helpers`, `Elevation`,
   `Spacing`, `Shape`, `Ripple`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
@@ -54,7 +54,7 @@ adding or changing a component.
     own built-in classes (see "Overriding built-in classes via `class`"
     below for what that does and doesn't guarantee).
   - `rest` (`:global`) — for `phx-*` bindings, `id`, `data-*`, etc.
-- Register new components in `PhoenixPaper.Components.__using__/1` in the
+- Register new components in `PhoenixPaper.Components`' `__using__/1` in the
   same change.
 - The one-module-per-component rule bends for a small control that's
   meaningless without its parent component — `PhoenixPaper.Drawer` exports
@@ -118,7 +118,7 @@ Two things worth knowing before touching this:
 - **It has to be `onclick`, not `onpointerdown`/`onmousedown`.** Phoenix's
   HEEx compiler statically validates `on*` attributes against a fixed
   allowlist for function components (see
-  `Phoenix.Component.Declarative`'s `@globals`) — that list has `onclick`
+  the `@globals` list in Phoenix.Component's internal `Declarative` module) — that list has `onclick`
   and the `onmouse*` family, but no `onpointer*` events at all. This only
   bites when the attribute has to pass through a function component like
   `Phoenix.Component.link/1` (which `ListItem` renders through when it's a
@@ -224,6 +224,33 @@ workaround for the one case even `tails` itself couldn't merge (`size-*`,
 a shorthand its ruleset predates — see `ThemeToggle`'s section below); it's
 now the standard pattern for *every* override, not just that one case.
 
+**Point people at the attr first.** Most of the overrides people reach
+for already have an attr that *changes* the built-in class instead of
+fighting it — a class conflict there isn't a bug to work around with `!`,
+it's a sign the attr was missed. Found in practice: a `class="flex-col"`
+on a `direction="row"` `pp_stack` silently lost to the stack's own
+`flex-row`, and nothing warned. When a component emits a layout/size
+class from an attr, name that attr in its moduledoc as the way to change
+it (see `PhoenixPaper.Stack`'s "Use the attrs, not `class`" table). The
+current set:
+
+| Component | Built-in class | Change it with |
+|-----------|----------------|----------------|
+| `Stack` | `flex-col`/`flex-row`, `gap-*`, `flex-wrap` | `direction`, `spacing`, `wrap` |
+| `Grid` | `gap-*` | `spacing` |
+| `GridItem` | `col-span-*`, `md:col-span-*` | `span`, `md` |
+| `Container` | `max-w-screen-*` | `max_width` |
+| `Paper`/`Card`/`Accordion` | `pp-elevation-*`, `rounded-*` | `elevation`, `shape` |
+| `Card` | `p-*` | `padding` |
+| `Button` | colors, `px-*`/`py-*`/`text-*`, `rounded-*` | `color` (incl. `inherit`), `size`, `shape` |
+| `Avatar` | `size-*`, colors | `size`, `color` |
+| `Typography` | `text-*` size/color | `variant`, `color` |
+| `List`/`ListItem` | `py-*`, `pl-*` | `dense`, `nested`, `inset` |
+
+Use `!` only for what no attr covers. A responsive or state variant
+(`md:flex-row`, `hover:...`) adds a *different* class instead of
+replacing one, so it doesn't need `!` at all.
+
 If a new component needs the *default itself* to be conditional rather
 than asking every caller to reach for `!`, prefer branching in the
 component's own `paper_classes/...` (a `case`/`cond` picking one literal
@@ -249,7 +276,7 @@ Rules:
 - The same applies to variant-prefixed combinations (`hover:pp-elevation-4`)
   — the whole prefixed token must appear literally somewhere, not be
   assembled at runtime by concatenating a prefix and a helper's return
-  value. `PhoenixPaper.Button.elevation_classes/2` shows the split: the
+  value. `PhoenixPaper.Button`'s private `elevation_classes/2` shows the split: the
   common case (`nil` = default elevation) is one literal string with the
   hover variant baked in; an explicit override falls back to a plain,
   un-animated `Elevation.class/1` call.
@@ -385,6 +412,39 @@ Two things worth remembering if you touch this family:
   HTML limitation), so the group can't return to "all collapsed" — that's
   documented as a known, permanent difference, not a bug to fix.
 
+## Surfaces: `Collapse`, and `List`'s collapsible groups
+
+`PhoenixPaper.Collapse` (`pp_collapse/1`) is the light show/hide for when
+`Accordion` is too much: one component, one `id`, a `:trigger` slot and
+the content. Same hidden-checkbox-plus-`peer-checked:` mechanism as
+`Accordion`/`Drawer`, but the content animates its height with the
+`grid-template-rows: 0fr → 1fr` trick (a grid track can transition
+between fractions of its content's height, which `height: auto` can't) and
+toggles `invisible`/`visible` alongside it, so links inside a closed
+collapse can't be tabbed to. `visibility` is in the transition list on
+purpose: it flips to `hidden` only at the *end* of closing, so the content
+stays painted while it shrinks.
+
+`PhoenixPaper.List.pp_list_group/1` is the same structure with a list-item-shaped
+trigger (a nested list inside a collapse, MUI's usual nested-nav pattern)
+and lives in `PhoenixPaper.List` because it has no use outside a list. It
+reuses `Collapse.toggle_id/1`, `content_id/1` and `content_classes/0`
+instead of composing `pp_collapse/1`: the list trigger needs *different*
+base classes than `Collapse`'s trigger, and with no class merging (see
+above) that can't be done by passing `trigger_class`. Its trigger label
+carries `data-pp-component="list-item"`, so `List`'s `dense`/`inset` and a
+colored `Drawer`'s compound selectors reach it like any other item.
+
+`List`'s `dense`/`nested`/`inset` use the `Table`-style descendant
+selectors (`[&_[data-pp-component=list-item]]:py-1`). `inset` targets items
+*without* a leading icon via `:not(:has([data-pp-list-item-leading]))`, which
+is why `ListItem`'s leading `<span>` carries that data attribute.
+
+Headless-Chromium caveat, again: reading `visibility` right after clicking
+the toggle returns the *pre*-transition value (see the `Tooltip` note
+below); inject `* { transition: none !important }` before clicking when
+checking the open state.
+
 ## Navigation: `AppBar` (renamed from `Navbar`)
 
 Renamed to match MUI's own component name (`Navbar` was this library's own
@@ -457,11 +517,27 @@ on every one of those: `Button`'s own `color_classes/2` already sets
 and PhoenixPaper doesn't merge/resolve class conflicts (see "Overriding
 built-in classes via `class`" above) — without `!`, both the default and
 the override would render and the button's actual color would be down to
-Tailwind's stylesheet order, not this override. There's no general fix
-for this beyond "remember to override text/border/outline color for
-brand-colored buttons placed on a brand-colored surface" — the same
-caveat applies to any `Button` dropped into a colored `Drawer` (see below)
-or `Card`.
+Tailwind's stylesheet order, not this override.
+
+**Since 0.2.4 the general fix is `color="inherit"`** (MUI's own name):
+`text`/`outlined`/`icon` buttons take `text-inherit` and do their hover
+tint, border and focus ring in `currentColor`, so they read on whatever
+surface they sit on — an `AppBar`, a colored `Drawer`, a colored `Card` —
+with no `class` override at all. The `!`-override above still works and is
+what to reach for when you want a *specific* color rather than the
+surrounding one.
+
+## Navigation: stacking order of `AppBar` and `Drawer`
+
+Fixed layers, MUI's order (drawer 1200 over app bar 1100): `AppBar`'s
+`sticky`/`fixed`/`absolute` positions are `z-20`; the desktop drawer is
+`lg:z-30`; the mobile backdrop `z-30` and mobile panel `z-40`. The desktop
+drawer used to be `lg:z-auto`, which gave it no stacking level at all, so
+a sticky app bar painted over it on scroll. Desktop drawer and mobile
+backdrop sharing `z-30` is fine: the backdrop only exists below `lg:`
+(`max-lg:peer-checked:block`). No attr controls this; the escape hatch
+for a "clipped" layout (app bar on top) is `class="!z-40"` on the app bar.
+Keep this ladder in mind when adding any other fixed/sticky component.
 
 ## Navigation: `Drawer`'s `color` and reaching into nested `List`/`ListItem`
 
@@ -963,7 +1039,13 @@ Four MUI-parity components added together.
   just the trigger), matching MUI's own `title` prop exactly. No collision
   detection/auto-flip like MUI's Popper-based positioning — `placement` is
   a fixed offset picked once, one of the 4 cardinal directions instead of
-  MUI's 12-way matrix.
+  MUI's 12-way matrix. Since 0.2.4 it also takes `Button`'s styling attrs
+  (`color`, `variant` = `raised`/`flat`/`outlined`, `size`, `shape`);
+  `color="default"` is the original inverted chip and stays the default.
+  No `text` variant (a background-less bubble is unreadable over
+  content). The outlined arrow is a `bg-pp-surface` square bordered on only
+  the two edges that stick out of the bubble, which pair depending on
+  `placement` (`arrow_border_edges/1`).
 
   **A verification dead-end worth knowing about, so it isn't re-walked**:
   an early headless-Chromium check of the hover reveal seemed to show
@@ -1086,15 +1168,51 @@ present message inside a `fixed` corner stack (`flex flex-col gap-2`).
   icon), never a background color. Colored severity surfaces = an
   `Alert` inside a bare `pp_snackbar`.
 - **`role`** is `alert` for `:error`, `status` otherwise.
-- The `:client-error`/`:server-error` `phx-disconnected` flashes a
-  generated `core_components` renders are a *different* mechanism (no
-  server flash entry) and are out of scope — keep the generated
-  `<.flash>` for those.
+- **`connection_notices`** (opt-in, since 0.2.4) renders the
+  `:client-error`/`:server-error` "connection lost" chips a generated
+  `core_components` shows. They're a *different* mechanism from flash (no
+  server flash entry — the server is what's unreachable): two
+  `pp_snackbar`s rendered `hidden`, with `phx-disconnected` running
+  `JS.remove_attribute("hidden", to: ".phx-client-error #pp-flash-client-error")`
+  (resp. `phx-server-error`) and `phx-connected` putting `hidden` back.
+  Plain attribute toggling, not `JS.show`/`JS.hide`: `JS.show` sets an
+  inline `display: block`, which would override the chip's own `flex`.
+  Tailwind's preflight makes `[hidden]` `display: none !important`, so
+  `hidden` wins over the chip's `flex` class while it's set.
 
 The `stack_classes/1` container is `pointer-events-none` with
 `[&_[data-pp-component=snackbar]]:pointer-events-auto` so the transparent
 gaps between/around chips don't eat clicks on the page beneath — the same
 `data-pp-component` compound-selector reach `Tabs`/`Drawer` use.
+
+## Actions: `ToggleButton`'s controlled vs. client-side modes
+
+`pp_toggle_button/1` is **controlled** by default (MUI's `selected` +
+`onChange`): its look comes from `pressed` alone and a click only fires
+the caller's `phx-click`. That's correct for app state but looked broken
+in a demo that hard-coded `pressed` with no handler, so `toggle` /
+`toggle_group` add an opt-in **client-side** mode:
+
+- The click runs `Phoenix.LiveView.JS` ops — `toggle_attribute` of
+  `aria-pressed`, or for a group `set_attribute("false")` on
+  `[data-pp-toggle-group="name"]` then `set_attribute("true")` on itself —
+  built in the public `@doc false` `toggle_js/2`, which the test
+  pattern-matches exactly, like `Tabs.select/3`. JS commands and not a
+  vanilla `onclick` because LiveView keeps JS-command attributes across
+  later patches; an `onclick`'s `setAttribute` would be reset to the
+  server's `pressed` by the next re-render (the same hydration class of bug
+  as `ThemeToggle`'s).
+- Styling can't branch on `pressed` in Elixir any more (the client owns
+  it), so toggle mode renders a *second* class set: unpressed classes as
+  the base and pressed ones behind `aria-pressed:`, with
+  `aria-pressed:hover:` pinning the pressed hover so the unpressed
+  `hover:bg-*/10` tint (equal specificity otherwise) can't show on a
+  pressed button.
+- Verified in headless Chromium with the real `phoenix.js` +
+  `phoenix_live_view.js` from `deps/` and a `LiveSocket` that never
+  connects: toggling, the exclusive group, and re-clicking the pressed
+  group member (stays pressed) all work, so it runs on controller-rendered
+  pages too, as long as `app.js` loads the `LiveSocket`.
 
 ## Actions: `PhoenixPaper.SpeedDial`
 
@@ -1175,6 +1293,48 @@ in `priv/static/phoenix_paper.css`:
   JS config.
 
 ## `PhoenixPaper.ThemeToggle`, and a class-merging gap it exposed early
+
+**Since 0.2.4 the default is `variant="segmented"`**: System / Light /
+Dark icon buttons, System selected by default (it *removes* `data-theme`).
+Everything below about the sun/moon switch now describes
+`variant="switch"`, kept for callers who want the two-state look. The
+segmented control deliberately avoids the switch's problems rather than
+working around them:
+
+- **Its selected state is CSS keyed off the ancestor's `data-theme`**
+  (`[[data-theme=dark]_&]:translate-x-14` on the indicator and the
+  matching button colors), never state stored on the component. So there's
+  no checkbox property for a LiveView patch to reset (the hydration bug
+  below can't happen), no cross-instance sync script, and System is simply
+  "neither light nor dark matched". The trade-off: it reads the *nearest*
+  `data-theme` ancestor, so a scoped `target` only shows correctly when the
+  toggle sits inside that target; documented, not worked around.
+- **No `aria-pressed`**, for the same reason: it would have to be set by
+  JS on click and a patch can undo it. Each button has `aria-label`/`title`
+  instead.
+- **Persistence** writes `localStorage["phx:theme"]` (removed for System)
+  only when `target="html"` — the exact key and semantics of Phoenix 1.8's
+  generated root layout script, so a 1.8 app restores it on reload with no
+  setup; the moduledoc has a four-line `<head>` snippet for other apps.
+  The switch variant writes the same key.
+- **The switch now follows the same rule.** It used to take its look from
+  its checkbox whenever `data-theme` was set, assuming a click had set
+  both together. Wrong after a reload with a saved `"dark"` (the server
+  renders the checkbox at `default_checked`, so: dark page, "off / sun"
+  switch) and after any theme change made elsewhere (the segmented
+  control, Phoenix 1.8's picker). Its track/thumb/icons now carry
+  `[[data-theme=dark]_&]:!...`/`[[data-theme=light]_&]:!...` classes;
+  the `!` is needed because `has-[:checked]:` ties them on specificity.
+  The checkbox only matters with no `data-theme` (System, OS light); the
+  CSS-file rule still covers System + OS dark. Verified in Chromium for
+  all six combinations of theme (none/dark/light) and OS preference, with
+  the checkbox both checked and unchecked.
+- Verified in headless Chromium by clicking each button: `data-theme`
+  removed/`light`/`dark`, `localStorage` matching, and two toggles on the
+  page (one inside an `AppBar`) moving their indicators together
+  (`translate` 0 / 28px / 56px — note Tailwind v4's `translate-x-*` sets
+  the standalone `translate` property, so `getComputedStyle(...).transform`
+  reads `none`; read `.translate`).
 
 Rewritten from a thin `PhoenixPaper.Switch` wrapper to its own markup so a
 sun/moon icon could live *inside* the sliding thumb (swapped via a
@@ -1279,6 +1439,24 @@ a `pp-elevation-N` class. The actual `box-shadow` values live once, in
 (a two-layer shadow that approximates — not reproduces exactly — Google's
 official umbra/penumbra/ambient elevation table). If pixel-exact MD shadows
 are ever needed, replace the CSS values; the Elixir API doesn't change.
+
+**Dark mode lightens instead of shadowing.** A dark shadow on a
+`#121212` page is invisible, so surfaces used to vanish into the page in
+dark mode (apps were patching it with site-wide borders). Each
+`pp-elevation-N` utility also sets `--pp-elevation-overlay` (MUI's
+formula, `4.5·ln(N+1)+2` percent — 5% at 1, 11.8% at 8, 16.5% at 24),
+registered with `@property ... inherits: false` so a nested surface never
+picks up its parent's value. `Paper`'s `pp-surface-overlay` utility paints
+`linear-gradient(rgb(var(--pp-surface-tint) / var(--pp-elevation-overlay)) ...)`
+as a `background-image` on top of `bg-pp-surface`. `--pp-surface-tint`
+is `255 255 255` only in the two dark blocks; in light mode it's unset,
+which makes the declaration invalid at computed-value time → no
+background image at all. Deliberately not `color-mix()`: Tailwind's build
+emits a no-`color-mix()` fallback that drops the percentage, which would
+paint a *solid* white tint on browsers taking the fallback — caught by
+reading the compiled CSS, not the source. The overlay is on `Paper` only
+(so `Card`/`Accordion`/`Dialog`/`Menu`/`TableContainer` inherit it), not
+on every `pp-elevation-*` user — a raised `Button` isn't a surface.
 
 ## Shape (border radius)
 

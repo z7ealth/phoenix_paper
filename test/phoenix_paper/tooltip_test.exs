@@ -95,4 +95,78 @@ defmodule PhoenixPaper.TooltipTest do
     </.pp_tooltip>
     """
   end
+
+  describe "colors and styles" do
+    test "defaults to the raised inverted chip, unchanged" do
+      html = render_component(&basic/1)
+      assert html =~ "bg-pp-on-surface text-pp-surface"
+      assert html =~ "shadow-md"
+      assert html =~ "px-2 py-1 text-xs"
+      assert html =~ ~s( rounded")
+    end
+
+    test "color fills the bubble and the arrow with a brand color pair" do
+      for color <- ~w(primary secondary accent error) do
+        assigns = %{color: color}
+
+        html =
+          rendered_to_string(~H"""
+          <.pp_tooltip title="t" color={@color} arrow><button>x</button></.pp_tooltip>
+          """)
+
+        assert html =~ "bg-pp-#{color} text-pp-on-#{color}"
+        assert html =~ ~r/rotate-45 bg-pp-#{color}/
+      end
+    end
+
+    test "flat drops the shadow" do
+      assigns = %{}
+      html = rendered_to_string(~H"<.pp_tooltip title='t' variant='flat'><b>x</b></.pp_tooltip>")
+      refute html =~ "shadow-md"
+      assert html =~ "bg-pp-on-surface"
+    end
+
+    test "outlined is a bordered surface, arrow bordered on its outer edges" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.pp_tooltip title="t" variant="outlined" color="error" arrow><b>x</b></.pp_tooltip>
+        """)
+
+      assert html =~ "border border-pp-error bg-pp-surface text-pp-error"
+      assert html =~ "bg-pp-surface border-pp-error border-b border-r"
+      refute html =~ "shadow-md"
+    end
+
+    test "outlined arrow edges follow the placement" do
+      for {placement, edges} <- [
+            {"top", "border-b border-r"},
+            {"bottom", "border-t border-l"},
+            {"left", "border-t border-r"},
+            {"right", "border-b border-l"}
+          ] do
+        assigns = %{placement: placement}
+
+        html =
+          rendered_to_string(~H"""
+          <.pp_tooltip title="t" variant="outlined" placement={@placement} arrow><b>x</b></.pp_tooltip>
+          """)
+
+        assert html =~ edges
+      end
+    end
+
+    test "size and shape" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.pp_tooltip title="t" size="large" shape={:full}><b>x</b></.pp_tooltip>
+        """)
+
+      assert html =~ "px-3 py-1.5 text-sm"
+      assert html =~ "rounded-full"
+    end
+  end
 end

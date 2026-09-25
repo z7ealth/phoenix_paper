@@ -26,7 +26,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.2.3`) and please
+> (e.g. `~> 0.2.4`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -36,7 +36,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.3"}
+    {:phoenix_paper, "~> 0.2.4"}
   ]
 end
 ```
@@ -68,16 +68,31 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
 <.pp_app_bar position="sticky">
   <:leading><.pp_drawer_toggle for="app-drawer" /></:leading>
   My App
+  <:actions>
+    <%!-- System / Light / Dark; System (follow the OS) is the default --%>
+    <.pp_theme_toggle />
+    <%!-- color="inherit" stays visible on the colored bar --%>
+    <.pp_button variant="icon" color="inherit" aria-label="Notifications">
+      <.pp_icon name="hero-bell" />
+    </.pp_button>
+  </:actions>
 </.pp_app_bar>
 
 <.pp_drawer id="app-drawer">
   <:header>My App</:header>
-  <.pp_list>
+  <.pp_list dense>
     <.pp_list_subheader>Main</.pp_list_subheader>
     <.pp_list_item href="/" active={@current_path == "/"}>
       <:leading><.pp_icon name="hero-home" /></:leading>
       Home
     </.pp_list_item>
+    <%!-- a collapsible section with a nested list --%>
+    <.pp_list_group id="nav-reports" default_open>
+      <:leading><.pp_icon name="hero-chart-bar" /></:leading>
+      <:label>Reports</:label>
+      <.pp_list_item href="/reports/sales">Sales</.pp_list_item>
+      <.pp_list_item href="/reports/traffic">Traffic</.pp_list_item>
+    </.pp_list_group>
     <.pp_divider />
     <.pp_list_subheader>Account</.pp_list_subheader>
     <.pp_list_item href="/settings" active={@current_path == "/settings"}>
@@ -118,8 +133,17 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
   </:actions>
 </.pp_card>
 
+<%!-- the whole title + body is a link (MUI's CardActionArea) --%>
+<.pp_card navigate={~p"/invoices"}>
+  <:title>Invoices</:title>
+  3 paid this month.
+</.pp_card>
+
+<.pp_typography variant="overline" color="primary">New</.pp_typography>
+<.pp_typography variant="h5">Release notes</.pp_typography>
+
 <.pp_avatar src="/images/1.jpg" alt="Remy Sharp" />
-<.pp_avatar>OP</.pp_avatar>
+<.pp_avatar color="primary">OP</.pp_avatar>
 
 <.pp_badge content={4}>
   <.pp_icon name="hero-bell" />
@@ -128,9 +152,21 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
 <.pp_chip>Basic</.pp_chip>
 <.pp_chip deletable on_delete={JS.push("remove_tag")}>React</.pp_chip>
 
-<.pp_tooltip title="Delete">
+<.pp_tooltip title="Delete" color="error" variant="outlined" arrow>
   <.pp_button variant="icon"><.pp_icon name="hero-trash" /></.pp_button>
 </.pp_tooltip>
+
+<%!-- client-side toggles: no handle_event needed --%>
+<.pp_toggle_button toggle pressed>Bold</.pp_toggle_button>
+<.pp_button_group>
+  <.pp_toggle_button toggle_group="view" pressed>List</.pp_toggle_button>
+  <.pp_toggle_button toggle_group="view">Grid</.pp_toggle_button>
+</.pp_button_group>
+
+<.pp_collapse id="advanced">
+  <:trigger>Advanced options</:trigger>
+  <.pp_input name="timeout" label="Timeout" />
+</.pp_collapse>
 
 <%!-- A trigger that opens a small anchored popover of actions --%>
 <.pp_menu id="profile-menu">
@@ -182,6 +218,8 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
       layout, where a generated <.flash_group> would go --%>
 <.pp_flash_group flash={@flash} />
 <.pp_flash_group flash={@flash} auto_hide_duration={4000} />
+<%!-- also the "connection lost" chips, replacing the generated <.flash_group> --%>
+<.pp_flash_group flash={@flash} connection_notices />
 
 <%!-- Autocomplete and TransferList need interactive state, so they're
       Phoenix.LiveComponents (LiveView only) instead of pp_* functions --%>

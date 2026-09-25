@@ -28,6 +28,10 @@ defmodule PhoenixPaper.Autocomplete do
   parent has no matching `handle_event/3` clause, the whole LiveView crashes
   and remounts, which looks like nothing happened at all — the dropdown
   never had a chance to render before the reset.
+
+  The query `<form>` gets `id="<id>-form"` (built from the component's own
+  `id`). LiveView needs an `id` on any `phx-change` form to restore its
+  input after a reconnect, and logs a warning for one without it.
   """
   use Phoenix.LiveComponent
 
@@ -62,7 +66,7 @@ defmodule PhoenixPaper.Autocomplete do
       class="relative"
       phx-click-away={JS.push("close", target: @myself)}
     >
-      <form phx-change="query" phx-target={@myself} onsubmit="event.preventDefault()">
+      <form id={"#{@id}-form"} phx-change="query" phx-target={@myself} onsubmit="event.preventDefault()">
         <div class={Helpers.classes(@paperize, wrapper_classes(@shape), nil)}>
           <input
             type="text"

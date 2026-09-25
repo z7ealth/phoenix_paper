@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-25
+
+### Added
+
+- `PhoenixPaper.Collapse` (`pp_collapse/1`) — a trigger that shows and
+  hides a block of content (MUI's `Collapse`), lighter than `Accordion`:
+  one component, one `id`, a `:trigger` slot. Pure CSS, with an animated
+  height and content that can't be tabbed into while closed.
+- `pp_list/1` gains `dense` (compact rows for every item), `nested`
+  (indent the whole list one step) and `inset` (line up items without a
+  leading icon with those that have one). `pp_list_item/1` gains `dense`.
+- `pp_list_group/1` — a list item that expands to show a nested list
+  (MUI's nested `List` inside a `Collapse`), for collapsible sidebar
+  sections.
+- `pp_card/1` gains `href`/`navigate`/`patch` (MUI's `CardActionArea`):
+  the title and body become one link with a hover tint, focus ring and
+  ripple (`ripple`, default `true`). `:actions` stay outside the link, so
+  buttons in them remain valid HTML.
+- `pp_typography/1` gains `color` (`"primary"`/`"secondary"`/`"accent"`/
+  `"error"`/`"muted"`). Unset keeps inheriting the surrounding color.
+- `pp_avatar/1` gains `color` (`"default"`/`"primary"`/`"secondary"`/
+  `"accent"`/`"error"`, default `"default"` — unchanged neutral grey).
+- `pp_button/1` gains `color="inherit"`: `text`/`outlined`/`icon` buttons
+  follow the surrounding text color, so they stay visible on a colored
+  `AppBar`/`Drawer`/`Card` without a `class` override. On `raised`/`flat`
+  it's a neutral surface-variant chip.
+- `pp_toggle_button/1` gains a client-side mode: `toggle` flips the
+  button's pressed state on click with no server round trip (`pressed` is
+  then the initial state), and `toggle_group="name"` makes a set exclusive
+  like radio buttons. Uses LiveView JS commands, so the state survives
+  re-renders; `on_toggle` runs extra JS (e.g. a `JS.push`) after the flip.
+  The default stays controlled (`pressed` from your assigns + `phx-click`),
+  now documented as such.
+- `pp_tooltip/1` gains the same styling attrs as `pp_button/1`: `color`
+  (`"default"`/`"primary"`/`"secondary"`/`"accent"`/`"error"`, default
+  `"default"` — the unchanged inverted chip), `variant` (`"raised"`
+  default / `"flat"` / `"outlined"`), `size` (`"small"`/`"medium"`/
+  `"large"`) and `shape` (a `PhoenixPaper.Shape` token, default `:sm`).
+  The `arrow` matches the bubble, including the outlined border.
+- `pp_flash_group/1` gains `connection_notices`: the hidden "We can't find
+  the internet" / "Something went wrong!" chips a generated
+  `core_components.ex` shows while the LiveView socket is disconnected,
+  toggled client-side by `phx-disconnected`/`phx-connected`. Titles and
+  text are overridable (`client_error_title`, `server_error_title`,
+  `reconnecting_text`).
+
+### Changed
+
+- **`pp_theme_toggle/1` is now a System / Light / Dark control by
+  default** (`variant="segmented"`, like the picker in Phoenix 1.8's
+  generated layout), with **System** selected by default: it removes
+  `data-theme` so the page follows the OS preference, and unlike the old
+  switch you can always go back to it. The selected state is pure CSS
+  (keyed off `data-theme`), so every toggle on the page agrees and a
+  LiveView re-render can't reset it. The choice is saved in `localStorage`
+  under `"phx:theme"`, the key Phoenix 1.8's root layout already restores
+  on load. It uses the `hero-computer-desktop-micro`/`hero-sun-micro`/
+  `hero-moon-micro` icons. The previous two-state sun/moon switch is still
+  available as `variant="switch"` (it now also saves to `"phx:theme"`).
+  Each button sends `phx-value-theme`, so `on_toggle={JS.push(...)}`
+  receives the chosen theme.
+- **Dark mode:** `Paper` (and everything built on it: `Card`, `Accordion`,
+  `Dialog`, `Menu`, `TableContainer`) now gets lighter as its elevation
+  goes up — MUI's white elevation overlay — instead of relying on a shadow
+  that doesn't show on a dark page. Light mode is unchanged. Apps that
+  added borders to make dark surfaces visible can drop them.
+- `pp_drawer/1` on desktop (`lg:` and up) now has a stacking level,
+  `lg:z-30` (was `lg:z-auto`), so it always sits above a `sticky`/`fixed`
+  `pp_app_bar` (`z-20`) — MUI's order, drawer over app bar. To put the app
+  bar on top instead, give it `class="!z-40"`.
+- `pp_typography/1`'s `caption` and `overline` variants are now
+  block-level (`block`, still a `<span>`), so an eyebrow or caption sits on
+  its own line without a wrapper. Add `class="!inline"` to keep one inline.
+- Docs: the components whose built-in classes people most often try to
+  replace through `class` (`Stack`'s `direction`/`spacing`, `Card`'s
+  `padding`, ...) now name the attr to use instead; see `PhoenixPaper.Stack`
+  and AGENTS.md, "Overriding built-in classes via `class`".
+
+### Fixed
+
+- `pp_theme_toggle variant="switch"` showed "off / sun" on a dark page
+  after a reload with a saved `data-theme="dark"`, and went stale whenever
+  something else changed the theme: its look came from its checkbox, which
+  the server always renders at `default_checked`. An explicit
+  `data-theme="dark"`/`"light"` now sets its look directly in CSS (the
+  checkbox is ignored), so it's always right and survives LiveView
+  re-renders.
+- `PhoenixPaper.Autocomplete`'s `phx-change` form had no `id`, so
+  LiveView logged a warning and couldn't restore it after a reconnect. It
+  is now `"<id>-form"`.
+
 ## [0.2.3] - 2026-09-25
 
 ### Changed
@@ -132,7 +223,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.0...v0.2.1

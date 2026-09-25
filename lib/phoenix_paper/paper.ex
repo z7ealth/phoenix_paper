@@ -8,6 +8,13 @@ defmodule PhoenixPaper.Paper do
       <.pp_paper elevation={2} class="p-4">
         Anything can go here.
       </.pp_paper>
+
+  In dark mode a shadow on a dark page doesn't show, so the surface also
+  gets *lighter* as `elevation` goes up (MUI's approach): the
+  `pp-surface-overlay` utility layers a translucent white tint whose
+  opacity each `pp-elevation-N` class sets (see `phoenix_paper.css`). In
+  light mode the tint is transparent, so nothing changes there.
+  `elevation={0}` gets no tint at all.
   """
   use Phoenix.Component
 
@@ -48,6 +55,10 @@ defmodule PhoenixPaper.Paper do
   end
 
   defp paper_classes(elevation, shape) do
-    ["block bg-pp-surface text-pp-on-surface", Shape.class(shape), Elevation.class(elevation)]
+    [
+      "block bg-pp-surface pp-surface-overlay text-pp-on-surface",
+      Shape.class(shape),
+      Elevation.class(elevation)
+    ]
   end
 end

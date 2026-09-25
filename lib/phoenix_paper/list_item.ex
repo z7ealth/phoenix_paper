@@ -20,6 +20,10 @@ defmodule PhoenixPaper.ListItem do
   Ripples on click/tap by default when it's a link (see
   `PhoenixPaper.Ripple`) — `ripple` has no effect on a non-link item, since
   there's nothing to click.
+
+  `dense` shrinks the row's vertical padding (MUI's `dense`) for long
+  navigation lists; `PhoenixPaper.List`'s own `dense` does the same for
+  every item inside it at once.
   """
   use Phoenix.Component
 
@@ -37,6 +41,7 @@ defmodule PhoenixPaper.ListItem do
   )
 
   attr(:disabled, :boolean, default: false)
+  attr(:dense, :boolean, default: false, doc: "compact row: less vertical padding")
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -67,7 +72,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true, @dense), @class)}
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
@@ -79,7 +84,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false, @dense), @class)}
       {@rest}
     >
       {item_content(assigns)}
@@ -89,7 +94,7 @@ defmodule PhoenixPaper.ListItem do
 
   defp item_content(assigns) do
     ~H"""
-    <span :if={@leading != []} class="flex shrink-0 items-center justify-center [&>*]:size-6">
+    <span :if={@leading != []} data-pp-list-item-leading class="flex shrink-0 items-center justify-center [&>*]:size-6">
       {render_slot(@leading)}
     </span>
     <span class="min-w-0 flex-1">
@@ -102,9 +107,10 @@ defmodule PhoenixPaper.ListItem do
     """
   end
 
-  defp item_classes(active, disabled, ripple, linked) do
+  defp item_classes(active, disabled, ripple, linked, dense) do
     [
       base_classes(),
+      density_classes(dense),
       cursor_classes(linked),
       state_classes(active),
       disabled_classes(disabled),
@@ -113,8 +119,11 @@ defmodule PhoenixPaper.ListItem do
   end
 
   defp base_classes do
-    "flex items-center gap-3 rounded-full px-4 py-2 transition-colors"
+    "flex items-center gap-3 rounded-full px-4 transition-colors"
   end
+
+  defp density_classes(true), do: "py-1"
+  defp density_classes(false), do: "py-2"
 
   defp cursor_classes(true), do: "cursor-pointer"
   defp cursor_classes(false), do: ""

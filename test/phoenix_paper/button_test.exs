@@ -215,4 +215,33 @@ defmodule PhoenixPaper.ButtonTest do
     </.pp_button>
     """
   end
+
+  describe "color=inherit" do
+    test "text/outlined/icon follow currentColor instead of a brand color" do
+      for variant <- ~w(text outlined icon) do
+        assigns = %{variant: variant}
+
+        html =
+          rendered_to_string(
+            ~H"<PhoenixPaper.Button.pp_button variant={@variant} color='inherit'>x</PhoenixPaper.Button.pp_button>"
+          )
+
+        assert html =~ "text-inherit"
+        assert html =~ "hover:bg-current/10"
+        assert html =~ "focus-visible:outline-current"
+        refute html =~ "pp-primary"
+      end
+    end
+
+    test "raised falls back to a neutral surface chip" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Button.pp_button color='inherit'>x</PhoenixPaper.Button.pp_button>"
+        )
+
+      assert html =~ "bg-pp-surface-variant text-pp-on-surface"
+    end
+  end
 end

@@ -42,4 +42,17 @@ defmodule PhoenixPaper.AutocompleteTest do
 
     assert html =~ ~s(value="Mexico")
   end
+
+  test "the phx-change form has an id derived from the component id" do
+    html =
+      render_component(PhoenixPaper.Autocomplete,
+        id: "country",
+        name: "country",
+        options: ["Canada"]
+      )
+
+    [form_tag] = Regex.run(~r/<form[^>]*>/, html)
+    assert form_tag =~ ~s(id="country-form")
+    assert form_tag =~ ~s(phx-change="query")
+  end
 end

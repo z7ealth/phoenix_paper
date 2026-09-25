@@ -103,4 +103,23 @@ defmodule PhoenixPaper.AvatarTest do
     <.pp_avatar paperize={false} class="my-class" />
     """
   end
+
+  test "color paints the fallback with a theme color pair, default stays neutral" do
+    for {color, class} <- [
+          {"default", "bg-pp-surface-variant text-pp-on-surface"},
+          {"primary", "bg-pp-primary text-pp-on-primary"},
+          {"secondary", "bg-pp-secondary text-pp-on-secondary"},
+          {"accent", "bg-pp-accent text-pp-on-accent"},
+          {"error", "bg-pp-error text-pp-on-error"}
+        ] do
+      assigns = %{color: color}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Avatar.pp_avatar color={@color}>AB</PhoenixPaper.Avatar.pp_avatar>"
+        )
+
+      assert html =~ class
+    end
+  end
 end

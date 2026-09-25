@@ -78,6 +78,26 @@ defmodule PhoenixPaper.Drawer do
   without adding an opinionated layout component this library would then
   have to maintain across every possible page shape.
 
+  ## Stacking order
+
+  The drawer always sits above `PhoenixPaper.AppBar`, the same fixed order
+  MUI uses (its drawer is `z-index` 1200, its app bar 1100):
+
+  | Layer                         | class  |
+  |-------------------------------|--------|
+  | App bar (`sticky`/`fixed`/`absolute`) | `z-20` |
+  | Desktop drawer (`lg:` and up) | `lg:z-30` |
+  | Mobile backdrop (below `lg:`) | `z-30` |
+  | Mobile drawer panel           | `z-40` |
+
+  So a `sticky` app bar scrolling past a desktop drawer, or a `fixed` app
+  bar spanning the full width, slides under the drawer rather than over
+  it. The desktop drawer and the mobile backdrop share `z-30` but never
+  meet: the backdrop only exists below `lg:`. There's no attr to change
+  the level; if your layout wants the app bar on top instead (a
+  "clipped" drawer that starts below the bar), give the app bar a higher
+  one with `class="!z-40"`.
+
   ## `width`
 
   `"sm"`/`"md"`/`"lg"`/`"xl"` (default `"md"`, unchanged from before this
@@ -195,7 +215,7 @@ defmodule PhoenixPaper.Drawer do
 
   defp paper_classes(color, elevation, width) do
     [
-      "fixed inset-y-0 left-0 z-40 -translate-x-full overflow-y-auto transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:shrink-0 lg:translate-x-0",
+      "fixed inset-y-0 left-0 z-40 -translate-x-full overflow-y-auto transition-transform peer-checked:translate-x-0 lg:sticky lg:top-0 lg:z-30 lg:h-screen lg:shrink-0 lg:translate-x-0",
       width_classes(width),
       color_classes(color),
       Elevation.class(elevation)

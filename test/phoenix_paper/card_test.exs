@@ -37,4 +37,56 @@ defmodule PhoenixPaper.CardTest do
     <.pp_card paperize={false} class="my-card">Body</.pp_card>
     """
   end
+
+  describe "link mode" do
+    defp linked_card(assigns) do
+      ~H"""
+      <PhoenixPaper.Card.pp_card navigate="/components" padding={:lg}>
+        <:title>Title</:title>
+        Body
+        <:actions><button>Act</button></:actions>
+      </PhoenixPaper.Card.pp_card>
+      """
+    end
+
+    test "wraps title and body in a link with hover, focus and ripple" do
+      html = render_component(&linked_card/1)
+
+      [link] = Regex.run(~r/<a[^>]*data-pp-card-action-area[^>]*>/, html)
+      assert link =~ ~s(href="/components")
+      assert link =~ "data-phx-link"
+      assert link =~ "hover:bg-pp-on-surface/5"
+      assert link =~ "focus-visible:outline-pp-primary"
+      assert link =~ "p-6"
+      assert link =~ "onclick="
+      assert html =~ "overflow-hidden"
+    end
+
+    test "keeps actions outside the link" do
+      html = render_component(&linked_card/1)
+      [_, after_link] = String.split(html, "</a>", parts: 2)
+      assert after_link =~ "<button>Act</button>"
+      [inside_link | _] = String.split(html, "</a>", parts: 2)
+      refute inside_link =~ "Act"
+    end
+
+    test "a card without href/navigate/patch renders no link" do
+      assigns = %{}
+      html = rendered_to_string(~H"<PhoenixPaper.Card.pp_card>Body</PhoenixPaper.Card.pp_card>")
+      refute html =~ "<a"
+    end
+
+    test "ripple is off under paperize: false" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Card.pp_card href='/x' paperize={false} class='mine'>Body</PhoenixPaper.Card.pp_card>"
+        )
+
+      refute html =~ "onclick="
+      refute html =~ "hover:bg-pp-on-surface/5"
+      assert html =~ "mine"
+    end
+  end
 end
