@@ -6,16 +6,18 @@
  *   @import "tailwindcss";
  *   @import "../../deps/phoenix_paper/priv/static/phoenix_paper.css";
  *
- * Also make sure Tailwind's source scanner covers this hex dependency so
- * the utility classes PhoenixPaper's `.ex` files emit (bg-pp-primary,
- * pp-elevation-4, ...) are actually generated:
- *
- *   @source "../../deps/phoenix_paper/lib";
+ * No separate `@source` is needed: the one below points Tailwind's source
+ * scanner at this package's own `lib/` (resolved relative to this file, so
+ * it holds whether PhoenixPaper lives in deps/ or is a `path:` dependency),
+ * so the utility classes its `.ex` files emit (bg-pp-primary,
+ * pp-elevation-4, ...) are always generated.
  *
  * All tokens below are namespaced `pp-` so they never collide with daisyUI's
  * own `primary`/`secondary`/`base-100`/... theme colors when both are
  * installed in the same app. See AGENTS.md, "Theming", for the full picture.
  */
+
+@source "../../lib";
 
 @theme {
   /* Default palette: classic Material indigo / pink, light scheme. */

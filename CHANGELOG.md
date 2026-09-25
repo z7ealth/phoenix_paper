@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-25
+
+### Changed
+
+- `phoenix_paper.css` now declares its own `@source "../../lib";`
+  (resolved relative to the stylesheet), so Tailwind scans PhoenixPaper's
+  `.ex` files automatically — whether it lives in `deps/` or is a `path:`
+  dependency. The separate `@source "../../deps/phoenix_paper/lib";` line
+  in your `app.css` is no longer needed and can be removed (keeping it is
+  harmless).
+
 ### Removed
 
-- `dev.exs`, the standalone live-preview component catalog script.
+- `dev.exs`, the standalone live-preview component catalog script, along
+  with leftover Tailwind scratch files (`imp_test/`, `input.css`). Try
+  components by adding PhoenixPaper as a `path:` dependency of a real
+  Phoenix project instead. None of these were part of the hex package.
 
 ## [0.2.2] - 2026-09-18
 
@@ -118,7 +132,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/z7ealth/phoenix_paper/compare/v0.1.0...v0.2.0

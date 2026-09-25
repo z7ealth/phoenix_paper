@@ -1,5 +1,10 @@
 # AGENTS.md — PhoenixPaper base rules
 
+> **Never commit, push, tag, or publish to hex.** Make the changes (code,
+> docs, `CHANGELOG.md`, the `@version` bump in `mix.exs`) and leave them
+> in the working tree; the maintainer reviews, commits, pushes, and runs
+> `mix hex.publish` themselves.
+
 PhoenixPaper is a Material Design component library for **Phoenix**, in the
 spirit of [ember-paper](https://github.com/miguelcobain/ember-paper) (the
 Ember.js Material Design addon), styled with **Tailwind CSS**. It ships as a
@@ -1308,16 +1313,17 @@ a `hero-*` class string the same way, not draw its own SVG.
 
 ## Consumer setup (what a project adding this dependency must do)
 
-1. Add `{:phoenix_paper, "~> 0.1"}` to `mix.exs`.
+1. Add `{:phoenix_paper, "~> 0.2"}` to `mix.exs`.
 2. In `lib/my_app_web.ex`, add `use PhoenixPaper.Components` to the
    `html_helpers` quote block, next to the existing `core_components` import.
 3. In `assets/css/app.css`, after `@import "tailwindcss";`, add:
    ```css
    @import "../../deps/phoenix_paper/priv/static/phoenix_paper.css";
-   @source "../../deps/phoenix_paper/lib";
    ```
-   The `@source` line is required — without it Tailwind never scans
-   PhoenixPaper's `.ex` files and the classes they emit get purged.
+   No `@source` line is needed: `phoenix_paper.css` declares its own
+   `@source "../../lib";`, resolved relative to itself, so Tailwind scans
+   PhoenixPaper's `.ex` files wherever the package lives (deps/ or a `path:`
+   checkout). Don't remove it — without it the classes they emit get purged.
 
 ## HEEx gotcha: literal `{`/`}` in attribute strings and text
 
@@ -1456,3 +1462,20 @@ component). At minimum, assert:
   `bg-pp-*` classes.
 - `paperize={false}` does **not** include any built-in class, and does
   include the caller's `class`.
+
+## Trying components in a real app
+
+There is no in-repo live preview (a standalone `dev.exs` catalog script
+used to exist and was removed in 0.2.3). To see a component render, add
+this checkout as a `path:` dependency of a real Phoenix project:
+
+```elixir
+{:phoenix_paper, path: "../phoenix_paper"}
+```
+
+and wire it up exactly as "Consumer setup" above describes. Because
+`phoenix_paper.css`'s own `@source` resolves relative to itself, the
+`path:` checkout's `lib/` is scanned the same way `deps/phoenix_paper/lib`
+is — the `@import` path in `app.css` is the only thing that changes.
+Unit tests (below) remain the required check; the real app is for looking
+at it.

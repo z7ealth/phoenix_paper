@@ -26,7 +26,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.2"}
+    {:phoenix_paper, "~> 0.2.3"}
   ]
 end
 ```
@@ -48,8 +48,9 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 ```css
 @import "tailwindcss";
 @import "../../deps/phoenix_paper/priv/static/phoenix_paper.css";
-@source "../../deps/phoenix_paper/lib";
 ```
+
+The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's no separate `@source` line to add.
 
 ## Usage
 
