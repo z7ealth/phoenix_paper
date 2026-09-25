@@ -26,7 +26,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.2.6`) and please
+> (e.g. `~> 0.2.7`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -36,7 +36,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.6"}
+    {:phoenix_paper, "~> 0.2.7"}
   ]
 end
 ```

@@ -1152,9 +1152,16 @@ component backed by the `Phoenix.FocusWrap` hook that ships with
 `phoenix_live_view.js`) for tab-focus trapping — not a hook this library
 wrote. If you've used the generated modal before, `PhoenixPaper.Dialog` is
 that same shape with Material chrome. `max_width` (since 0.2.6, default
-`md` = the old fixed `max-w-md`) caps the content `Paper`'s width through
-a literal `max_width_class/1` clause per value; the content is always
-`w-full` up to that cap. The one non-obvious wiring detail:
+`md` = the old fixed `max-w-md`) is a literal `max_width_class/1` clause
+per value, and it goes on the **focus-wrap container**, not the `Paper`
+panel (fixed in 0.2.7): the `flex items-center justify-center` row sizes
+its direct child, the container, which has no width of its own. With
+`w-full max-w-*` on the panel, `w-full` resolved against a shrink-to-fit
+container, so a canvas or other no-natural-width child collapsed the
+dialog, and long text widened the container past the panel and pushed it
+off-centre. Now the container is `w-full max-w-*` (paperize-gated) and
+the panel is plain `w-full`. Verified by measuring the panel in Chromium
+for canvas, short and long content at 1280px and 500px viewports. The one non-obvious wiring detail:
 `data-cancel` has to live on the *outermost* element (the one
 `JS.exec("data-cancel", to: "##{id}")` actually targets by CSS selector),
 not on the inner `Paper` content — putting it on the wrong element means

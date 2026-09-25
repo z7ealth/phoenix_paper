@@ -41,6 +41,14 @@ defmodule PhoenixPaper.Dialog do
   `w-full` up to that cap, so it still shrinks on small screens. Use this
   instead of a `class="!max-w-2xl"` override.
 
+  The width and cap sit on the focus-wrap container (the element the
+  centering flex row actually sizes), and the `Paper` panel fills it. With
+  the cap on the panel instead (0.2.6), the container shrank to its
+  content, so a `w-full` child with no natural width (a canvas, an empty
+  input) collapsed to the text width, and long text widened the container
+  past the panel, leaving the dialog off-centre. Under `paperize={false}`
+  the container gets neither class and sizes to its content, as before.
+
       <.pp_dialog id="report" max_width="2xl">...</.pp_dialog>
 
   Uses `Phoenix.Component.focus_wrap/1` for tab-focus trapping — a built-in
@@ -104,7 +112,7 @@ defmodule PhoenixPaper.Dialog do
             phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
             phx-key="escape"
             phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-            class="hidden"
+            class={["hidden", @paperize && ["w-full", max_width_class(@max_width)]]}
           >
             <.pp_paper
               id={"#{@id}-content"}
@@ -112,7 +120,7 @@ defmodule PhoenixPaper.Dialog do
               shape={@shape}
               paperize={@paperize}
               component="dialog-content"
-              class={Helpers.classes(@paperize, ["w-full p-6", max_width_class(@max_width)], @class)}
+              class={Helpers.classes(@paperize, "w-full p-6", @class)}
             >
               <div :if={@title != []} id={"#{@id}-title"} class="mb-2 text-lg font-medium">
                 {render_slot(@title)}

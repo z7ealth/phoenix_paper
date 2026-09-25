@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-09-25
+
+### Fixed
+
+- `pp_dialog/1`'s width: the `max_width` cap and `w-full` were on the
+  inner panel, but the centering flex row sizes the focus-wrap container
+  around it, which had no width of its own. So a `w-full` child with no
+  natural width (a canvas, an empty input) collapsed the dialog to its
+  text width, and a long paragraph widened the container past the panel,
+  leaving the dialog off-centre. The width and cap now sit on that
+  container and the panel fills it: the dialog grows to its `max_width`,
+  stays centred, and still shrinks on small screens.
+
 ## [0.2.6] - 2026-09-25
 
 ### Added
@@ -266,7 +279,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...v0.2.4
