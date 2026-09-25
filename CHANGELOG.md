@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-09-25
+
+### Added
+
+- `pp_dialog/1` gains `max_width` (`"xs"`/`"sm"`/`"md"`/`"lg"`/`"xl"`/
+  `"2xl"`/`"3xl"`/`"4xl"`/`"5xl"`/`"full"`, default `"md"` — the
+  previous fixed width), MUI's `maxWidth`. Replaces a
+  `class="!max-w-2xl"` override.
+- `pp_list_item/1` passes link attributes (`target`, `rel`, `download`,
+  `method`, `replace`, ...) through to its link, the same list
+  `pp_button/1` accepts.
+- `pp_card/1` gains `target` and `rel`, forwarded to the link in link
+  mode (the card's other extra attrs land on its root `<div>`).
+
 ## [0.2.5] - 2026-09-25
 
 ### Added
@@ -252,7 +266,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.2...v0.2.3

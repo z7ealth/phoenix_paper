@@ -21,6 +21,14 @@ defmodule PhoenixPaper.ListItem do
   `PhoenixPaper.Ripple`) — `ripple` has no effect on a non-link item, since
   there's nothing to click.
 
+  When linked, the usual link attributes (`target`, `rel`, `download`,
+  `method`, `replace`, ...) pass straight through to the `<a>`, the same
+  list `PhoenixPaper.Button` accepts:
+
+      <.pp_list_item href="https://hexdocs.pm" target="_blank" rel="noopener">
+        Docs
+      </.pp_list_item>
+
   `dense` shrinks the row's vertical padding (MUI's `dense`) for long
   navigation lists; `PhoenixPaper.List`'s own `dense` does the same for
   every item inside it at once.
@@ -44,7 +52,11 @@ defmodule PhoenixPaper.ListItem do
   attr(:dense, :boolean, default: false, doc: "compact row: less vertical padding")
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
-  attr(:rest, :global)
+
+  attr(:rest, :global,
+    include: ~w(target rel download hreflang referrerpolicy method csrf_token replace),
+    doc: "link attrs (target, rel, method, ...) pass through to the link when linked"
+  )
 
   slot(:leading, doc: "an icon or avatar")
   slot(:inner_block, required: true, doc: "the primary line of text")

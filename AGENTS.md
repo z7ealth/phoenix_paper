@@ -363,6 +363,17 @@ architecture (`Card` wraps `Paper` there too). When a new component needs
 "a raised surface," reach for `<.pp_paper>` instead of hand-rolling
 `bg-pp-surface` + `Elevation.class/1` + `Shape.class/1` again.
 
+**Link attributes need a route to the `<a>`.** A linkable component whose
+`rest` lands on the link itself (`Button`, `ListItem`) must list the
+non-global link attrs in `attr(:rest, :global, include: ~w(target rel
+download hreflang referrerpolicy method csrf_token replace))` — `target`
+and `rel` aren't HTML globals, so without the `include` Phoenix rejects
+them at compile time. A component whose `rest` lands on a *wrapper*
+instead (`Card`: `rest` goes on the `Paper` root, the link is inside it)
+needs explicit `target`/`rel` attrs forwarded to the link, or they'd end
+up on a `<div>` where they do nothing. `ListItem` and `Card` were both
+missing this until 0.2.6.
+
 Composing one PhoenixPaper component inside another needs one extra step
 `Card` uses: `Paper` hardcodes `data-pp-component="paper"` on its own root,
 and every component is expected to mark itself with *its own* name (see
@@ -1140,7 +1151,10 @@ transitions, and `Phoenix.Component.focus_wrap/1` (a *built-in* Phoenix
 component backed by the `Phoenix.FocusWrap` hook that ships with
 `phoenix_live_view.js`) for tab-focus trapping — not a hook this library
 wrote. If you've used the generated modal before, `PhoenixPaper.Dialog` is
-that same shape with Material chrome. The one non-obvious wiring detail:
+that same shape with Material chrome. `max_width` (since 0.2.6, default
+`md` = the old fixed `max-w-md`) caps the content `Paper`'s width through
+a literal `max_width_class/1` clause per value; the content is always
+`w-full` up to that cap. The one non-obvious wiring detail:
 `data-cancel` has to live on the *outermost* element (the one
 `JS.exec("data-cancel", to: "##{id}")` actually targets by CSS selector),
 not on the inner `Paper` content — putting it on the wrong element means

@@ -117,4 +117,22 @@ defmodule PhoenixPaper.CardTest do
       assert html =~ "mine"
     end
   end
+
+  test "target and rel go on the link, not the card root" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <PhoenixPaper.Card.pp_card href="https://example.com" target="_blank" rel="noopener">
+        Body
+      </PhoenixPaper.Card.pp_card>
+      """)
+
+    [link] = Regex.run(~r/<a[^>]*>/, html)
+    assert link =~ ~s(target="_blank")
+    assert link =~ ~s(rel="noopener")
+
+    [root] = Regex.run(~r/<div[^>]*data-pp-component="card"[^>]*>/, html)
+    refute root =~ "target="
+  end
 end

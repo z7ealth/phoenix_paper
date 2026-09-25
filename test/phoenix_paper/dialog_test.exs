@@ -48,4 +48,44 @@ defmodule PhoenixPaper.DialogTest do
     </.pp_dialog>
     """
   end
+
+  describe "max_width" do
+    defp content_tag(html) do
+      [tag] = Regex.run(~r/<div[^>]*data-pp-component="dialog-content"[^>]*>/, html)
+      tag
+    end
+
+    test "defaults to md, the previous fixed width" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(
+          ~H"<PhoenixPaper.Dialog.pp_dialog id='d'>x</PhoenixPaper.Dialog.pp_dialog>"
+        )
+
+      assert content_tag(html) =~ "w-full p-6 max-w-md"
+    end
+
+    test "maps each value to a literal max-w class" do
+      for {value, class} <- [
+            {"xs", "max-w-xs"},
+            {"sm", "max-w-sm"},
+            {"lg", "max-w-lg"},
+            {"2xl", "max-w-2xl"},
+            {"5xl", "max-w-5xl"},
+            {"full", "max-w-full"}
+          ] do
+        assigns = %{value: value}
+
+        html =
+          rendered_to_string(
+            ~H"<PhoenixPaper.Dialog.pp_dialog id='d' max_width={@value}>x</PhoenixPaper.Dialog.pp_dialog>"
+          )
+
+        tag = content_tag(html)
+        assert tag =~ class
+        refute tag =~ "max-w-md"
+      end
+    end
+  end
 end

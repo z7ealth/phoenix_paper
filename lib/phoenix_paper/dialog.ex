@@ -32,6 +32,17 @@ defmodule PhoenixPaper.Dialog do
   the dialog was dismissed this way (e.g. to reset form state), the same as
   the generated modal's own `on_cancel`.
 
+  ## `max_width`
+
+  How wide the dialog can grow, MUI's `maxWidth`: `"xs"`, `"sm"`, `"md"`
+  (default, unchanged), `"lg"`, `"xl"`, `"2xl"`, `"3xl"`, `"4xl"`,
+  `"5xl"` (Tailwind's `max-w-*` scale, 20rem to 64rem) or `"full"` (the
+  whole viewport width minus the 1rem margin). The dialog is always
+  `w-full` up to that cap, so it still shrinks on small screens. Use this
+  instead of a `class="!max-w-2xl"` override.
+
+      <.pp_dialog id="report" max_width="2xl">...</.pp_dialog>
+
   Uses `Phoenix.Component.focus_wrap/1` for tab-focus trapping — a built-in
   Phoenix accessibility helper (ships with `phoenix_live_view.js`'s
   `Phoenix.FocusWrap` hook), not a custom hook this library adds.
@@ -54,6 +65,12 @@ defmodule PhoenixPaper.Dialog do
     default: :lg,
     values: ~w(none xs sm md lg xl full)a,
     doc: "corner radius token, see PhoenixPaper.Shape"
+  )
+
+  attr(:max_width, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl 2xl 3xl 4xl 5xl full),
+    doc: "the dialog's maximum width (Tailwind max-w-* scale); md is the default"
   )
 
   attr(:class, :any, default: nil)
@@ -95,7 +112,7 @@ defmodule PhoenixPaper.Dialog do
               shape={@shape}
               paperize={@paperize}
               component="dialog-content"
-              class={Helpers.classes(@paperize, "w-full max-w-md p-6", @class)}
+              class={Helpers.classes(@paperize, ["w-full p-6", max_width_class(@max_width)], @class)}
             >
               <div :if={@title != []} id={"#{@id}-title"} class="mb-2 text-lg font-medium">
                 {render_slot(@title)}
@@ -145,4 +162,15 @@ defmodule PhoenixPaper.Dialog do
     |> JS.hide(to: "##{id}", time: 200)
     |> JS.pop_focus()
   end
+
+  defp max_width_class("xs"), do: "max-w-xs"
+  defp max_width_class("sm"), do: "max-w-sm"
+  defp max_width_class("md"), do: "max-w-md"
+  defp max_width_class("lg"), do: "max-w-lg"
+  defp max_width_class("xl"), do: "max-w-xl"
+  defp max_width_class("2xl"), do: "max-w-2xl"
+  defp max_width_class("3xl"), do: "max-w-3xl"
+  defp max_width_class("4xl"), do: "max-w-4xl"
+  defp max_width_class("5xl"), do: "max-w-5xl"
+  defp max_width_class("full"), do: "max-w-full"
 end

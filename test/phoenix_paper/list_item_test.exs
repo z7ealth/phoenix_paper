@@ -147,4 +147,19 @@ defmodule PhoenixPaper.ListItemTest do
 
     assert html =~ "data-pp-list-item-leading"
   end
+
+  test "link attrs like target and rel pass through to the link" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <PhoenixPaper.ListItem.pp_list_item href="https://example.com" target="_blank" rel="noopener">
+        Docs
+      </PhoenixPaper.ListItem.pp_list_item>
+      """)
+
+    [link] = Regex.run(~r/<a[^>]*>/, html)
+    assert link =~ ~s(target="_blank")
+    assert link =~ ~s(rel="noopener")
+  end
 end

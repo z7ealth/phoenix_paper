@@ -25,6 +25,15 @@ defmodule PhoenixPaper.Card do
   row sits above that overlay so its buttons keep their own clicks, and
   passes clicks in the gaps between buttons through to the overlay.
 
+  `target` and `rel` are explicit attrs that go on the link (a card's
+  other extra attrs land on its root `<div>`, where a `target` would do
+  nothing):
+
+      <.pp_card href="https://hexdocs.pm/phoenix_paper" target="_blank" rel="noopener">
+        <:title>Docs</:title>
+        Opens in a new tab.
+      </.pp_card>
+
   In link mode the padding moves from the card root onto the link (and the
   actions row). The stretch itself is unconditional (it defines what's
   clickable); the tint, focus ring and ripple are paperize-gated as usual.
@@ -47,6 +56,8 @@ defmodule PhoenixPaper.Card do
   attr(:href, :any, default: nil, doc: "makes the title and body a link (MUI's CardActionArea)")
   attr(:navigate, :any, default: nil, doc: "like href, a LiveView live navigation")
   attr(:patch, :any, default: nil, doc: "like href, a LiveView live patch")
+  attr(:target, :string, default: nil, doc: "link mode: the link's target, e.g. _blank")
+  attr(:rel, :string, default: nil, doc: "link mode: the link's rel, e.g. noopener")
 
   attr(:ripple, :boolean,
     default: true,
@@ -104,6 +115,8 @@ defmodule PhoenixPaper.Card do
         href={@href}
         navigate={@navigate}
         patch={@patch}
+        target={@target}
+        rel={@rel}
         data-pp-card-action-area
         class={
           [
