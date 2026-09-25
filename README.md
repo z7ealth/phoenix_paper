@@ -19,6 +19,16 @@ See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 helpers, and the icon strategy (reusing the heroicons every `mix phx.new`
 app already vendors, no extra dependency).
 
+## Status
+
+> [!WARNING]
+> PhoenixPaper is in active development. Bugs are expected, and component
+> APIs may change between `0.x` releases (breaking changes are always
+> called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
+> semver-guaranteed API at **1.0.0**. Until then, pin a minor version
+> (e.g. `~> 0.2.3`) and please
+> [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
+
 ## Installation
 
 Add `phoenix_paper` to your `mix.exs` deps:
