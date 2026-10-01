@@ -17,8 +17,8 @@ defmodule PhoenixPaper.Components do
   generated `core_components.ex` (`button/1`, `input/1`, `icon/1`, ...) or
   with daisyUI class names.
 
-  `PhoenixPaper.Autocomplete` and `PhoenixPaper.TransferList` need
-  interactive state, so they're `Phoenix.LiveComponent`s instead of function
+  `PhoenixPaper.Autocomplete`, `PhoenixPaper.PowerSelect` and
+  `PhoenixPaper.TransferList` need interactive state, so they're `Phoenix.LiveComponent`s instead of function
   components — use them directly with `<.live_component module={...} />`,
   they aren't imported here.
   """
@@ -48,6 +48,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Drawer, only: [pp_drawer: 1, pp_drawer_toggle: 1]
       import PhoenixPaper.Fab, only: [pp_fab: 1]
       import PhoenixPaper.Flash, only: [pp_flash_group: 1, pp_flash: 1]
+      import PhoenixPaper.Form, only: [pp_form: 1]
       import PhoenixPaper.Grid, only: [pp_grid: 1]
       import PhoenixPaper.GridItem, only: [pp_grid_item: 1]
       import PhoenixPaper.Icon, only: [pp_icon: 1]
@@ -59,6 +60,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.ListSubheader, only: [pp_list_subheader: 1]
       import PhoenixPaper.Menu, only: [pp_menu: 1]
       import PhoenixPaper.NumberField, only: [pp_number_field: 1]
+      import PhoenixPaper.Pagination, only: [pp_pagination: 1]
       import PhoenixPaper.Paper, only: [pp_paper: 1]
       import PhoenixPaper.Progress, only: [pp_progress: 1]
       import PhoenixPaper.RadioGroup, only: [pp_radio_group: 1]
@@ -79,6 +81,7 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.TableContainer, only: [pp_table_container: 1]
       import PhoenixPaper.TableFooter, only: [pp_table_footer: 1]
       import PhoenixPaper.TableHead, only: [pp_table_head: 1]
+      import PhoenixPaper.TablePagination, only: [pp_table_pagination: 1]
       import PhoenixPaper.TableRow, only: [pp_table_row: 1]
       import PhoenixPaper.ThemeToggle, only: [pp_theme_toggle: 1]
       import PhoenixPaper.ToggleButton, only: [pp_toggle_button: 1]

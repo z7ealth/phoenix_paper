@@ -207,7 +207,7 @@ defmodule PhoenixPaper.Input do
         type={@type}
         id={@id}
         name={@name}
-        value={@value}
+        value={input_value(@type, @value)}
         disabled={@disabled}
         placeholder={@label}
         class={Helpers.classes(@paperize, dense_field_classes(@size), nil)}
@@ -251,7 +251,7 @@ defmodule PhoenixPaper.Input do
             type={@type}
             id={@id}
             name={@name}
-            value={@value}
+            value={input_value(@type, @value)}
             disabled={@disabled}
             placeholder=" "
             class={Helpers.classes(@paperize, input_classes(@size), nil)}
@@ -283,6 +283,15 @@ defmodule PhoenixPaper.Input do
     </div>
     """
   end
+
+  # `Phoenix.HTML.Form.normalize_value/2` turns a `NaiveDateTime`/`DateTime`
+  # into the `YYYY-MM-DDTHH:MM` a `datetime-local` input requires (the browser
+  # rejects the seconds/zone `to_string/1` would add), the same call a
+  # generated `core_components.ex` makes. Every other type passes through.
+  defp input_value("datetime-local" = type, value),
+    do: Phoenix.HTML.Form.normalize_value(type, value)
+
+  defp input_value(_type, value), do: value
 
   defp wrapper_classes("outlined", color, _shape, errors, size) do
     [

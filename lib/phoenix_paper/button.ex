@@ -77,6 +77,17 @@ defmodule PhoenixPaper.Button do
   `aria-disabled="true"` plus `pointer-events-none` and the same dimmed
   look. Any link-specific attr (`method`, `download`, `target`, `rel`, ...)
   passes straight through via the global `rest`.
+
+  ## Positioning
+
+  The ripple makes the button `relative`, and Tailwind orders `.relative`
+  after `.absolute`/`.fixed` in its stylesheet, so `class="absolute top-2
+  right-2"` leaves the button in the flow. Use `position` instead (offsets
+  stay in `class`):
+
+      <.pp_button variant="icon" position="absolute" class="top-2 right-2">
+        <.pp_icon name="hero-clipboard" />
+      </.pp_button>
   """
   use Phoenix.Component
 
@@ -104,6 +115,13 @@ defmodule PhoenixPaper.Button do
     default: true,
     doc:
       "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
+  attr(:position, :string,
+    default: "relative",
+    values: ~w(relative fixed absolute sticky),
+    doc:
+      "the root's CSS position; set it here, not via class, since the ripple's own relative would beat a class=\"fixed\""
   )
 
   attr(:disabled, :boolean, default: false)
@@ -163,7 +181,7 @@ defmodule PhoenixPaper.Button do
         Helpers.classes(
           @paperize,
           [
-            paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?),
+            paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?, @position),
             inert_classes(@inert?)
           ],
           @class
@@ -184,7 +202,7 @@ defmodule PhoenixPaper.Button do
       class={
         Helpers.classes(
           @paperize,
-          paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?),
+          paper_classes(@variant, @color, @size, @elevation, @shape, @ripple?, @position),
           @class
         )
       }
@@ -219,13 +237,13 @@ defmodule PhoenixPaper.Button do
   defp inert_classes(true), do: "pointer-events-none opacity-40"
   defp inert_classes(false), do: ""
 
-  defp paper_classes(variant, color, size, elevation, shape, ripple) do
+  defp paper_classes(variant, color, size, elevation, shape, ripple, position) do
     [
       base_classes(variant, size),
       Shape.class(shape),
       color_classes(variant, color),
       elevation_classes(variant, elevation),
-      Ripple.container_classes(ripple)
+      Ripple.container_classes(ripple, position)
     ]
   end
 

@@ -19,4 +19,11 @@ defmodule PhoenixPaper.RippleTest do
     assert Ripple.container_classes(true) == "relative overflow-hidden"
     assert Ripple.container_classes(false) == ""
   end
+
+  test "container_classes/2 emits exactly one position class" do
+    assert Ripple.container_classes(true, "relative") == "relative overflow-hidden"
+    assert Ripple.container_classes(true, "fixed") == "fixed overflow-hidden"
+    assert Ripple.container_classes(false, "relative") == ""
+    assert Ripple.container_classes(false, "sticky") == "sticky"
+  end
 end

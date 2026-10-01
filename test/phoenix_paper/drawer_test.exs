@@ -22,9 +22,19 @@ defmodule PhoenixPaper.DrawerTest do
     """
   end
 
+  test "the header grows with its content and the body is inset" do
+    html = render_component(&drawer/1)
+
+    assert html =~ "min-h-16 items-center px-4 py-3"
+    refute html =~ " h-16 "
+    assert html =~ ~s(<div class="px-3 py-2">)
+  end
+
   test "pp_drawer_toggle points its label at the same derived toggle id" do
     html = render_component(&toggle/1)
     assert html =~ ~s(for="app-drawer-toggle")
+    assert html =~ "hover:bg-current/10"
+    refute html =~ "hover:bg-pp-on-surface/10"
   end
 
   defp toggle(assigns) do
@@ -37,6 +47,7 @@ defmodule PhoenixPaper.DrawerTest do
     html = render_component(&bare/1)
 
     refute html =~ "peer-checked:translate-x-0"
+    refute html =~ "px-3 py-2"
     assert html =~ ~s(id="app-drawer-toggle")
     assert html =~ "my-drawer"
   end

@@ -98,6 +98,17 @@ defmodule PhoenixPaper.Drawer do
   "clipped" drawer that starts below the bar), give the app bar a higher
   one with `class="!z-40"`.
 
+  ## Header and body
+
+  The `:header` row is at least `h-16` and grows with taller content (a
+  logo over a version line) instead of squeezing it. The body is inset
+  `px-3 py-2`, Material's drawer padding, so a list's rounded active-item
+  highlight doesn't touch the panel edges; `paperize={false}` drops that
+  inset along with the rest of the panel's skin.
+
+  `pp_drawer_toggle/1`'s bars and hover tint both use `currentColor`, so it
+  reads on a surface or a colored `AppBar` alike.
+
   ## `width`
 
   `"sm"`/`"md"`/`"lg"`/`"xl"` (default `"md"`, unchanged from before this
@@ -184,10 +195,12 @@ defmodule PhoenixPaper.Drawer do
       class={Helpers.classes(@paperize, paper_classes(@color, @elevation, @width), @class)}
       {@rest}
     >
-      <div :if={@header != []} class="flex h-16 items-center px-4 text-lg font-medium">
+      <div :if={@header != []} class="flex min-h-16 items-center px-4 py-3 text-lg font-medium">
         {render_slot(@header)}
       </div>
-      {render_slot(@inner_block)}
+      <div class={Helpers.classes(@paperize, "px-3 py-2", nil)}>
+        {render_slot(@inner_block)}
+      </div>
     </aside>
     """
   end
@@ -202,7 +215,7 @@ defmodule PhoenixPaper.Drawer do
     <label
       for={toggle_id(@for)}
       data-pp-component="drawer-toggle"
-      class={Helpers.classes(@paperize, "inline-flex size-10 cursor-pointer flex-col items-center justify-center gap-1 rounded-full hover:bg-pp-on-surface/10 lg:hidden", @class)}
+      class={Helpers.classes(@paperize, "inline-flex size-10 cursor-pointer flex-col items-center justify-center gap-1 rounded-full hover:bg-current/10 lg:hidden", @class)}
     >
       <span class="block h-0.5 w-5 bg-current" />
       <span class="block h-0.5 w-5 bg-current" />

@@ -82,7 +82,7 @@ defmodule PhoenixPaper.Avatar do
       <span :if={@inner_block != []} class="flex size-full select-none items-center justify-center leading-none">
         {render_slot(@inner_block)}
       </span>
-      <.pp_icon :if={@inner_block == []} name="hero-user" class={icon_classes(@size)} />
+      <.pp_icon :if={@inner_block == []} name="hero-user" size="none" class={icon_classes(@size)} />
       <img
         :if={@src}
         src={@src}
@@ -117,7 +117,7 @@ defmodule PhoenixPaper.Avatar do
   defp variant_classes("rounded"), do: "rounded-md"
   defp variant_classes("square"), do: "rounded-none"
 
-  defp icon_classes("small"), do: "!size-4"
-  defp icon_classes("medium"), do: "!size-5"
-  defp icon_classes("large"), do: "!size-7"
+  defp icon_classes("small"), do: "size-4"
+  defp icon_classes("medium"), do: "size-5"
+  defp icon_classes("large"), do: "size-7"
 end

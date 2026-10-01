@@ -18,7 +18,7 @@ defmodule PhoenixPaper.Autocomplete do
         options={["Canada", "Mexico", "United States"]}
       />
 
-  Filtering runs entirely server-side via `phx-change`/`phx-debounce` on the
+  Filtering runs entirely server-side via `phx-keyup`/`phx-debounce` on the
   text input — no client JS beyond what LiveView already ships.
 
   Every `phx-*` binding in the template needs its *own* `phx-target={@myself}`
@@ -29,9 +29,14 @@ defmodule PhoenixPaper.Autocomplete do
   and remounts, which looks like nothing happened at all — the dropdown
   never had a chance to render before the reset.
 
-  The query `<form>` gets `id="<id>-form"` (built from the component's own
-  `id`). LiveView needs an `id` on any `phx-change` form to restore its
-  input after a reconnect, and logs a warning for one without it.
+  The query input is not wrapped in a `<form>` of its own (until 0.3.0 it
+  was): inside the caller's form that's a nested form, invalid HTML that
+  the browser silently drops. It sends `phx-keyup` instead of `phx-change`
+  (which needs a form), and its `form` attribute points at an id that
+  doesn't exist, which detaches it from any surrounding form: it's never
+  submitted and never triggers that form's `phx-change`. Only the hidden
+  `name` input carries the value. `PhoenixPaper.PowerSelect` uses the same
+  trick.
   """
   use Phoenix.LiveComponent
 
@@ -66,26 +71,27 @@ defmodule PhoenixPaper.Autocomplete do
       class="relative"
       phx-click-away={JS.push("close", target: @myself)}
     >
-      <form id={"#{@id}-form"} phx-change="query" phx-target={@myself} onsubmit="event.preventDefault()">
-        <div class={Helpers.classes(@paperize, wrapper_classes(@shape), nil)}>
+      <div class={Helpers.classes(@paperize, wrapper_classes(@shape), nil)}>
           <input
             type="text"
+            id={"#{@id}-query"}
+            form={"#{@id}-detached"}
             autocomplete="off"
             value={@query}
             placeholder={@placeholder}
             phx-focus="open"
+            phx-keyup="query"
             phx-target={@myself}
             phx-debounce="150"
-            name="query"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();}"
             class={Helpers.classes(@paperize, input_classes(), nil)}
           />
           <span
             :if={@paperize}
             class="pointer-events-none absolute right-3 top-1/2 size-0 -translate-y-1/2 border-x-4 border-t-4 border-x-transparent border-t-pp-outline"
           />
-          <label :if={@label} class={Helpers.classes(@paperize, label_classes(), nil)}>{@label}</label>
-        </div>
-      </form>
+          <label :if={@label} for={"#{@id}-query"} class={Helpers.classes(@paperize, label_classes(), nil)}>{@label}</label>
+      </div>
 
       <input type="hidden" name={@name} value={@value} />
 
@@ -111,7 +117,7 @@ defmodule PhoenixPaper.Autocomplete do
   end
 
   @impl true
-  def handle_event("query", %{"query" => query}, socket) do
+  def handle_event("query", %{"value" => query}, socket) do
     {:noreply, socket |> assign(query: query, open: true) |> update_filtered()}
   end
 

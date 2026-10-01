@@ -167,7 +167,7 @@ defmodule PhoenixPaper.Chip do
       onkeydown={keydown_activate_script()}
       phx-click={@on_delete}
     >
-      <.pp_icon name="hero-x-mark-mini" class={icon_size_classes(@size)} />
+      <.pp_icon name="hero-x-mark-mini" size="none" class={icon_size_classes(@size)} />
     </span>
     """
   end
@@ -189,8 +189,8 @@ defmodule PhoenixPaper.Chip do
   defp icon_slot_classes("small"), do: "flex shrink-0 items-center [&>*]:size-3.5"
   defp icon_slot_classes("medium"), do: "flex shrink-0 items-center [&>*]:size-4"
 
-  defp icon_size_classes("small"), do: "!size-3.5"
-  defp icon_size_classes("medium"), do: "!size-4"
+  defp icon_size_classes("small"), do: "size-3.5"
+  defp icon_size_classes("medium"), do: "size-4"
 
   defp keydown_activate_script, do: @keydown_activate
 

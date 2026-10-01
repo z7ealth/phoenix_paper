@@ -7,12 +7,33 @@ defmodule PhoenixPaper.Icon do
   PhoenixPaper does **not** ship its own icon set or extra dependency: pass
   the same `hero-*` class you'd use with the app's default `core_components`
   icon helper (e.g. `"hero-check"`, `"hero-check-solid"`, `"hero-check-mini"`).
+
+  ## Size: use the attr, not `class`
+
+  `size` picks the icon's `size-*` class: `xs` (`size-3`), `sm` (`size-4`),
+  `md` (`size-5`, the default), `lg` (`size-6`) or `xl` (`size-8`). A plain
+  `class="size-4"` next to the built-in `size-5` doesn't reliably win (see
+  AGENTS.md, "Overriding built-in classes via `class`"); for any other size,
+  pass `size="none"` and set it yourself:
+
+      <.pp_icon name="hero-chevron-right" size="sm" />
+      <.pp_icon name="hero-sparkles" size="none" class="size-10" />
+
+  To hide an icon, use `class="!hidden"`: the built-in `inline-block` would
+  otherwise beat a plain `hidden`.
   """
   use Phoenix.Component
 
   alias PhoenixPaper.Helpers
 
   attr(:name, :string, required: true, doc: ~s(a heroicon class, e.g. "hero-check"))
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl none),
+    doc: "xs=size-3, sm=size-4, md=size-5, lg=size-6, xl=size-8; none emits no size class"
+  )
+
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
 
@@ -21,8 +42,15 @@ defmodule PhoenixPaper.Icon do
     ~H"""
     <span
       data-pp-component="icon"
-      class={Helpers.classes(@paperize, "inline-block size-5 align-[-0.125em]", [@name, @class])}
+      class={Helpers.classes(@paperize, ["inline-block align-[-0.125em]", size_class(@size)], [@name, @class])}
     />
     """
   end
+
+  defp size_class("xs"), do: "size-3"
+  defp size_class("sm"), do: "size-4"
+  defp size_class("md"), do: "size-5"
+  defp size_class("lg"), do: "size-6"
+  defp size_class("xl"), do: "size-8"
+  defp size_class("none"), do: nil
 end

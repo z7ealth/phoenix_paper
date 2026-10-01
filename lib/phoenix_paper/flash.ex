@@ -154,12 +154,12 @@ defmodule PhoenixPaper.Flash do
       phx-connected={JS.set_attribute({"hidden", ""}, to: "##{@id}")}
     >
       <span class="flex items-center gap-3">
-        <.pp_icon name="hero-exclamation-circle-mini" class="!size-5 shrink-0" />
+        <.pp_icon name="hero-exclamation-circle-mini" class="shrink-0" />
         <span>
           <span class="block font-medium">{@title}</span>
           <span class="flex items-center gap-1">
             {@text}
-            <.pp_icon name="hero-arrow-path-mini" class="!size-3 motion-safe:animate-spin" />
+            <.pp_icon name="hero-arrow-path-mini" size="xs" class="motion-safe:animate-spin" />
           </span>
         </span>
       </span>
@@ -191,7 +191,7 @@ defmodule PhoenixPaper.Flash do
       paperize={@paperize}
     >
       <span class="flex items-center gap-3">
-        <.pp_icon :if={icon_name(@kind)} name={icon_name(@kind)} class="!size-5 shrink-0" />
+        <.pp_icon :if={icon_name(@kind)} name={icon_name(@kind)} class="shrink-0" />
         <span>{@message}</span>
       </span>
     </.pp_snackbar>

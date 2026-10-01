@@ -55,4 +55,31 @@ defmodule PhoenixPaper.FabTest do
     <.pp_fab paperize={false}>+</.pp_fab>
     """
   end
+
+  test "position emits a single position class, keeping the ripple's overflow-hidden" do
+    html = render_component(&fixed_position/1)
+
+    assert html =~ "fixed overflow-hidden"
+    assert html =~ "bottom-6"
+    refute html =~ "relative"
+  end
+
+  defp fixed_position(assigns) do
+    ~H"""
+    <.pp_fab position="fixed" class="bottom-6 right-6">+</.pp_fab>
+    """
+  end
+
+  test "position without ripple still emits the position" do
+    html = render_component(&absolute_no_ripple/1)
+
+    assert html =~ "absolute"
+    refute html =~ "overflow-hidden"
+  end
+
+  defp absolute_no_ripple(assigns) do
+    ~H"""
+    <.pp_fab position="absolute" ripple={false}>+</.pp_fab>
+    """
+  end
 end

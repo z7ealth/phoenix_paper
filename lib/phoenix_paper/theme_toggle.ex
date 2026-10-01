@@ -259,10 +259,10 @@ defmodule PhoenixPaper.ThemeToggle do
         />
         <span class={Helpers.classes(@paperize, thumb_classes(), nil)}>
           <span class="absolute inset-0 flex items-center justify-center text-amber-500 opacity-100 transition-opacity">
-            <.pp_icon name="hero-sun-mini" class="!size-3" />
+            <.pp_icon name="hero-sun-mini" size="xs" />
           </span>
           <span class="absolute inset-0 flex items-center justify-center text-slate-700 opacity-0 transition-opacity">
-            <.pp_icon name="hero-moon-mini" class="!size-3" />
+            <.pp_icon name="hero-moon-mini" size="xs" />
           </span>
         </span>
       </span>
@@ -303,7 +303,7 @@ defmodule PhoenixPaper.ThemeToggle do
           onclick={set_script(@ripple?, @target, mode)}
           class={Helpers.classes(@paperize, segment_classes(mode), nil)}
         >
-          <.pp_icon name={icon} class="!size-4" />
+          <.pp_icon name={icon} size="sm" />
         </button>
       </div>
       <span :if={@label}>{@label}</span>

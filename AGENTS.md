@@ -19,11 +19,11 @@ adding or changing a component.
 - `lib/phoenix_paper/*.ex` — one module per component (`Button`, `Card`,
   `Icon`, `Checkbox`, `Input`, `Switch`, `RadioGroup`, `Select`,
   `ButtonGroup`, `ToggleButton`, `Fab`, `Rating`, `Slider`, `NumberField`,
-  `Autocomplete`, `TransferList`, `AppBar`, `Drawer`, `Breadcrumbs`, `List`, `ListItem`,
+  `Autocomplete`, `PowerSelect`, `TransferList`, `AppBar`, `Drawer`, `Breadcrumbs`, `List`, `ListItem`,
   `ListSubheader`, `Divider`, `Box`, `Container`, `Stack`, `Grid`,
   `GridItem`, `ImageList`, `ImageListItem`, `Paper`, `Typography`, `Table`,
   `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`,
-  `TableFooter`, `Alert`, `Backdrop`, `Dialog`, `Menu`, `Progress`, `Skeleton`,
+  `TableFooter`, `TablePagination`, `Pagination`, `Form`, `Alert`, `Backdrop`, `Dialog`, `Menu`, `Progress`, `Skeleton`,
   `Snackbar`, `Flash`, `SpeedDial`, `Accordion`, `AccordionSummary`,
   `AccordionDetails`, `AccordionActions`, `Collapse`, ...), plus `Helpers`, `Elevation`,
   `Spacing`, `Shape`, `Ripple`.
@@ -113,8 +113,18 @@ class={Helpers.classes(@paperize, [..., Ripple.container_classes(@ripple)], @cla
 onclick={Ripple.on_click(@ripple)}
 ```
 
-Two things worth knowing before touching this:
+Three things worth knowing before touching this:
 
+- **`relative` loses to a caller's `fixed`/`absolute`.** Tailwind emits
+  `.relative` after `.absolute`/`.fixed` in its stylesheet, so
+  `container_classes/1`'s `relative` silently beat a
+  `class="fixed bottom-6 right-6"` on a `Fab` (the documented way to
+  anchor one, until 0.3.0). `Button` and `Fab` now take a `position` attr
+  (`relative`/`fixed`/`absolute`/`sticky`) and call
+  `Ripple.container_classes/2`, which emits exactly one position class
+  plus `overflow-hidden`. Any of the four gives the ripple span its
+  containing block. `SpeedDial` takes `position` on its root, which is
+  where `class` now lands too (`trigger_class` styles the trigger).
 - **It has to be `onclick`, not `onpointerdown`/`onmousedown`.** Phoenix's
   HEEx compiler statically validates `on*` attributes against a fixed
   allowlist for function components (see
@@ -244,6 +254,8 @@ current set:
 | `Card` | `p-*` | `padding` |
 | `Button` | colors, `px-*`/`py-*`/`text-*`, `rounded-*` | `color` (incl. `inherit`), `size`, `shape` |
 | `Avatar` | `size-*`, colors | `size`, `color` |
+| `Icon` | `size-*` | `size` (`none` = no built-in size) |
+| `Fab`/`SpeedDial`/`Button` | `relative` | `position` |
 | `Typography` | `text-*` size/color | `variant`, `color` |
 | `List`/`ListItem` | `py-*`, `pl-*` | `dense`, `nested`, `inset` |
 
@@ -330,13 +342,72 @@ Every component is a stateless `Phoenix.Component` function (`pp_*/1`) by
 default — that's the whole point of the `pp_` import convention. Reach for a
 `Phoenix.LiveComponent` only when a component needs interactive state a
 single render pass can't express from its attrs alone (`Autocomplete`'s open
-dropdown + filtered list, `TransferList`'s left/right item split). Those two
-are the only such components on purpose: they aren't imported by
+dropdown + filtered list, `PowerSelect`'s search term/results/selection,
+`TransferList`'s left/right item split). Those three are the only such
+components on purpose: they aren't imported by
 `PhoenixPaper.Components` (there's no function to import — they're used
 directly as `<.live_component module={PhoenixPaper.Autocomplete} ...} />`),
 they only work inside a LiveView (not a plain dead/controller-rendered
 page), and that limitation should be called out in their moduledoc. Default
 to a stateless function component; justify a `LiveComponent` explicitly.
+
+## Forms: `PowerSelect` (ember-power-select)
+
+A `LiveComponent` modeled on ember-power-select. The server holds the
+search term, the current results, the selection and a pending search; the
+client does only what LiveView leaves alone when it patches. Decisions
+worth knowing before touching it:
+
+- **Open/close is `Phoenix.LiveView.JS`** (`show/1`, `hide/2`, `toggle/2`,
+  `pick/5`, public `@doc false` and tested by pattern-matching their ops,
+  like `Tabs.select/3`), not an `open` assign. JS-command display state
+  survives patches, and a click-away doesn't cost a round trip. The list
+  is always rendered, hidden.
+- **Keyboard is one inline `onkeydown` on the root** (`@keyboard_js`). It
+  only moves DOM focus and `.click()`s elements that already exist (options,
+  chips, a hidden `data-pp-close` button running `hide/2`). Focus and
+  clicks can't be undone by a patch, unlike a script mutating attributes
+  (the `ThemeToggle` hydration bug). Type-ahead on a search-less trigger
+  works on the hidden options the same way.
+- **No `<form>` inside, and the search box is detached from the
+  caller's form.** A `phx-change` needs a form, but the component usually
+  sits *inside* the caller's form and a nested `<form>` is dropped by the
+  HTML parser. So the search box uses `phx-keyup` (key events send the
+  input's `value`) with `phx-debounce`, has no `name`, and its `form`
+  attribute points at a nonexistent id. That makes `input.form` null, so
+  LiveView never runs the caller's `phx-change` for it, and it's never
+  submitted. `Autocomplete` had a real nested `<form>` until 0.3.0; it now
+  uses the same trick.
+- **The caller's form still sees changes.** Hidden inputs carry the
+  value. After each change the server renders a fresh
+  `<span id="<id>-changed-N" phx-mounted={JS.dispatch("input", ...)}>`:
+  the id changes, so it's a new element, and `phx-mounted` fires after the
+  patch, when the hidden inputs already hold the new value. The dispatched
+  `input` event bubbles into the caller's form `phx-change`, like a native
+  select's. `on_change` (a function, run in the LiveView process) covers
+  use outside a form.
+- **The parent's `value` is only re-read when it changes**
+  (`external_value`). A parent re-render with a stale value must not undo
+  a pick that hasn't round-tripped yet.
+- **Async search is `start_async/3`.** LiveView drops results from a
+  superseded task by ref, and the task also returns its term, which is
+  compared with the current one. A blank term cancels and shows `options`.
+- **Accent folding is NFD plus stripping `\p{Mn}`**, with a small table
+  for letters that don't decompose (`ø`, `æ`, `œ`, `ß`, `ł`, `đ`, `ð`).
+- **A LiveComponent has no `attr` defaults.** An omitted attr is simply
+  absent, so `update/2` fills `@defaults` with `assign_new/3`. That's
+  correct here, unlike in function components (see the `assign_new/3`
+  gotcha below).
+
+Verified two ways: `live_isolated/3` tests with a real host LiveView
+(search, picks, clear, multiple, disabled options, async ordering, the
+stale-parent case) through `PhoenixPaper.TestEndpoint` in `test/support`
+(needs the test-only `lazy_html` dep). Also headless Chromium driven over
+the DevTools protocol, with the real `phoenix.js`/`phoenix_live_view.js`
+and a LiveSocket that never connects: open/close, click-away, arrow keys,
+Escape, type-ahead, search focus, Enter not submitting, Backspace removing
+a chip, the search box not being in `FormData`. Not covered in the
+browser: the `phx-mounted` dispatch, which only fires after a real patch.
 
 ## Layout primitives (`Box`, `Container`, `Stack`, `Grid`/`GridItem`, `ImageList`/`ImageListItem`)
 
@@ -574,6 +645,17 @@ backdrop sharing `z-30` is fine: the backdrop only exists below `lg:`
 for a "clipped" layout (app bar on top) is `class="!z-40"` on the app bar.
 Keep this ladder in mind when adding any other fixed/sticky component.
 
+## Navigation: `Drawer`'s header and body inset
+
+Since 0.3.0 the body (`inner_block`) sits in a `px-3 py-2` wrapper,
+Material's drawer padding, so a `ListItem`'s `rounded-full` active pill
+no longer touches the panel edges. That wrapper is paperize-gated. The
+`:header` row is `min-h-16 py-3` instead of a fixed `h-16`, so a logo with
+a version line under it grows the row instead of being squeezed. Its
+classes stay unconditional, like before (it has no `class` of its own).
+`pp_drawer_toggle/1`'s hover is `hover:bg-current/10`, matching its
+`bg-current` bars, so it reads on a colored `AppBar` too.
+
 ## Navigation: `Drawer`'s `color` and reaching into nested `List`/`ListItem`
 
 `Drawer` gained a `color` attr (`primary`/`secondary`/`accent`/`surface`,
@@ -743,6 +825,44 @@ even under `paperize={false}`, the same deliberate exception `AppBar`'s
 inner toolbar div makes and for the same reason: there's no `class` attr
 exposed on an individual `<li>` for a `paperize={false}` caller to rebuild
 that row layout themselves.
+
+## Navigation: `Pagination` and `TablePagination`
+
+Both are stateless and **1-based** (MUI's `TablePagination` is 0-based;
+one numbering across the library won). Each control either links or
+fires an event, never both:
+
+- **Link mode**: a `path` function builds each URL — `page -> url` for
+  `Pagination`, `(page, rows_per_page) -> url` for `TablePagination` —
+  and `link` (`patch` default/`navigate`/`href`) picks the link kind. The
+  page lives in the URL, so `handle_params/3` loads it. Picking a new page
+  size links to page 1.
+- **Event mode**: `on_change` (`Pagination`) or `on_page_change`/
+  `on_rows_per_page_change` (`TablePagination`) set `phx-click`, with the
+  value in `phx-value-page`/`phx-value-rows_per_page` and `target` as
+  `phx-target`.
+
+A control that can't move (previous on page 1) renders as a disabled
+`<button>` in both modes, never a link to page 0. `Pagination.items/4` is
+MUI's `usePagination` ellipsis algorithm, public and doctested; its
+constant-length property (the bar doesn't change width while paging) has
+its own test. `TablePagination`'s rows-per-page picker is a `pp_menu` of
+`pp_list_item`s rather than a native `<select>`: a `<select>` can't
+navigate on change without a script or a wrapping form, and a menu item
+is a plain link. That's why `TablePagination` needs an `id`, and like
+`Menu` it needs the LiveView JS client on the page. Prev/next are
+`pp_button variant="icon" color="inherit"`.
+
+## Forms: `pp_form`
+
+`pp_form/1` is a thin layer over `Phoenix.Component.form/1`, not a
+replacement: it adds a `flex flex-col` + `Spacing.gap(spacing)` column
+and a right-aligned `:actions` slot, and passes everything else through
+by spreading a map into `<.form>`. Only the options the caller actually
+set are forwarded, because `form/1` reads `as`/`method`/`errors`/
+`csrf_token` straight from its assigns and would treat a `nil` as an
+explicit value. Plain `<.form>` stays fully supported; every `pp_*`
+control takes `field=` either way.
 
 ## Navigation: `Menu`
 
@@ -998,14 +1118,12 @@ unbroken until the notch actually needs to open.
 
 Modeled on MUI's Table components — one small function component per table
 part, composed by the caller (see `PhoenixPaper.Table`'s moduledoc for the
-full composition example). No `PhoenixPaper.TablePagination`/
-`TableSortLabel` — `TableCell`'s `sortable`/`sort_direction` attrs give the
-sort-header *look* (a clickable header with a direction arrow), but wiring
-an actual sort click to actual reordered data is the caller's LiveView, same
-as it would be for a hand-rolled `<th>`; a full pagination component wasn't
-built at all (flagged as a bigger, separate addition when this family shipped
-— composable from existing `Select`/`Button` pieces, but a real interactive
-component with its own API decisions, not just another table part).
+full composition example). No `TableSortLabel` — `TableCell`'s
+`sortable`/`sort_direction` attrs give the sort-header *look* (a clickable
+header with a direction arrow), but wiring an actual sort click to actual
+reordered data is the caller's LiveView, same as it would be for a
+hand-rolled `<th>`. `TablePagination` arrived in 0.3.0, see "Navigation:
+`Pagination` and `TablePagination`" below.
 
 `dense` (`Table`) and `sticky_header` (`Table`), and `striped` (`TableBody`)
 cascade to every descendant cell via plain CSS descendant selectors
@@ -1128,9 +1246,10 @@ brand equivalent for "success" or "info" or "warning". Rather than force
 `Alert` onto the existing 4-color scale (which has no green or amber), added
 `--color-pp-success`/`-warning`/`-info` (+ `-on-*` pairs) to
 `priv/static/phoenix_paper.css`, in both the light (`@theme`) and
-`[data-theme="dark"]` blocks — but **not** the `[data-pp-theme="teal"]`
-alternate palette, since status colors aren't part of a brand identity swap
-and should stay consistent regardless of which brand palette is active.
+`[data-theme="dark"]` blocks. (A bundled alternate brand palette, removed
+in 0.3.0, deliberately left them out: status colors aren't part of a brand
+identity swap, so an app's own palette override should usually leave them
+alone too.)
 (Older versions of this library also required registering any new `pp-*`
 token in `mix.exs`'s `color_classes` list, for a class-merge dependency
 that's since been dropped — see "Overriding built-in classes via `class`"
@@ -1344,8 +1463,10 @@ in `priv/static/phoenix_paper.css`:
   preference in either direction; the media query is purely the fallback for
   "no explicit choice made yet." `PhoenixPaper.ThemeToggle` (below) is built
   around this: it never forces `data-theme` on mount, only on click.
-- A second bundled palette (`teal`/`amber`) is opt-in via
-  `data-pp-theme="teal"` on any ancestor element (typically `<html>`).
+- **Only one palette ships** (the default indigo/pink, light + dark).
+  A second bundled one (`data-pp-theme="teal"`) was removed in 0.3.0: the
+  library supplies a working default, the app supplies its own brand.
+  Don't add bundled palettes back.
 - **Custom themes**: don't fork the CSS file. Override the `--color-pp-*`
   variables from the consuming app's own stylesheet, after importing
   `phoenix_paper.css`. That's the entire theming API — no build step, no
@@ -1429,6 +1550,9 @@ sun/moon icon could live *inside* the sliding thumb (swapped via a
   silently does nothing for the rest without any error or warning — the
   same `!` pattern this one gap needed is now how every override works,
   everywhere in this library, since there's no merge step left at all.
+  (Since 0.3.0 `Icon` has a `size` attr, so the toggle uses `size="xs"`
+  instead; `size="none"` is the escape hatch for a size outside its
+  presets.)
 - **First version's `<script>`-based system-preference sync looked right
   and wasn't** — worth knowing in detail since it's the kind of bug that
   only shows up on a real dark-OS machine, never in a static render or a
@@ -1550,7 +1674,7 @@ a `hero-*` class string the same way, not draw its own SVG.
 
 ## Consumer setup (what a project adding this dependency must do)
 
-1. Add `{:phoenix_paper, "~> 0.2"}` to `mix.exs`.
+1. Add `{:phoenix_paper, "~> 0.3"}` to `mix.exs`.
 2. In `lib/my_app_web.ex`, add `use PhoenixPaper.Components` to the
    `html_helpers` quote block, next to the existing `core_components` import.
 3. In `assets/css/app.css`, after `@import "tailwindcss";`, add:

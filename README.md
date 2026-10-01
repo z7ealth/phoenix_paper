@@ -26,7 +26,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.2.7`) and please
+> (e.g. `~> 0.3.0`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -36,7 +36,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.2.7"}
+    {:phoenix_paper, "~> 0.3.0"}
   ]
 end
 ```
@@ -181,8 +181,26 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
 <.pp_typography variant="h4">Account settings</.pp_typography>
 <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
 
-<.pp_input field={@form[:email]} label="Email" />
-<.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />
+<%!-- pp_form = Phoenix's <.form> plus field spacing and an actions row --%>
+<.pp_form for={@form} phx-change="validate" phx-submit="save">
+  <.pp_input field={@form[:email]} label="Email" />
+  <.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />
+  <.pp_input field={@form[:starts_at]} type="datetime-local" label="Starts at" />
+  <:actions>
+    <.pp_button type="submit">Save</.pp_button>
+  </:actions>
+</.pp_form>
+
+<%!-- page numbers as patch links (or on_change="paginate" for events) --%>
+<.pp_pagination page={@page} count={@total_pages} path={&~p"/users?page=#{&1}"} />
+<%!-- a table footer: rows per page, "11–20 of 47", prev/next --%>
+<.pp_table_pagination
+  id="users-pagination"
+  page={@page}
+  count={@total_rows}
+  rows_per_page={@per_page}
+  path={&~p"/users?page=#{&1}&per_page=#{&2}"}
+/>
 
 <%!-- hide_label: dense, unwrapped variant for an inline filter toolbar --%>
 <.pp_input hide_label label="Search" name="q" size="small" />
@@ -200,10 +218,10 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
   <.pp_button variant="outlined">Day</.pp_button>
   <.pp_button variant="outlined">Week</.pp_button>
 </.pp_button_group>
-<.pp_fab>+</.pp_fab>
+<.pp_fab position="fixed" class="bottom-6 right-6">+</.pp_fab>
 
 <%!-- A FAB that fans out related actions on hover / click / focus — pure CSS --%>
-<.pp_speed_dial id="create" label="Create" class="fixed bottom-6 right-6">
+<.pp_speed_dial id="create" label="Create" position="fixed" class="bottom-6 right-6">
   <:action label="New workbook" navigate={~p"/workbooks/new"}>
     <.pp_icon name="hero-document-plus" />
   </:action>
@@ -221,9 +239,22 @@ The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's n
 <%!-- also the "connection lost" chips, replacing the generated <.flash_group> --%>
 <.pp_flash_group flash={@flash} connection_notices />
 
-<%!-- Autocomplete and TransferList need interactive state, so they're
-      Phoenix.LiveComponents (LiveView only) instead of pp_* functions --%>
+<%!-- Autocomplete, PowerSelect and TransferList need interactive state, so
+      they're Phoenix.LiveComponents (LiveView only) instead of pp_* functions --%>
 <.live_component module={PhoenixPaper.Autocomplete} id="country" name="country" label="Country" options={["Canada", "Mexico"]} />
+
+<%!-- PowerSelect: a searchable select (ember-power-select) — accent-insensitive
+      search, keyboard nav, groups, server search, and multiple selection --%>
+<.live_component
+  module={PhoenixPaper.PowerSelect}
+  id="assignees"
+  field={@form[:assignee_ids]}
+  label="Assignees"
+  multiple
+  search={&MyApp.Accounts.search_users/1}
+  label_field={:name}
+  value_field={:id}
+/>
 <.live_component module={PhoenixPaper.TransferList} id="permissions" items={["Read", "Write", "Admin"]} />
 ```
 

@@ -114,4 +114,27 @@ defmodule PhoenixPaper.Ripple do
   @spec container_classes(boolean()) :: String.t()
   def container_classes(false), do: ""
   def container_classes(true), do: "relative overflow-hidden"
+
+  @doc """
+  Like `container_classes/1`, for a component with a `position` attr
+  (`Button`, `Fab`): emits exactly one position class, so a `fixed`/
+  `absolute`/`sticky` root never also carries the ripple's `relative`.
+  Any of the four positions gives the ripple `<span>` its containing
+  block, so the ripple only adds `overflow-hidden` on top.
+
+  `"relative"` (the default) without ripple emits nothing, exactly like
+  `container_classes(false)`; the other positions are always emitted,
+  because the caller asked for them.
+  """
+  @spec container_classes(boolean(), String.t()) :: String.t()
+  def container_classes(ripple?, position)
+
+  def container_classes(true, "relative"), do: "relative overflow-hidden"
+  def container_classes(true, "fixed"), do: "fixed overflow-hidden"
+  def container_classes(true, "absolute"), do: "absolute overflow-hidden"
+  def container_classes(true, "sticky"), do: "sticky overflow-hidden"
+  def container_classes(false, "relative"), do: ""
+  def container_classes(false, "fixed"), do: "fixed"
+  def container_classes(false, "absolute"), do: "absolute"
+  def container_classes(false, "sticky"), do: "sticky"
 end

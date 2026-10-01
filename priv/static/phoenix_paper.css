@@ -15,6 +15,12 @@
  * All tokens below are namespaced `pp-` so they never collide with daisyUI's
  * own `primary`/`secondary`/`base-100`/... theme colors when both are
  * installed in the same app. See AGENTS.md, "Theming", for the full picture.
+ *
+ * Only one palette ships: the default below (light, dark, and the
+ * system-preference fallback). To theme your app, don't fork this file —
+ * override the `--color-pp-*` variables from your own app.css, after this
+ * import (in `:root`, `[data-theme="dark"]`, or any scoping selector of
+ * your own).
  */
 
 @source "../../lib";
@@ -115,42 +121,6 @@
     --color-pp-on-info: #01324a;
 
     --pp-surface-tint: 255 255 255;
-  }
-}
-
-/*
- * Alternate default palette (teal / amber). Opt in with
- * `<html data-pp-theme="teal">` (or any ancestor element).
- * To build a fully custom theme, don't fork this file — override the
- * `--color-pp-*` variables from your own app.css instead (see AGENTS.md).
- */
-[data-pp-theme="teal"] {
-  --color-pp-primary: #00695c;
-  --color-pp-on-primary: #ffffff;
-  --color-pp-secondary: #ff8f00;
-  --color-pp-on-secondary: #1f1300;
-  --color-pp-accent: #5c6bc0;
-  --color-pp-on-accent: #ffffff;
-}
-
-[data-pp-theme="teal"][data-theme="dark"] {
-  --color-pp-primary: #4db6ac;
-  --color-pp-on-primary: #04211d;
-  --color-pp-secondary: #ffca80;
-  --color-pp-on-secondary: #2b1a00;
-  --color-pp-accent: #8c9eff;
-  --color-pp-on-accent: #0a0e3d;
-}
-
-/* Same "system" fallback as above, for the teal palette. */
-@media (prefers-color-scheme: dark) {
-  [data-pp-theme="teal"]:not([data-theme="light"]) {
-    --color-pp-primary: #4db6ac;
-    --color-pp-on-primary: #04211d;
-    --color-pp-secondary: #ffca80;
-    --color-pp-on-secondary: #2b1a00;
-    --color-pp-accent: #8c9eff;
-    --color-pp-on-accent: #0a0e3d;
   }
 }
 

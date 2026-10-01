@@ -11,7 +11,7 @@ defmodule PhoenixPaper.AutocompleteTest do
         options: ["Canada", "Mexico"]
       )
 
-    [input_tag] = Regex.run(~r/<input[^>]*name="query"[^>]*>/, html)
+    [input_tag] = Regex.run(~r/<input[^>]*id="country-query"[^>]*>/, html)
 
     assert input_tag =~ ~s(phx-focus="open")
     assert input_tag =~ "phx-target="
@@ -43,7 +43,7 @@ defmodule PhoenixPaper.AutocompleteTest do
     assert html =~ ~s(value="Mexico")
   end
 
-  test "the phx-change form has an id derived from the component id" do
+  test "the query input has no form of its own and is detached from any surrounding form" do
     html =
       render_component(PhoenixPaper.Autocomplete,
         id: "country",
@@ -51,8 +51,10 @@ defmodule PhoenixPaper.AutocompleteTest do
         options: ["Canada"]
       )
 
-    [form_tag] = Regex.run(~r/<form[^>]*>/, html)
-    assert form_tag =~ ~s(id="country-form")
-    assert form_tag =~ ~s(phx-change="query")
+    refute html =~ "<form"
+    [input_tag] = Regex.run(~r/<input[^>]*id="country-query"[^>]*>/, html)
+    assert input_tag =~ ~s(form="country-detached")
+    assert input_tag =~ ~s(phx-keyup="query")
+    refute input_tag =~ "name="
   end
 end

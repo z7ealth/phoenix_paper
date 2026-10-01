@@ -5,7 +5,7 @@ defmodule PhoenixPaper.SpeedDial do
   [`SpeedDial`](https://mui.com/material-ui/react-speed-dial/) +
   `SpeedDialAction`.
 
-      <.pp_speed_dial id="create" label="Create" class="fixed bottom-6 right-6">
+      <.pp_speed_dial id="create" label="Create" position="fixed" class="bottom-6 right-6">
         <:action label="New workbook" navigate={~p"/workbooks/new"}>
           <.pp_icon name="hero-document-plus" />
         </:action>
@@ -15,9 +15,14 @@ defmodule PhoenixPaper.SpeedDial do
       </.pp_speed_dial>
 
   Like `PhoenixPaper.Fab`, it's the caller's job to anchor the whole thing
-  to a corner (`class="fixed bottom-6 right-6"`); `direction` then picks
-  which way the actions fan out from there (`up` — the default — `down`,
-  `left`, `right`).
+  to a corner: `position="fixed"` plus offsets in `class` (which lands on
+  the root, around both the trigger and the actions). `direction` then
+  picks which way the actions fan out from there (`up` — the default —
+  `down`, `left`, `right`). Style the trigger itself with `trigger_class`.
+
+  Don't put `fixed` in `class`: the root is `relative` by default (the
+  actions are positioned against it) and Tailwind orders `.relative` after
+  `.fixed`, so the dial would stay in the page flow.
 
   ## Pure CSS — opens on hover, click, or keyboard focus
 
@@ -94,12 +99,20 @@ defmodule PhoenixPaper.SpeedDial do
     doc: "the ripple effect on the trigger and actions — off whenever paperize is false"
   )
 
+  attr(:position, :string,
+    default: "relative",
+    values: ~w(relative fixed absolute sticky),
+    doc: "the root's CSS position — use fixed (plus offsets in class) to anchor it to a corner"
+  )
+
   attr(:paperize, :boolean, default: true)
 
   attr(:class, :any,
     default: nil,
-    doc: "merged onto the trigger — put your `fixed`/corner anchoring here"
+    doc: "added to the root (trigger + actions) — put your corner offsets here"
   )
+
+  attr(:trigger_class, :any, default: nil, doc: "added to the trigger FAB")
 
   attr(:rest, :global)
 
@@ -122,7 +135,7 @@ defmodule PhoenixPaper.SpeedDial do
     assigns = assign(assigns, :ripple?, assigns.ripple and assigns.paperize)
 
     ~H"""
-    <div data-pp-component="speed-dial" class="group relative inline-flex" {@rest}>
+    <div data-pp-component="speed-dial" class={["group inline-flex", position_class(@position), @class]} {@rest}>
       <input
         type="checkbox"
         id={"#{@id}-toggle"}
@@ -133,7 +146,7 @@ defmodule PhoenixPaper.SpeedDial do
       <label
         for={"#{@id}-toggle"}
         onclick={Ripple.on_click(@ripple?)}
-        class={Helpers.classes(@paperize, trigger_classes(@color, @size, @ripple?), @class)}
+        class={Helpers.classes(@paperize, trigger_classes(@color, @size, @ripple?), @trigger_class)}
       >
         <span
           :if={@open_icon == []}
@@ -212,6 +225,13 @@ defmodule PhoenixPaper.SpeedDial do
     </div>
     """
   end
+
+  # Unconditional, like the rest of the root's classes: the actions container
+  # is positioned against this root, so it's plumbing, not skin.
+  defp position_class("relative"), do: "relative"
+  defp position_class("fixed"), do: "fixed"
+  defp position_class("absolute"), do: "absolute"
+  defp position_class("sticky"), do: "sticky"
 
   defp trigger_classes(color, size, ripple) do
     [

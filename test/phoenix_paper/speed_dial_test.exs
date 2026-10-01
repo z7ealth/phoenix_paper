@@ -7,7 +7,13 @@ defmodule PhoenixPaper.SpeedDialTest do
 
   defp dial(assigns) do
     ~H"""
-    <.pp_speed_dial id="create" label="Create" class="fixed bottom-6 right-6">
+    <.pp_speed_dial
+      id="create"
+      label="Create"
+      position="fixed"
+      class="bottom-6 right-6"
+      trigger_class="my-trigger"
+    >
       <:action label="New workbook" navigate="/workbooks/new">
         <span class="hero-document-plus" />
       </:action>
@@ -27,14 +33,20 @@ defmodule PhoenixPaper.SpeedDialTest do
     assert html =~ "peer sr-only"
   end
 
-  test "merges the caller class onto the trigger (for corner anchoring) and defaults to hero-plus" do
+  test "position and class land on the root, as its only position class; trigger_class on the trigger" do
     html = render_component(&dial/1)
 
-    assert html =~ "fixed"
-    assert html =~ "bottom-6"
-    assert html =~ "right-6"
+    assert html =~
+             ~s(data-pp-component="speed-dial" class="group inline-flex fixed bottom-6 right-6")
+
+    assert html =~ ~r/<label[^>]*class="[^"]*my-trigger/
     assert html =~ "hero-plus"
     assert html =~ "peer-checked:rotate-45"
+  end
+
+  test "the root defaults to relative" do
+    html = render_component(&bare/1)
+    assert html =~ ~s(class="group inline-flex relative my-dial")
   end
 
   test "opens on checkbox, hover, or keyboard focus (pure CSS, no JS)" do

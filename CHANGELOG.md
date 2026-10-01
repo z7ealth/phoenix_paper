@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-01
+
+### Added
+
+- `PhoenixPaper.PowerSelect`, a searchable select in the spirit of
+  ember-power-select (a `Phoenix.LiveComponent`, LiveView only):
+  - Search (`search_enabled`) that ignores case and accents ("maria"
+    finds "María"), on the label or a `search_field`, or with a custom
+    `matcher`. Without search, typing on the focused trigger jumps to an
+    option.
+  - Server search: `search` is a function `term -> options`, run as an
+    async task. It shows a loading message, only the latest term's
+    results are shown, and blank terms fall back to `options`.
+  - Groups (`%{group_name: ..., options: [...]}`, nestable, disableable)
+    and disabled options.
+  - `multiple`, with chips in the trigger, Backspace to remove the last
+    one, and `name[]` hidden inputs.
+  - Keyboard navigation, `allow_clear`, `placeholder`/
+    `search_placeholder`, translatable messages, `:option` and
+    `:selected_item` slots, and `field=` integration. The surrounding
+    form's `phx-change` runs on every change, like a native select's; use
+    `on_change` outside a form.
+
+- `pp_form/1`, a thin layer over Phoenix's `<.form>`: same `for`/`as`/
+  `action`/`:let` API, plus a spaced field column (`spacing`, default
+  `:md`) and a right-aligned `:actions` slot. Plain `<.form>` keeps
+  working with every `pp_*` control.
+- `pp_pagination/1` (MUI `Pagination`): page numbers with ellipsis
+  collapsing (`sibling_count`/`boundary_count`), prev/next and optional
+  first/last buttons, `text`/`outlined` variants, `circular`/`rounded`
+  shapes, three sizes and a selected-page `color`. Each page is a link
+  built by `path` (`patch` by default) or fires `on_change` with
+  `phx-value-page`. Pages are 1-based.
+- `pp_table_pagination/1` (MUI `TablePagination`): rows-per-page menu,
+  the "1–10 of 47" range and prev/next (optional first/last), as links
+  via a `path` function of `(page, rows_per_page)` or as events
+  (`on_page_change`/`on_rows_per_page_change`). Labels are customizable
+  for translation. Pages are 1-based.
+- `pp_icon/1` gains `size` (`xs`/`sm`/`md`/`lg`/`xl`, default `md` =
+  the previous `size-5`, or `none` for no built-in size). A plain
+  `class="size-4"` used to lose to the built-in `size-5`.
+- `pp_fab/1`, `pp_button/1` and `pp_speed_dial/1` gain `position`
+  (`relative` default, `fixed`, `absolute`, `sticky`). Use it to anchor
+  one: `<.pp_fab position="fixed" class="bottom-6 right-6">`.
+- `pp_speed_dial/1` gains `trigger_class`.
+
+### Changed
+
+- **Breaking:** the bundled alternate palette (`data-pp-theme="teal"`)
+  is removed from `phoenix_paper.css`. Only the default palette ships; to
+  re-create it (or any brand), override the `--color-pp-*` variables in
+  your own `app.css`.
+- **Breaking:** `pp_speed_dial/1`'s `class` now goes on the root (around
+  the trigger and the actions) instead of the trigger. Move trigger
+  styling to `trigger_class`.
+- `pp_drawer/1`'s body is inset `px-3 py-2`, so lists no longer sit flush
+  and the active item's pill no longer touches the edges. The `:header`
+  row is `min-h-16 py-3` instead of a fixed `h-16`, so taller content
+  grows it instead of being squeezed.
+- `pp_drawer_toggle/1`'s hover tint follows the text color
+  (`hover:bg-current/10`), so it reads on a colored app bar.
+
+### Fixed
+
+- `PhoenixPaper.Autocomplete` rendered its own `<form>`, which is invalid
+  nested inside the caller's form (the browser drops it, breaking the
+  search). The query input now uses `phx-keyup` and is detached from any
+  surrounding form, so it's never submitted with it either.
+- Form errors whose options include lists or tuples (Ecto's
+  `unique_constraint`, with `fields: [:email]`, or a `validate_format`
+  regex) crashed rendering. `PhoenixPaper.Helpers.translate_error/1` now
+  fills in only the `%{...}` placeholders the message uses.
+- `pp_input type="datetime-local"` now formats a `NaiveDateTime`/
+  `DateTime` value as `YYYY-MM-DDTHH:MM`, the format the input requires
+  (previously the browser showed an empty field).
+- `class="fixed ..."`/`"absolute ..."` on `pp_fab`, `pp_button` and
+  `pp_speed_dial` lost to the ripple's (or the dial's) own `relative`,
+  so the documented corner anchoring never worked. Use `position`.
+
 ## [0.2.7] - 2026-09-25
 
 ### Fixed
@@ -279,7 +358,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release: a Material Design component library for Phoenix and
   LiveView, styled with Tailwind CSS.
 
-[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.7...HEAD
+[Unreleased]: https://github.com/z7ealth/phoenix_paper/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.7...v0.3.0
 [0.2.7]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/z7ealth/phoenix_paper/compare/v0.2.4...v0.2.5

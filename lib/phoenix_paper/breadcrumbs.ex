@@ -26,7 +26,7 @@ defmodule PhoenixPaper.Breadcrumbs do
   own `separator` prop can — an icon, not just text:
 
       <.pp_breadcrumbs>
-        <:separator><.pp_icon name="hero-chevron-right" class="size-4" /></:separator>
+        <:separator><.pp_icon name="hero-chevron-right" size="sm" /></:separator>
         <:item navigate={~p"/"}>Home</:item>
         <:item>Settings</:item>
       </.pp_breadcrumbs>

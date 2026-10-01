@@ -77,7 +77,7 @@ defmodule PhoenixPaper.Collapse do
           data-pp-collapse-icon
           class="inline-flex shrink-0 transition-transform duration-200"
         >
-          <.pp_icon name="hero-chevron-down-mini" class="!size-5" />
+          <.pp_icon name="hero-chevron-down-mini" />
         </span>
       </label>
       <div

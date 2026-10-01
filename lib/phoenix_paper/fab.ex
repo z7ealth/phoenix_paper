@@ -2,8 +2,16 @@ defmodule PhoenixPaper.Fab do
   @moduledoc """
   A Material Design Floating Action Button (`pp_fab/1`) — a circular,
   elevated, icon-only button, or (with `extended`) a pill with a label.
-  Typically anchored to a screen corner by the caller (e.g. `class="fixed
-  bottom-6 right-6"`).
+
+  Anchor it to a screen corner with `position` plus offsets in `class`:
+
+      <.pp_fab position="fixed" class="bottom-6 right-6">
+        <.pp_icon name="hero-plus" />
+      </.pp_fab>
+
+  Don't put `fixed` in `class`: the ripple makes the root `relative`, and
+  Tailwind's stylesheet orders `.relative` after `.fixed`, so the FAB would
+  stay in the page flow with the offsets only nudging it.
   """
   use Phoenix.Component
 
@@ -17,6 +25,13 @@ defmodule PhoenixPaper.Fab do
     default: true,
     doc:
       "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  )
+
+  attr(:position, :string,
+    default: "relative",
+    values: ~w(relative fixed absolute sticky),
+    doc:
+      "the root's CSS position; set it here, not via class, since the ripple's own relative would beat a class=\"fixed\""
   )
 
   attr(:disabled, :boolean, default: false)
@@ -36,7 +51,7 @@ defmodule PhoenixPaper.Fab do
       type={@type}
       disabled={@disabled}
       data-pp-component="fab"
-      class={Helpers.classes(@paperize, paper_classes(@color, @size, @extended, @ripple?), @class)}
+      class={Helpers.classes(@paperize, paper_classes(@color, @size, @extended, @ripple?, @position), @class)}
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
@@ -45,13 +60,13 @@ defmodule PhoenixPaper.Fab do
     """
   end
 
-  defp paper_classes(color, size, extended, ripple) do
+  defp paper_classes(color, size, extended, ripple, position) do
     [
       base_classes(extended),
       size_classes(size, extended),
       color_classes(color),
       Elevation.class(6),
-      Ripple.container_classes(ripple)
+      Ripple.container_classes(ripple, position)
     ]
   end
 

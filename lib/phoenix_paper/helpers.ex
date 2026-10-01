@@ -81,11 +81,32 @@ defmodule PhoenixPaper.Helpers do
   (e.g. `{"must be %{count} characters", [count: 3]}`), without depending on
   Gettext. Shared by every form component (`Input`, `Select`,
   `NumberField`, ...) that accepts `field=` and renders `field.errors`.
+
+  Only the placeholders the message actually contains are filled in; every
+  other option is ignored. Ecto puts non-text metadata in the same keyword
+  list (`unique_constraint`'s `fields: [:email]`, `constraint_name: ...`,
+  `validation: {:format, ~r/.../}`), and converting those to text would
+  raise. A placeholder with no matching option is left as written, and one
+  whose value isn't plain text is rendered with `inspect/1`.
+
+      iex> PhoenixPaper.Helpers.translate_error({"has already been taken", [constraint: :unique, fields: [:email]]})
+      "has already been taken"
+
+      iex> PhoenixPaper.Helpers.translate_error({"should be at least %{count} character(s)", [count: 3, validation: :length]})
+      "should be at least 3 character(s)"
   """
   @spec translate_error({String.t(), keyword()}) :: String.t()
   def translate_error({msg, opts}) do
-    Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+    Regex.replace(~r/%\{(\w+)\}/, msg, fn placeholder, key ->
+      case Enum.find(opts, fn {opt_key, _value} -> to_string(opt_key) == key end) do
+        {_key, value} -> placeholder_text(value)
+        nil -> placeholder
+      end
     end)
   end
+
+  defp placeholder_text(value) when is_binary(value) or is_number(value) or is_atom(value),
+    do: to_string(value)
+
+  defp placeholder_text(value), do: inspect(value)
 end

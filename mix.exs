@@ -1,7 +1,7 @@
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
-  @version "0.2.7"
+  @version "0.3.0"
   @source_url "https://github.com/z7ealth/phoenix_paper"
   @description "A Material Design component library for Phoenix and LiveView, styled with Tailwind CSS."
 
@@ -44,7 +44,10 @@ defmodule PhoenixPaper.MixProject do
       # dependency here or those components break at render time in any
       # consuming app that doesn't happen to pull `jason` in some other way.
       {:jason, "~> 1.4"},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      # `Phoenix.LiveViewTest.live_isolated/3` (PowerSelect's event tests)
+      # needs it to parse rendered HTML. Test-only: not shipped to consumers.
+      {:lazy_html, ">= 0.1.0", only: :test}
     ]
   end
 

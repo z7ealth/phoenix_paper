@@ -85,9 +85,10 @@ defmodule PhoenixPaper.ThemeToggleTest do
     assert html =~ "hero-moon-mini"
   end
 
-  test "the icon size override uses !important — class overrides aren't merged, so ! is what wins" do
+  test "the thumb icons use Icon's size attr, so only one size class renders" do
     html = render_component(&basic/1)
-    assert html =~ "!size-3"
+    assert html =~ "size-3 hero-sun-mini"
+    refute html =~ "size-5 hero-sun-mini"
   end
 
   test "renders no inline <script> — the first-paint system sync is pure CSS, not JS" do

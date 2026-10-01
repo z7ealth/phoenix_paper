@@ -23,6 +23,30 @@ defmodule PhoenixPaper.InputTest do
     """
   end
 
+  test "datetime-local formats a NaiveDateTime/DateTime value the way the input requires" do
+    html = render_component(&datetime_local/1)
+
+    assert html =~ ~s(value="2026-10-01T09:30")
+    assert html =~ ~s(value="2026-10-01T18:05")
+    refute html =~ "09:30:15"
+  end
+
+  defp datetime_local(assigns) do
+    form = Phoenix.Component.to_form(%{"starts_at" => ~N[2026-10-01 09:30:15]}, as: :event)
+    assigns = assign(assigns, :form, form)
+
+    ~H"""
+    <.pp_input field={@form[:starts_at]} type="datetime-local" label="Starts" />
+    <.pp_input
+      name="ends_at"
+      type="datetime-local"
+      label="Ends"
+      value={~U[2026-10-01 18:05:00Z]}
+      hide_label
+    />
+    """
+  end
+
   test "renders the floating label and outlined classes by default" do
     html = render_component(&outlined/1)
 

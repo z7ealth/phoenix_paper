@@ -35,4 +35,29 @@ defmodule PhoenixPaper.HelpersTest do
       assert result =~ "cursor-pointer"
     end
   end
+
+  describe "translate_error/1" do
+    test "fills in only the placeholders the message uses" do
+      assert Helpers.translate_error({"must be %{count} characters", [count: 3, kind: :min]}) ==
+               "must be 3 characters"
+    end
+
+    test "ignores list and tuple options it doesn't use (unique_constraint, format)" do
+      assert Helpers.translate_error(
+               {"has already been taken",
+                [constraint: :unique, constraint_name: "users_email_index", fields: [:email]]}
+             ) == "has already been taken"
+
+      assert Helpers.translate_error({"has invalid format", [validation: {:format, ~r/@/}]}) ==
+               "has invalid format"
+    end
+
+    test "leaves a placeholder with no matching option untouched" do
+      assert Helpers.translate_error({"must be %{count}", []}) == "must be %{count}"
+    end
+
+    test "renders a used non-text value with inspect" do
+      assert Helpers.translate_error({"one of %{enum}", [enum: [:a, :b]]}) == "one of [:a, :b]"
+    end
+  end
 end

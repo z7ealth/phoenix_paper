@@ -176,7 +176,7 @@ defmodule PhoenixPaper.Snackbar do
           )
         }
       >
-        <.pp_icon name="hero-x-mark-mini" class="!size-4" />
+        <.pp_icon name="hero-x-mark-mini" size="sm" />
       </button>
       <span
         :if={@on_close && @auto_hide_duration}
