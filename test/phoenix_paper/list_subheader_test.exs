@@ -8,7 +8,7 @@ defmodule PhoenixPaper.ListSubheaderTest do
   test "renders the label with uppercase small-caps styling" do
     html = render_component(&subheader/1)
 
-    assert html =~ "uppercase"
+    assert html =~ "pp-title-small"
     assert html =~ "Main"
   end
 

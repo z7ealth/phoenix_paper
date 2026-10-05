@@ -30,12 +30,12 @@ defmodule PhoenixPaper.AccordionSummary do
       {@rest}
     >
       <div class="min-w-0 flex-1">{render_slot(@inner_block)}</div>
-      <span class="pp-accordion-icon shrink-0 transition-transform">▾</span>
+      <PhoenixPaper.Icon.pp_icon name="hero-chevron-down" class="pp-accordion-icon shrink-0 text-pp-on-surface-variant pp-motion-spatial-fast" />
     </label>
     """
   end
 
   defp paper_classes do
-    "flex cursor-pointer items-center gap-2 px-4 py-3 select-none hover:bg-pp-on-surface/5 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 peer-checked:[&_.pp-accordion-icon]:rotate-180"
+    "relative flex min-h-14 cursor-pointer select-none items-center gap-4 rounded-[inherit] px-4 py-3 pp-title-medium pp-state-layer peer-focus-visible:outline-3 peer-focus-visible:-outline-offset-3 peer-focus-visible:outline-solid peer-focus-visible:outline-pp-secondary peer-disabled:pointer-events-none peer-disabled:opacity-38 peer-checked:[&_.pp-accordion-icon]:rotate-180"
   end
 end

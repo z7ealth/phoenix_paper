@@ -36,10 +36,14 @@ defmodule PhoenixPaper.Pagination do
 
   ## Look
 
-  `variant` (`text`/`outlined`), `shape` (`circular`/`rounded`), `size`
-  (`small`/`medium`/`large`), and `color` (`standard`/`primary`/
-  `secondary`/`accent`) for the selected page: `standard` is a grey tint,
-  the brand colors fill it (`text`) or tint and outline it (`outlined`).
+  MD3 has no pagination component, so this one is built from MD3 icon
+  button parts: page buttons are `on-surface-variant` with a state layer,
+  and the current page is filled. `variant` (`text`/`outlined`), `shape`
+  (`round`/`square`, with the Expressive press morph), `size` (`xs` 32dp,
+  `sm` 40dp, `md` 48dp) and `color` for the current page: `primary`
+  (`primary` fill), `secondary` (`secondary-container`, the navigation
+  indicator color), `tertiary` (`tertiary-container`) or `standard`
+  (`surface-container-highest`).
   `show_first_button`/`show_last_button` add jump-to-end buttons;
   `hide_prev_button`/`hide_next_button` drop the arrows.
   """
@@ -71,9 +75,9 @@ defmodule PhoenixPaper.Pagination do
   attr(:sibling_count, :integer, default: 1)
   attr(:boundary_count, :integer, default: 1)
   attr(:variant, :string, default: "text", values: ~w(text outlined))
-  attr(:shape, :string, default: "circular", values: ~w(circular rounded))
-  attr(:size, :string, default: "medium", values: ~w(small medium large))
-  attr(:color, :string, default: "primary", values: ~w(standard primary secondary accent))
+  attr(:shape, :string, default: "round", values: ~w(round square))
+  attr(:size, :string, default: "sm", values: ~w(xs sm md))
+  attr(:color, :string, default: "primary", values: ~w(standard primary secondary tertiary))
   attr(:show_first_button, :boolean, default: false)
   attr(:show_last_button, :boolean, default: false)
   attr(:hide_prev_button, :boolean, default: false)
@@ -198,16 +202,16 @@ defmodule PhoenixPaper.Pagination do
   defp control_content(%{kind: :page} = assigns), do: ~H"{@to}"
 
   defp control_content(%{kind: :first} = assigns),
-    do: ~H|<.pp_icon name="hero-chevron-double-left-mini" />|
+    do: ~H|<.pp_icon name="hero-chevron-double-left" size="sm" />|
 
   defp control_content(%{kind: :previous} = assigns),
-    do: ~H|<.pp_icon name="hero-chevron-left-mini" />|
+    do: ~H|<.pp_icon name="hero-chevron-left" size="sm" />|
 
   defp control_content(%{kind: :next} = assigns),
-    do: ~H|<.pp_icon name="hero-chevron-right-mini" />|
+    do: ~H|<.pp_icon name="hero-chevron-right" size="sm" />|
 
   defp control_content(%{kind: :last} = assigns),
-    do: ~H|<.pp_icon name="hero-chevron-double-right-mini" />|
+    do: ~H|<.pp_icon name="hero-chevron-double-right" size="sm" />|
 
   defp aria_label(:page, page), do: "Go to page #{page}"
   defp aria_label(:first, _page), do: "Go to first page"
@@ -270,53 +274,39 @@ defmodule PhoenixPaper.Pagination do
   defp item_classes(kind, _variant, _shape, size, _color, _selected)
        when kind in [:start_ellipsis, :end_ellipsis],
        do: [
-         "inline-flex items-center justify-center select-none text-pp-on-surface",
+         "inline-flex items-center justify-center select-none pp-label-large text-pp-on-surface-variant",
          size_classes(size)
        ]
 
   defp item_classes(_kind, variant, shape, size, color, selected) do
     [
-      "inline-flex items-center justify-center cursor-pointer select-none transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pp-primary",
+      "relative inline-flex items-center justify-center overflow-hidden cursor-pointer select-none pp-label-large pp-state-layer pp-focus-ring pp-motion-spatial-fast disabled:pointer-events-none disabled:text-pp-on-surface/38",
       size_classes(size),
       shape_class(shape),
       color_classes(variant, color, selected)
     ]
   end
 
-  defp size_classes("small"), do: "h-6 min-w-6 px-1 text-xs"
-  defp size_classes("medium"), do: "h-8 min-w-8 px-1.5 text-sm"
-  defp size_classes("large"), do: "h-10 min-w-10 px-2 text-base"
+  defp size_classes("xs"), do: "h-8 min-w-8 px-1.5"
+  defp size_classes("sm"), do: "h-10 min-w-10 px-2"
+  defp size_classes("md"), do: "h-12 min-w-12 px-2.5"
 
-  defp shape_class("circular"), do: "rounded-full"
-  defp shape_class("rounded"), do: "rounded"
+  defp shape_class("round"), do: "rounded-pp-full active:rounded-pp-sm"
+  defp shape_class("square"), do: "rounded-pp-md active:rounded-pp-sm"
 
-  defp color_classes("text", _color, false),
-    do: "text-pp-on-surface hover:bg-pp-on-surface/10"
-
-  defp color_classes("text", "standard", true), do: "bg-pp-on-surface/15 text-pp-on-surface"
-
-  defp color_classes("text", "primary", true),
-    do: "bg-pp-primary text-pp-on-primary hover:bg-pp-primary/90"
-
-  defp color_classes("text", "secondary", true),
-    do: "bg-pp-secondary text-pp-on-secondary hover:bg-pp-secondary/90"
-
-  defp color_classes("text", "accent", true),
-    do: "bg-pp-accent text-pp-on-accent hover:bg-pp-accent/90"
+  defp color_classes("text", _color, false), do: "text-pp-on-surface-variant"
 
   defp color_classes("outlined", _color, false),
-    do: "border border-pp-outline/40 text-pp-on-surface hover:bg-pp-on-surface/10"
+    do: "border border-pp-outline-variant text-pp-on-surface-variant"
 
-  defp color_classes("outlined", "standard", true),
-    do: "border border-pp-outline/40 bg-pp-on-surface/15 text-pp-on-surface"
+  defp color_classes(_variant, "primary", true), do: "bg-pp-primary text-pp-on-primary"
 
-  defp color_classes("outlined", "primary", true),
-    do: "border border-pp-primary/50 bg-pp-primary/10 text-pp-primary hover:bg-pp-primary/20"
+  defp color_classes(_variant, "secondary", true),
+    do: "bg-pp-secondary-container text-pp-on-secondary-container"
 
-  defp color_classes("outlined", "secondary", true),
-    do:
-      "border border-pp-secondary/50 bg-pp-secondary/10 text-pp-secondary hover:bg-pp-secondary/20"
+  defp color_classes(_variant, "tertiary", true),
+    do: "bg-pp-tertiary-container text-pp-on-tertiary-container"
 
-  defp color_classes("outlined", "accent", true),
-    do: "border border-pp-accent/50 bg-pp-accent/10 text-pp-accent hover:bg-pp-accent/20"
+  defp color_classes(_variant, "standard", true),
+    do: "bg-pp-surface-container-highest text-pp-on-surface"
 end

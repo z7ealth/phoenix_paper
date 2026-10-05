@@ -55,7 +55,7 @@ defmodule PhoenixPaper.Autocomplete do
       |> assign_new(:label, fn -> nil end)
       |> assign_new(:placeholder, fn -> nil end)
       |> assign_new(:paperize, fn -> true end)
-      |> assign_new(:shape, fn -> :sm end)
+      |> assign_new(:shape, fn -> :xs end)
       |> assign_new(:open, fn -> false end)
       |> assign_new(:query, fn -> label_for(options, assigns[:value]) end)
       |> update_filtered()
@@ -106,7 +106,7 @@ defmodule PhoenixPaper.Autocomplete do
             phx-value-value={opt_value}
             phx-value-label={opt_label}
             phx-target={@myself}
-            class="block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-pp-primary/10"
+            class="flex min-h-12 w-full cursor-pointer items-center px-4 py-2 text-start pp-label-large text-pp-on-surface hover:bg-pp-on-surface/8 focus-visible:bg-pp-on-surface/10 focus-visible:outline-none"
           >
             {opt_label}
           </button>
@@ -153,24 +153,24 @@ defmodule PhoenixPaper.Autocomplete do
 
   defp wrapper_classes(shape) do
     [
-      "relative border border-pp-outline transition-colors focus-within:border-2 focus-within:border-pp-primary",
+      "relative border border-pp-outline pp-motion-effects-fast hover:border-pp-on-surface focus-within:border-2 focus-within:!border-pp-primary",
       Shape.class(shape)
     ]
   end
 
   defp input_classes do
-    "peer block w-full bg-transparent px-3 pt-7 pb-2 pr-8 text-sm text-pp-on-surface outline-none"
+    "peer block w-full bg-transparent ps-4 pe-10 pt-6 pb-2 pp-body-large text-pp-on-surface outline-none"
   end
 
   defp label_classes do
-    "pointer-events-none absolute left-3 top-2 text-xs text-pp-outline"
+    "pointer-events-none absolute start-4 top-2 pp-body-small text-pp-on-surface-variant [div:focus-within>&]:text-pp-primary"
   end
 
   defp list_classes(shape) do
     [
-      "absolute z-10 mt-1 max-h-56 w-full overflow-auto border border-pp-outline bg-pp-surface",
+      "absolute z-40 mt-1 max-h-56 w-full overflow-auto bg-pp-surface-container py-1 text-pp-on-surface",
       Shape.class(shape),
-      "pp-elevation-4"
+      "pp-elevation-2"
     ]
   end
 end

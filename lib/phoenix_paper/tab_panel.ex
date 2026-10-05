@@ -1,18 +1,16 @@
 defmodule PhoenixPaper.TabPanel do
   @moduledoc """
-  The content shown for one `PhoenixPaper.Tab` (`pp_tab_panel/1`) — hidden
-  until its matching tab is selected. See `PhoenixPaper.Tabs`'s moduledoc
-  for the full composition example and why switching needs real
-  per-element JS targeting rather than a CSS-only trick.
+  The content for one `PhoenixPaper.Tab` (`pp_tab_panel/1`) — see
+  `PhoenixPaper.Tabs` for composition.
 
-  `id`/`value` must match the corresponding `pp_tab/1` exactly — that's how
-  `PhoenixPaper.Tabs.select/2,3` finds this panel to show/hide it.
-
-  Unlike MUI's `TabPanel` (which unmounts inactive panels from the React
-  tree by default), every panel here always stays in the DOM, just
-  `display: none` — the same trade-off `PhoenixPaper.Dialog`/
-  `PhoenixPaper.Drawer` make, and for the same reason: pure CSS/JS
-  visibility toggling needs the element to exist in order to toggle it.
+  Pass the group's `id` and the matching tab's `value`; mark the panel of
+  the `default_selected` tab `default_selected` too. Only that panel is
+  visible on first paint; `PhoenixPaper.Tabs.select/2` shows/hides them
+  afterwards. Hidden panels use the `hidden` *class*, unconditionally (even
+  under `paperize={false}`), not the `hidden` attribute: Tailwind's
+  preflight makes `[hidden]` `display: none !important`, which
+  `JS.show`'s inline `display` can't beat. The panel itself has no padding beyond `py-4` — MD3 doesn't
+  style tab content.
   """
   use Phoenix.Component
 
@@ -35,17 +33,18 @@ defmodule PhoenixPaper.TabPanel do
     <div
       id={panel_id(@id, @value)}
       role="tabpanel"
+      tabindex="0"
       aria-labelledby={tab_id(@id, @value)}
       data-pp-component="tab-panel"
       data-pp-tab-panel-group={@id}
-      class={Helpers.classes(@paperize, visibility_classes(@default_selected), @class)}
+      class={[
+        !@default_selected && "hidden",
+        Helpers.classes(@paperize, "py-4 focus-visible:outline-none", @class)
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
     </div>
     """
   end
-
-  defp visibility_classes(true), do: "block p-4"
-  defp visibility_classes(false), do: "hidden p-4"
 end

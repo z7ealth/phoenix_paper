@@ -7,151 +7,108 @@ defmodule PhoenixPaper.TabsTest do
   import PhoenixPaper.Tab
   import PhoenixPaper.TabPanel
 
-  test "renders a tablist with matching tab/panel ids and aria wiring" do
-    html = render_component(&basic/1)
+  alias Phoenix.LiveView.JS
+
+  defp group(assigns) do
+    ~H"""
+    <.pp_tabs id="t" variant={@variant}>
+      <.pp_tab id="t" value="one" default_selected>One</.pp_tab>
+      <.pp_tab id="t" value="two" badge={3}>
+        <:icon><span class="hero-photo" /></:icon>
+        Two
+      </.pp_tab>
+      <.pp_tab id="t" value="three" disabled>Three</.pp_tab>
+    </.pp_tabs>
+    <.pp_tab_panel id="t" value="one" default_selected>Panel one</.pp_tab_panel>
+    <.pp_tab_panel id="t" value="two">Panel two</.pp_tab_panel>
+    """
+  end
+
+  test "tablist, tabs and panels are wired with matching ids and aria" do
+    html = render_component(&group/1, variant: "primary")
 
     assert html =~ ~s(role="tablist")
-    assert html =~ ~s(role="tab")
-    assert html =~ ~s(role="tabpanel")
-    assert html =~ ~s(id="demo-tab-one")
-    assert html =~ ~s(id="demo-panel-one")
-    assert html =~ ~s(aria-controls="demo-panel-one")
-    assert html =~ ~s(aria-labelledby="demo-tab-one")
+    assert html =~ ~s(id="t-tab-one")
+    assert html =~ ~s(aria-controls="t-panel-one")
+    assert html =~ ~s(aria-labelledby="t-tab-one")
+    assert html =~ ~s(data-pp-tabs-id="t")
+    assert html =~ ~s(data-pp-tab-panel-group="t")
   end
 
-  defp basic(assigns) do
-    ~H"""
-    <.pp_tabs id="demo">
-      <.pp_tab id="demo" value="one" default_selected>One</.pp_tab>
-      <.pp_tab id="demo" value="two">Two</.pp_tab>
-    </.pp_tabs>
-    <.pp_tab_panel id="demo" value="one" default_selected>Content one</.pp_tab_panel>
-    <.pp_tab_panel id="demo" value="two">Content two</.pp_tab_panel>
-    """
+  test "default_selected: aria-selected true and the only visible panel (hidden class, not attribute)" do
+    html = render_component(&group/1, variant: "primary")
+
+    assert html =~ ~r/id="t-tab-one"[^>]*aria-selected="true"/
+    assert html =~ ~r/id="t-tab-two"[^>]*aria-selected="false"/
+    assert html =~ ~r/id="t-panel-two"[^>]*class="hidden/
+    refute html =~ ~r/id="t-panel-one"[^>]*class="hidden/
   end
 
-  test "default_selected picks the initially active tab/panel, others start hidden" do
-    html = render_component(&basic/1)
+  test "variant lives on the root; tabs style off it and off aria-selected" do
+    html = render_component(&group/1, variant: "secondary")
 
-    assert html =~ ~s(aria-selected="true")
-    assert html =~ ~s(aria-selected="false")
-    assert html =~ ~r/id="demo-panel-one"[^>]*class="[^"]*\bblock\b/
-    assert html =~ ~r/id="demo-panel-two"[^>]*class="[^"]*\bhidden\b/
+    assert html =~ ~s(data-pp-variant="secondary")
+    assert html =~ "group/tabs"
+    assert html =~ "group-data-[pp-variant=primary]/tabs:aria-selected:text-pp-primary"
+    assert html =~ "group-data-[pp-variant=secondary]/tabs:aria-selected:text-pp-on-surface"
+    assert html =~ "data-pp-tab-indicator"
+    assert html =~ "rounded-t-[3px]"
   end
 
-  test "color picks the active tab's indicator classes" do
-    html = render_component(&secondary/1)
-    assert html =~ "border-pp-secondary"
-    assert html =~ "text-pp-secondary"
+  test "a tab with an icon is 64dp on primary tabs; badge renders" do
+    html = render_component(&group/1, variant: "primary")
+
+    assert html =~ "group-data-[pp-variant=primary]/tabs:h-16"
+    assert html =~ "data-pp-tab-icon"
+    assert html =~ ~r/min-w-4[^>]*>\s*3\s*</
   end
 
-  defp secondary(assigns) do
-    ~H"""
-    <.pp_tabs id="demo">
-      <.pp_tab id="demo" value="one" default_selected color="secondary">One</.pp_tab>
-    </.pp_tabs>
-    """
+  test "disabled tab" do
+    html = render_component(&group/1, variant: "primary")
+    assert html =~ ~r/id="t-tab-three"[^>]*disabled/
   end
 
-  test "orientation=\"vertical\" uses a right border indicator instead of a bottom one" do
-    html = render_component(&vertical/1)
-    assert html =~ "border-r-2"
-    refute html =~ "border-b-2"
+  test "layout=scrollable scrolls instead of stretching" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_tabs id='s' layout='scrollable'><span /></.pp_tabs>")
+    assert html =~ "overflow-x-auto"
+    refute html =~ "flex-1"
   end
 
-  defp vertical(assigns) do
-    ~H"""
-    <.pp_tabs id="demo" orientation="vertical">
-      <.pp_tab id="demo" value="one" orientation="vertical">One</.pp_tab>
-    </.pp_tabs>
-    """
+  test "select/2 builds the exact op sequence" do
+    assert select("t", "two").ops == [
+             ["set_attr", %{to: ~s([data-pp-tabs-id="t"]), attr: ["aria-selected", "false"]}],
+             ["set_attr", %{to: ~s([data-pp-tabs-id="t"]), attr: ["tabindex", "-1"]}],
+             ["set_attr", %{to: "#t-tab-two", attr: ["aria-selected", "true"]}],
+             ["set_attr", %{to: "#t-tab-two", attr: ["tabindex", "0"]}],
+             ["hide", %{to: ~s([data-pp-tab-panel-group="t"])}],
+             ["show", %{to: "#t-panel-two", display: "block"}]
+           ]
+
+    assert %JS{} = select("t", "one")
   end
 
-  test "variant=\"full_width\" stretches every tab equally" do
-    html = render_component(&full_width/1)
-    assert html =~ "flex-1"
+  test "paperize={false} renders bare elements" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_tabs id="b" paperize={false} class="mine">
+        <.pp_tab id="b" value="x" paperize={false}>X</.pp_tab>
+      </.pp_tabs>
+      """)
+
+    refute html =~ "border-pp-surface-variant"
+    refute html =~ "pp-title-small"
+    assert html =~ "mine"
   end
 
-  defp full_width(assigns) do
-    ~H"""
-    <.pp_tabs id="demo" variant="full_width">
-      <.pp_tab id="demo" value="one">One</.pp_tab>
-    </.pp_tabs>
-    """
-  end
+  test "roving tabindex and the arrow-key handler on the tablist" do
+    html = render_component(&group/1, variant: "primary")
 
-  test "disabled tab renders the disabled attribute" do
-    html = render_component(&disabled/1)
-    assert html =~ "disabled"
-  end
-
-  defp disabled(assigns) do
-    ~H"""
-    <.pp_tabs id="demo">
-      <.pp_tab id="demo" value="one" disabled>One</.pp_tab>
-    </.pp_tabs>
-    """
-  end
-
-  test "paperize={false} renders bare elements with no built-in classes" do
-    html = render_component(&bare/1)
-    assert html =~ ~s(data-pp-component="tabs" class="")
-    assert html =~ ~s(class="my-tab")
-  end
-
-  defp bare(assigns) do
-    ~H"""
-    <.pp_tabs id="demo" paperize={false}>
-      <.pp_tab id="demo" value="one" paperize={false} class="my-tab">One</.pp_tab>
-    </.pp_tabs>
-    <.pp_tab_panel id="demo" value="one" paperize={false}>Content</.pp_tab_panel>
-    """
-  end
-
-  test "select/3 builds the exact op sequence that deselects the group, then selects this tab/panel" do
-    %Phoenix.LiveView.JS{ops: ops} = PhoenixPaper.Tabs.select("demo", "two", "secondary")
-
-    assert [
-             ["remove_class", %{names: all_active, to: "[data-pp-tabs-id=\"demo\"]"}],
-             [
-               "add_class",
-               %{
-                 names: ["border-transparent", "text-pp-on-surface"],
-                 to: "[data-pp-tabs-id=\"demo\"]"
-               }
-             ],
-             ["set_attr", %{to: "[data-pp-tabs-id=\"demo\"]", attr: ["aria-selected", "false"]}],
-             [
-               "remove_class",
-               %{names: ["border-transparent", "text-pp-on-surface"], to: "#demo-tab-two"}
-             ],
-             [
-               "add_class",
-               %{names: ["border-pp-secondary", "text-pp-secondary"], to: "#demo-tab-two"}
-             ],
-             ["set_attr", %{to: "#demo-tab-two", attr: ["aria-selected", "true"]}],
-             ["hide", %{to: "[data-pp-tab-panel-group=\"demo\"]"}],
-             ["show", %{to: "#demo-panel-two", display: "block"}]
-           ] = ops
-
-    assert "border-pp-secondary" in all_active
-    assert "text-pp-error" in all_active
-  end
-
-  test "icon slot renders alongside the label" do
-    html = render_component(&with_icon/1)
-    assert html =~ "★"
-    assert html =~ "One"
-  end
-
-  defp with_icon(assigns) do
-    ~H"""
-    <.pp_tabs id="demo">
-      <.pp_tab id="demo" value="one">
-        <:icon>★</:icon>
-        One
-      </.pp_tab>
-    </.pp_tabs>
-    """
+    assert html =~ ~r/id="t-tab-one"[^>]*tabindex="0"/
+    assert html =~ ~r/id="t-tab-two"[^>]*tabindex="-1"/
+    assert html =~ "ArrowRight"
+    assert html =~ "onkeydown="
   end
 end

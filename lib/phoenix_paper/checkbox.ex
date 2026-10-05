@@ -1,28 +1,32 @@
 defmodule PhoenixPaper.Checkbox do
   @moduledoc """
-  A Material Design checkbox (`pp_checkbox/1`).
+  An MD3 checkbox (`pp_checkbox/1`).
 
-  Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` (idiomatic
-  `to_form/2` usage, same as the default `core_components.ex` input) or plain
-  `name`/`checked` attrs.
+      <.pp_checkbox field={@form[:terms]} label="I accept the terms" />
+      <.pp_checkbox name="all" label="Select all" indeterminate />
 
-  When `paperize` is `false` this renders a bare native `<input
-  type="checkbox">` (no hidden-input trick, no custom box) so it never fights
-  a caller's own CSS — `class` targets that bare input directly in this
-  case (not the wrapping `<label>`, which keeps its own unconditional
-  layout classes regardless of `paperize`; see
-  `PhoenixPaper.Helpers.toggle_label_classes/1`), so e.g.
-  `class="size-5"` sizes the checkbox itself as expected.
+  Accepts a `Phoenix.HTML.FormField` via `field=` or plain
+  `name`/`checked`. An unchecked box still submits `"false"` (a hidden
+  input before the real one, like a generated `core_components.ex`).
 
-  `ripple={true}` adds the Material ripple effect on click/tap, wired to
-  the small box rather than the whole label — off by default (unlike
-  `Button`/`Fab`/`ToggleButton`), since a checkbox's own instant
-  fill/border-color change already reads as clear feedback on a target
-  this small — see `PhoenixPaper.Ripple`.
+  MD3 look: an 18dp box with 2dp corners and a 2dp `on-surface-variant`
+  border, filled `primary` with an `on-primary` check when checked, inside
+  a 40dp circular state layer (hover 8%, keyboard focus and press 10%) that
+  reacts anywhere on the label. `error` paints it in the error role.
+  `indeterminate` shows a dash and `aria-checked="mixed"` — HTML has no
+  indeterminate attribute (it's a JS-only property), so this is the
+  visual state only; the input still submits its checked value.
+
+  Under `paperize={false}` it's a bare native checkbox (no hidden-input
+  trick, no custom box) and `class` targets that input, so
+  `class="size-5"` sizes the checkbox itself.
+
+  `ripple` adds the centered ripple on click (off by default — the fill
+  change is feedback enough on a target this small).
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.{Helpers, Ripple, Shape}
+  alias PhoenixPaper.{Helpers, Ripple}
 
   attr(:id, :any, default: nil)
   attr(:name, :any, default: nil)
@@ -30,17 +34,20 @@ defmodule PhoenixPaper.Checkbox do
   attr(:label, :string, default: nil)
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:checked, :boolean, default: nil)
+  attr(:indeterminate, :boolean, default: false)
+  attr(:error, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
 
   attr(:ripple, :boolean,
     default: false,
-    doc: "the Material ripple effect on click/tap (default: false) — see PhoenixPaper.Ripple"
+    doc: "the centered ripple on click, see PhoenixPaper.Ripple"
   )
 
   attr(:disabled, :boolean, default: false)
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form autofocus phx-click))
+  attr(:rest, :global, include: ~w(form autofocus))
 
+  @doc "Renders a checkbox. See the module doc."
   def pp_checkbox(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
@@ -68,10 +75,7 @@ defmodule PhoenixPaper.Checkbox do
 
       <span
         :if={@paperize}
-        class={[
-          "has-[:checked]:border-pp-primary has-[:checked]:bg-pp-primary relative inline-flex size-5 shrink-0 items-center justify-center border-2 border-pp-outline transition-colors",
-          Shape.class(:xs)
-        ]}
+        class="relative -m-[11px] inline-flex size-10 shrink-0 items-center justify-center rounded-full has-[:disabled]:opacity-38"
         onclick={Ripple.on_click_centered(@ripple?)}
       >
         <input
@@ -81,11 +85,25 @@ defmodule PhoenixPaper.Checkbox do
           value={@value}
           checked={@checked}
           disabled={@disabled}
-          class="peer absolute inset-0 m-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+          aria-checked={@indeterminate && "mixed"}
+          aria-invalid={@error && "true"}
+          class="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0 disabled:cursor-default"
           {@rest}
         />
-        <span class="pp-checkbox-check pointer-events-none opacity-0 peer-checked:opacity-100 text-pp-on-primary text-xs">
-          {"✓"}
+        <span class={["pp-state-layer-target absolute inset-0 rounded-full", layer_color(@error)]} />
+        <span class={box_classes(@error, @indeterminate)}>
+          <svg :if={!@indeterminate} viewBox="0 0 18 18" class="size-full" aria-hidden="true">
+            <path
+              d="M4.5 9.5l3 3 6-7"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="[stroke-dasharray:16] [stroke-dashoffset:16] transition-[stroke-dashoffset] duration-200 ease-pp-emphasized-decelerate [:checked~span>svg>&]:[stroke-dashoffset:0]"
+            />
+          </svg>
+          <span :if={@indeterminate} class="h-0.5 w-2.5 rounded-full bg-current" />
         </span>
       </span>
 
@@ -101,8 +119,29 @@ defmodule PhoenixPaper.Checkbox do
         {@rest}
       />
 
-      <span :if={@label}>{@label}</span>
+      <span :if={@label} class={@paperize && "pp-body-large text-pp-on-surface"}>{@label}</span>
     </label>
     """
   end
+
+  defp layer_color(false), do: "text-pp-on-surface peer-checked:text-pp-primary"
+  defp layer_color(true), do: "text-pp-error"
+
+  # Unchecked: the outline box. Checked (peer-checked) or indeterminate:
+  # filled, border dropped into the fill color.
+  defp box_classes(false, false),
+    do:
+      "pointer-events-none relative inline-flex size-[18px] items-center justify-center rounded-[2px] border-2 border-pp-on-surface-variant text-pp-on-primary transition-colors duration-150 peer-checked:border-pp-primary peer-checked:bg-pp-primary"
+
+  defp box_classes(false, true),
+    do:
+      "pointer-events-none relative inline-flex size-[18px] items-center justify-center rounded-[2px] border-2 border-pp-primary bg-pp-primary text-pp-on-primary"
+
+  defp box_classes(true, false),
+    do:
+      "pointer-events-none relative inline-flex size-[18px] items-center justify-center rounded-[2px] border-2 border-pp-error text-pp-on-error transition-colors duration-150 peer-checked:bg-pp-error"
+
+  defp box_classes(true, true),
+    do:
+      "pointer-events-none relative inline-flex size-[18px] items-center justify-center rounded-[2px] border-2 border-pp-error bg-pp-error text-pp-on-error"
 end

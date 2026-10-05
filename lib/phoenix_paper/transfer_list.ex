@@ -48,21 +48,23 @@ defmodule PhoenixPaper.TransferList do
       <div class="flex flex-col gap-2">
         <button
           type="button"
+          aria-label="Move selected right"
           phx-click="move_right"
           phx-target={@myself}
           disabled={Enum.all?(@left, &(&1 not in @checked))}
-          class={Helpers.classes(@paperize, "cursor-pointer border border-pp-outline px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40", nil)}
+          class={Helpers.classes(@paperize, "relative inline-flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-pp-full border border-pp-outline-variant text-pp-on-surface-variant pp-state-layer pp-focus-ring pp-motion-spatial-fast active:rounded-pp-sm disabled:cursor-default disabled:border-pp-on-surface/12 disabled:text-pp-on-surface/38", nil)}
         >
-          {"›"}
+          <PhoenixPaper.Icon.pp_icon name="hero-chevron-right" size="sm" />
         </button>
         <button
           type="button"
+          aria-label="Move selected left"
           phx-click="move_left"
           phx-target={@myself}
           disabled={Enum.all?(@right, &(&1 not in @checked))}
-          class={Helpers.classes(@paperize, "cursor-pointer border border-pp-outline px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-40", nil)}
+          class={Helpers.classes(@paperize, "relative inline-flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-pp-full border border-pp-outline-variant text-pp-on-surface-variant pp-state-layer pp-focus-ring pp-motion-spatial-fast active:rounded-pp-sm disabled:cursor-default disabled:border-pp-on-surface/12 disabled:text-pp-on-surface/38", nil)}
         >
-          {"‹"}
+          <PhoenixPaper.Icon.pp_icon name="hero-chevron-left" size="sm" />
         </button>
       </div>
 
@@ -79,10 +81,10 @@ defmodule PhoenixPaper.TransferList do
 
   defp list(assigns) do
     ~H"""
-    <div class={Helpers.classes(@paperize, "flex w-48 flex-col border border-pp-outline", nil)}>
+    <div class={Helpers.classes(@paperize, "flex w-56 flex-col overflow-hidden rounded-pp-md border border-pp-outline-variant", nil)}>
       <div class={Helpers.classes(
         @paperize,
-        "border-b border-pp-outline bg-pp-surface-variant px-3 py-2 text-xs font-medium uppercase",
+        "border-b border-pp-outline-variant bg-pp-surface-container px-4 py-3 pp-title-small text-pp-on-surface-variant",
         nil
       )}>
         {@label} ({length(@items)})
@@ -91,7 +93,7 @@ defmodule PhoenixPaper.TransferList do
         <li :for={item <- @items}>
           <label class={Helpers.classes(
             @paperize,
-            "flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-pp-primary/10",
+            "flex min-h-12 cursor-pointer items-center gap-4 px-4 py-2 pp-body-large hover:bg-pp-on-surface/8",
             nil
           )}>
             <input
@@ -100,7 +102,7 @@ defmodule PhoenixPaper.TransferList do
               phx-click="toggle"
               phx-value-item={item}
               phx-target={@target}
-              class="cursor-pointer"
+              class="size-[18px] cursor-pointer accent-pp-primary"
             />
             {item}
           </label>

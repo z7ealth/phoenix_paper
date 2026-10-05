@@ -42,6 +42,8 @@ defmodule PhoenixPaper.TableRow do
     """
   end
 
-  defp paper_classes(false), do: "transition-colors hover:bg-pp-on-surface/5"
-  defp paper_classes(true), do: "!bg-pp-primary/10 transition-colors hover:!bg-pp-primary/15"
+  defp paper_classes(false), do: "pp-motion-effects-fast hover:bg-pp-on-surface/8"
+
+  defp paper_classes(true),
+    do: "!bg-pp-secondary-container text-pp-on-secondary-container pp-motion-effects-fast"
 end

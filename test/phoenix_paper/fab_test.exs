@@ -5,81 +5,70 @@ defmodule PhoenixPaper.FabTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Fab
 
-  test "renders a circular button with elevation by default" do
-    html = render_component(&circular/1)
+  test "default: 56dp, 16dp corners, primary-container, level 3 rising to 4 on hover" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_fab icon='hero-pencil' label='Compose' />")
 
-    assert html =~ "rounded-full"
-    assert html =~ "pp-elevation-6"
-    assert html =~ "size-14"
-    assert html =~ "cursor-pointer"
+    assert html =~ "size-14 rounded-pp-lg"
+    assert html =~ "bg-pp-primary-container text-pp-on-primary-container"
+    assert html =~ "pp-elevation-3"
+    assert html =~ "hover:pp-elevation-4"
+    assert html =~ ~s(aria-label="Compose")
+    assert html =~ "hero-pencil"
   end
 
-  defp circular(assigns) do
-    ~H"""
-    <.pp_fab>+</.pp_fab>
-    """
+  test "Expressive medium and large sizes" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_fab icon="hero-pencil" label="A" size="medium" />
+      <.pp_fab icon="hero-pencil" label="B" size="large" />
+      """)
+
+    assert html =~ "size-20 rounded-pp-lg-increased"
+    assert html =~ "size-24 rounded-pp-xl"
   end
 
-  test "extended renders a labeled pill instead of a fixed square size" do
-    html = render_component(&extended/1)
+  test "extended shows the label and drops the aria-label" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_fab icon='hero-pencil' label='Compose' extended />")
 
-    assert html =~ "uppercase"
-    assert html =~ "h-14"
-    refute html =~ "size-14"
+    assert html =~ ">Compose</span>"
+    refute html =~ "aria-label"
+    assert html =~ "pp-title-medium"
   end
 
-  defp extended(assigns) do
-    ~H"""
-    <.pp_fab extended>Create</.pp_fab>
-    """
+  test "colors and lowered" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_fab icon="hero-pencil" label="A" color="tertiary" lowered />
+      <.pp_fab icon="hero-pencil" label="B" color="surface" />
+      """)
+
+    assert html =~ "bg-pp-tertiary text-pp-on-tertiary"
+    assert html =~ "pp-elevation-1"
+    assert html =~ "bg-pp-surface-container-high text-pp-primary"
   end
 
-  test "ripple={false} drops the click handler" do
-    html = render_component(&no_ripple/1)
-    refute html =~ "onclick="
-  end
+  test "position emits a single position class" do
+    assigns = %{}
 
-  defp no_ripple(assigns) do
-    ~H"""
-    <.pp_fab ripple={false}>+</.pp_fab>
-    """
-  end
-
-  test "paperize={false} drops the click handler too, even with ripple defaulting true" do
-    html = render_component(&bare/1)
-    refute html =~ "onclick="
-  end
-
-  defp bare(assigns) do
-    ~H"""
-    <.pp_fab paperize={false}>+</.pp_fab>
-    """
-  end
-
-  test "position emits a single position class, keeping the ripple's overflow-hidden" do
-    html = render_component(&fixed_position/1)
+    html =
+      rendered_to_string(
+        ~H"<.pp_fab icon='hero-pencil' label='A' position='fixed' class='bottom-4' />"
+      )
 
     assert html =~ "fixed overflow-hidden"
-    assert html =~ "bottom-6"
-    refute html =~ "relative"
+    refute html =~ "relative overflow-hidden"
   end
 
-  defp fixed_position(assigns) do
-    ~H"""
-    <.pp_fab position="fixed" class="bottom-6 right-6">+</.pp_fab>
-    """
-  end
-
-  test "position without ripple still emits the position" do
-    html = render_component(&absolute_no_ripple/1)
-
-    assert html =~ "absolute"
-    refute html =~ "overflow-hidden"
-  end
-
-  defp absolute_no_ripple(assigns) do
-    ~H"""
-    <.pp_fab position="absolute" ripple={false}>+</.pp_fab>
-    """
+  test "ripple off when paperize is false" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_fab icon='hero-pencil' label='A' paperize={false} />")
+    refute html =~ "onclick"
+    refute html =~ "pp-elevation"
   end
 end

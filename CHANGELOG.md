@@ -7,6 +7,204 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-05
+
+PhoenixPaper is now a **Material Design 3** library, including **M3
+Expressive**. Almost every component's look changed, and many attrs were
+renamed to MD3's vocabulary. This is a breaking release; the migration
+table below lists every rename. Compile warnings from attr `values:`
+validation point at most of the call sites to update.
+
+### Added
+
+- **MD3 token layer** in `phoenix_paper.css`:
+  - The full MD3 color-role set: `*-container`/`on-*-container`, the
+    surface-container scale (`surface-container-lowest` … `-highest`,
+    `surface-dim`/`-bright`), `on-surface-variant`, `outline-variant`,
+    `inverse-surface`/`inverse-on-surface`/`inverse-primary`, the fixed
+    roles, `scrim` and `shadow`.
+  - The MD3 baseline scheme (seed `#6750A4`) in light and dark. Dark mode
+    uses tonal surfaces.
+  - The status roles (`success`/`warning`/`info`) gain `-container` pairs.
+- **Type scale**: the 15 MD3 roles as `pp-display-large` … `pp-label-small`
+  utilities, plus Expressive `-emphasized` variants, and
+  `--font-pp-brand`/`--font-pp-plain` (Roboto Flex by default; not
+  loaded for you).
+- **Shape**: the MD3 corner scale as `--radius-pp-*` / `rounded-pp-*`,
+  including the Expressive `lg_increased`, `xl_increased` and `xxl`.
+- **State layers and focus**: `pp-state-layer` (hover 8%, focus/press 10%
+  of the content color), `pp-focus-ring` (3dp `secondary` outline) and
+  MD3 disabled colors on interactive components.
+- **Motion**: the M3 Expressive spring tokens as CSS `linear()` easings
+  sampled from the real springs (`pp-motion-spatial-*` /
+  `pp-motion-effects-*` utilities). `data-pp-motion="standard"` switches to
+  the standard scheme, and `prefers-reduced-motion` is respected. MD3
+  duration easings are available as `ease-pp-*`.
+- New components:
+  - `pp_icon_button/1`: standard/filled/tonal/outlined, Expressive sizes
+    and widths, toggle with a selected glyph.
+  - `pp_split_button/1`.
+  - `pp_fab_menu/1`.
+  - `pp_navigation_rail/1` (with `pp_navigation_rail_item/1` and
+    `pp_navigation_rail_toggle/1`): collapsed, expanded, or responsive with
+    a modal rail on small screens.
+  - `pp_navigation_bar/1` (with `pp_navigation_bar_item/1`): the
+    Expressive flexible bar.
+  - `pp_toolbar/1`: docked or floating, standard or vibrant, with an
+    optional FAB.
+  - `pp_loading_indicator/1`: the Expressive shape-morphing indicator.
+  - `pp_search_bar/1`, with a docked search view.
+  - `pp_bottom_sheet/1` and `pp_side_sheet/1`, modal or standard.
+  - `pp_carousel/1`: multi-browse, hero, uncontained and full-screen.
+  - `pp_menu_item/1`.
+  - `PhoenixPaper.DatePicker` (docked or modal, with an input mode) and
+    `PhoenixPaper.TimePicker` (dial or input), both LiveComponents.
+- Expressive features on existing components:
+  - Buttons: sizes `xs`–`xl`, round/square shapes, shape morphing on press,
+    toggle buttons (`selected`/`toggle`/`group`/`on_toggle`).
+  - New `ButtonGroup`, standard or connected.
+  - Wavy and thick progress indicators.
+  - Slider sizes, the `centered` track and a value indicator.
+  - Medium and large flexible top app bars with subtitles.
+  - Emphasized typography.
+- **Optional JS hook** (`priv/static/phoenix_paper.js`, importable as
+  `"phoenix_paper"` thanks to a `package.json`, enabled with
+  `config :phoenix_paper, hook: true`):
+  - the sliding tab indicator;
+  - drag-to-dismiss bottom sheets;
+  - the scrolled top app bar and carousel masking where CSS scroll
+    timelines are missing;
+  - the loading-indicator morph where CSS can't animate `d`.
+
+  Nothing requires it.
+- `DatePicker` `range`: MD3's date range picker.
+  - The second pick ends the range, swapping it if earlier.
+  - The days between sit on a `secondary-container` band.
+  - Submitted as `<name>_start`/`<name>_end`.
+  - Input mode shows start and end fields.
+- `pp_search_bar` `view="fullscreen"`/`"responsive"`: MD3's full-screen
+  search view, CSS only. A back button closes it; `responsive` is full
+  screen below `sm`.
+- `pp_submenu/1`: cascading menus.
+  - Opens on hover, keyboard focus or click/tap.
+  - Opening it keeps the parent menu open; `Menu.close/2` collapses
+    nested submenus.
+- `TimePicker`: MD3's selector circle on the dial, and dragging the
+  hand to any hour or exact minute with the optional hook.
+- `mix phoenix_paper.gen.theme --seed "#hex"`:
+  - Generates every MD3 color role, light and dark, from one seed, using
+    a port of Material's HCT color science (`PhoenixPaper.Theme`,
+    `PhoenixPaper.Theme.Hct`).
+  - Variants: tonal spot (default), neutral, vibrant, expressive,
+    fidelity, monochrome.
+  - `--secondary`/`--tertiary`/`--neutral`/`--error` pin core colors.
+  - The output CSS is imported after `phoenix_paper.css`.
+- Edge flipping (optional hook): menus, submenus, split-button menus and
+  tooltips (given an `id`) flip to the other side when they'd overflow
+  the viewport.
+- Tabs follow the ARIA keyboard model:
+  - Only the selected tab is a Tab stop; `select/2` keeps the roving
+    `tabindex` in sync.
+  - Left/Right (mirrored in RTL), Home and End move between tabs,
+    skipping disabled ones, and select as they go.
+- `Card`: `variant` (`elevated`/`filled`/`outlined`), `:media` and
+  `:subhead` slots.
+- `Dialog`: a hero `icon`, plus `variant="fullscreen"`/`"responsive"`.
+- `Tooltip`: `variant="rich"` with `subhead` and `:actions`.
+- `Typography`: `tag` (picked independently of `variant`, via `dynamic_tag`)
+  and `emphasized`.
+- `TextField`: a trailing error icon and `aria-describedby`.
+- `Checkbox`: `indeterminate` and `error`. `RadioGroup`: `error`.
+  `Switch`: `icons`.
+- `Badge`: a `tertiary` color. `Paper`: the surface-container `color`
+  values and `outlined`.
+
+### Changed
+
+- **Breaking — renamed components:**
+
+  | 0.3 | 0.4 |
+  |-----|-----|
+  | `AppBar` / `pp_app_bar` | `TopAppBar` / `pp_top_app_bar` |
+  | `Input` / `pp_input` | `TextField` / `pp_text_field` |
+  | `pp_button variant="icon"` | `pp_icon_button` (`icon` + required `label`) |
+
+- **Breaking — removed components, with their MD3 replacements:**
+
+  | Removed | Use instead |
+  |---------|-------------|
+  | `Drawer` / `pp_drawer` / `pp_drawer_toggle` | `pp_navigation_rail` (`variant="responsive"` gives the modal on phones) / `pp_navigation_rail_toggle` |
+  | `ToggleButton` / `pp_toggle_button` | `pp_button`/`pp_icon_button` with `selected`/`toggle`/`group` |
+  | old `ButtonGroup` | the new `pp_button_group` (`standard`/`connected`) |
+  | `SpeedDial` / `pp_speed_dial` | `pp_fab_menu` |
+
+- **Breaking — colors:** `accent` is renamed to `tertiary` everywhere
+  (`--color-pp-tertiary`, `color="tertiary"`), MD3's name. The default
+  palette is now the MD3 baseline instead of indigo/pink, and `secondary`
+  is a muted companion of primary rather than a contrasting pink.
+  `--color-pp-surface-variant` keeps its name with MD3's value.
+- **Breaking — elevation:** six levels (0–5) instead of 0–24, with MD3
+  shadows; `Elevation.class/1` clamps to 5. The dark-mode white overlay
+  (`pp-surface-overlay`, `--pp-surface-tint`, `--pp-elevation-overlay`) is
+  removed: surfaces use container colors. Components no longer take
+  `elevation` attrs: Button, Card, Accordion, Dialog, Menu, Snackbar,
+  TopAppBar and TableContainer.
+- **Breaking — shape:** `Shape` emits `rounded-pp-*` classes on the MD3
+  scale (`:sm` is now 8px, `:md` 12px, `:lg` 16px, `:xl` 28px). Adds
+  `:start`/`:end` edges.
+- **Breaking — typography:** `Typography` variants are the MD3 roles
+  (`h1` → `display-large`, `h4` → `headline-medium`, `body1` → `body-large`,
+  `caption` → `body-small`, `overline` → `label-small`, … — full table in
+  its moduledoc). `color="muted"` → `"on-surface-variant"`.
+- **Breaking — icons:** `Icon` sizes follow MD3 (`md`, the default, is
+  24dp instead of 20dp).
+- **Breaking — per-component attr changes:**
+
+  | Component | 0.3 | 0.4 |
+  |-----------|-----|-----|
+  | Button | `variant` `raised`/`flat` | `elevated`/`filled` (default `filled`) |
+  | Button | `size` `small`/`medium`/`large`, `shape` atoms, `elevation` | `size` `xs`..`xl` (default `sm`), `shape` `round`/`square` |
+  | Fab | default `color="secondary"`, `size` `sm`/`md`/`lg`, inner-block label | default `primary-container`, `size` `default`/`medium`/`large`, `icon`+`label` attrs, `extended` shows the label |
+  | Card | `elevation` | `variant` |
+  | Chip | `variant` `filled`/`outlined`, `color`, `size`, `clickable` | `variant` `assist`/`filter`/`input`/`suggestion`, `elevated`; `clickable` only for input chips |
+  | TextField | `variant="standard"`, `helper_text`, `shape` | removed / `supporting_text` / removed |
+  | Select, NumberField, PowerSelect | `helper_text`, `shape` (Select/NumberField) | `supporting_text`; shape removed |
+  | Tabs | `variant` `standard`/`scrollable`/`full_width`, `orientation`, per-tab `color`, `select/3` | `variant` `primary`/`secondary`, `layout` `fixed`/`scrollable`, `select/2` |
+  | TopAppBar | `color` `primary`/`secondary`/`accent`, `variant` `regular`/`dense`, `elevation` | `color` `surface`/`transparent`, `variant` `small`/`center_aligned`/`medium`/`large`, `subtitle`, `scrolled` |
+  | Tooltip | `color`, `variant` `raised`/`flat`/`outlined`, `size`, `shape`, `arrow` | `variant` `plain`/`rich`, `subhead`, `:actions` |
+  | Snackbar | `color`, `elevation` | removed (always `inverse-surface`); `two_line` added |
+  | Menu | `:trigger` slot inside a `pp_button`, `trigger_size`, `elevation`, `shape` | `trigger_icon`+`trigger_label` or `:trigger` with `trigger_variant`; `pp_menu_item/1`; `color` `standard`/`vibrant` |
+  | Slider | `size` `medium`/`small` | `size` `xs`..`xl`; `track="centered"`; `value_indicator`; `stop_indicator` |
+  | Progress | indeterminate circular spinner | an SVG arc; `wavy`, `thickness`, `stop_indicator`, `label` |
+  | Accordion | `variant` `raised`/`flat`, `elevation` | `variant` `elevated`/`filled` |
+  | Avatar | `color` `default` (grey) | container colors, default `primary`; `surface` for neutral |
+  | Pagination | `shape` `circular`/`rounded`, `size` `small`..`large`, `color="accent"` | `shape` `round`/`square`, `size` `xs`/`sm`/`md`, `color="tertiary"` |
+  | TableContainer | `elevation` | `variant` (default `outlined`) |
+  | Dialog | default `max_width="md"` | default `lg` |
+
+- Lists are MD3 rows (56/72dp, `body-large`), the active item is
+  `secondary-container`, and subheaders use `title-small` instead of
+  uppercase.
+- Switch, checkbox and radio follow MD3 metrics, each with a 40dp state
+  layer. Switch and checkbox `ripple` now defaults to off.
+- Selected link menu items set `aria-current="page"`.
+- `Divider` drops its vertical margin and uses `outline-variant`.
+- Requires `phoenix_live_view ~> 1.1` (was `~> 1.0`): `Typography`
+  renders through `dynamic_tag/1`'s `tag_name` attr.
+
+### Fixed
+
+- `pp_table_pagination/1` now puts its `id` on the root element. Before,
+  the id only fed the rows-per-page menu's id, so `#my-pagination`
+  selected nothing (unlike `pp_pagination/1`, whose `id` reaches its root).
+
+### Removed
+
+- `Drawer`, `ToggleButton`, `SpeedDial` and the old `ButtonGroup` (see the
+  table above).
+- The dark-mode elevation overlay utilities, and the 24-level elevation
+  scale.
+
 ## [0.3.0] - 2026-10-01
 
 ### Added

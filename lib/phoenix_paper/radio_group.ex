@@ -6,11 +6,13 @@ defmodule PhoenixPaper.RadioGroup do
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
 
-  `ripple={true}` adds the Material ripple effect on click/tap, wired to
-  each option's small box rather than its whole label — off by default
-  (unlike `Button`/`Fab`/`ToggleButton`), since a radio's own instant
-  fill/border-color change already reads as clear feedback on a target
-  this small — see `PhoenixPaper.Ripple`.
+  MD3 look: a 20dp ring (2dp `on-surface-variant`, `primary` when
+  selected) whose 10dp dot springs in, inside a 40dp state layer that
+  reacts anywhere on the option's label. `error` paints it in the error
+  role. The group label is `title-small`, options `body-large`.
+
+  `ripple={true}` adds the centered ripple on click — off by default,
+  since the dot is feedback enough — see `PhoenixPaper.Ripple`.
   """
   use Phoenix.Component
 
@@ -23,6 +25,7 @@ defmodule PhoenixPaper.RadioGroup do
   attr(:options, :list, required: true, doc: "list of {label, value} tuples, or plain values")
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:disabled, :boolean, default: false)
+  attr(:error, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
 
   attr(:ripple, :boolean,
@@ -53,12 +56,14 @@ defmodule PhoenixPaper.RadioGroup do
       data-pp-component="radio-group"
       class={Helpers.classes(@paperize, "flex flex-col gap-2 border-0 p-0 m-0", @class)}
     >
-      <legend :if={@label} class="mb-1 p-0 text-sm font-medium text-pp-on-surface">{@label}</legend>
+      <legend :if={@label} class={Helpers.classes(@paperize, "mb-1 p-0 pp-title-small text-pp-on-surface-variant", nil)}>
+        {@label}
+      </legend>
 
       <label :for={{opt_label, opt_value} <- @normalized_options} class={Helpers.toggle_label_classes(nil)}>
         <span
           :if={@paperize}
-          class="has-[:checked]:border-pp-primary has-[:disabled]:opacity-40 relative inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-pp-outline transition-colors"
+          class="relative -m-2.5 inline-flex size-10 shrink-0 items-center justify-center rounded-full has-[:disabled]:opacity-38"
           onclick={Ripple.on_click_centered(@ripple?)}
         >
           <input
@@ -67,10 +72,14 @@ defmodule PhoenixPaper.RadioGroup do
             value={opt_value}
             checked={to_string(opt_value) == to_string(@value)}
             disabled={@disabled}
-            class="peer absolute inset-0 m-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            aria-invalid={@error && "true"}
+            class="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0 disabled:cursor-default"
             {@rest}
           />
-          <span class="peer-checked:scale-100 pointer-events-none size-2.5 scale-0 rounded-full bg-pp-primary transition-transform" />
+          <span class={["pp-state-layer-target absolute inset-0 rounded-full", layer_color(@error)]} />
+          <span class={ring_classes(@error)}>
+            <span class={dot_classes(@error)} />
+          </span>
         </span>
 
         <input
@@ -83,11 +92,32 @@ defmodule PhoenixPaper.RadioGroup do
           {@rest}
         />
 
-        <span>{opt_label}</span>
+        <span class={@paperize && "pp-body-large text-pp-on-surface"}>{opt_label}</span>
       </label>
     </fieldset>
     """
   end
+
+  defp layer_color(false), do: "text-pp-on-surface peer-checked:text-pp-primary"
+  defp layer_color(true), do: "text-pp-error"
+
+  # MD3: a 20dp ring (2dp on-surface-variant, primary when selected) with a
+  # 10dp dot that springs in.
+  defp ring_classes(false),
+    do:
+      "pointer-events-none relative inline-flex size-5 items-center justify-center rounded-full border-2 border-pp-on-surface-variant transition-colors peer-checked:border-pp-primary"
+
+  defp ring_classes(true),
+    do:
+      "pointer-events-none relative inline-flex size-5 items-center justify-center rounded-full border-2 border-pp-error"
+
+  defp dot_classes(false),
+    do:
+      "size-2.5 scale-0 rounded-full bg-pp-primary pp-motion-spatial-fast [:checked~span>&]:scale-100"
+
+  defp dot_classes(true),
+    do:
+      "size-2.5 scale-0 rounded-full bg-pp-error pp-motion-spatial-fast [:checked~span>&]:scale-100"
 
   defp normalize_option({label, value}), do: {label, value}
   defp normalize_option(value), do: {to_string(value), value}

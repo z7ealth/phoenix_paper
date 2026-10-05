@@ -5,12 +5,28 @@ defmodule PhoenixPaper.PaperTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Paper
 
-  test "renders a surface with the default elevation and shape" do
+  test "renders a flat surface with the default shape" do
     html = render_component(&default/1)
 
     assert html =~ "bg-pp-surface"
-    assert html =~ "pp-elevation-1"
+    assert html =~ "pp-elevation-0"
+    assert html =~ "rounded-pp-md"
     assert html =~ ~s(data-pp-component="paper")
+  end
+
+  test "surface-container roles, outlined and elevation" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_paper color="surface-container-high" elevation={3}>a</.pp_paper>
+      <.pp_paper color="primary-container" outlined>b</.pp_paper>
+      """)
+
+    assert html =~ "bg-pp-surface-container-high text-pp-on-surface"
+    assert html =~ "pp-elevation-3"
+    assert html =~ "bg-pp-primary-container text-pp-on-primary-container"
+    assert html =~ "border border-pp-outline-variant"
   end
 
   defp default(assigns) do
@@ -44,36 +60,13 @@ defmodule PhoenixPaper.PaperTest do
     """
   end
 
-  test "applies the dark-mode elevation overlay utility" do
-    assigns = %{}
-
-    html =
-      rendered_to_string(
-        ~H"<PhoenixPaper.Paper.pp_paper elevation={4}>x</PhoenixPaper.Paper.pp_paper>"
-      )
-
-    assert html =~ "pp-surface-overlay"
-    assert html =~ "pp-elevation-4"
-  end
-
-  test "paperize={false} drops the overlay too" do
-    assigns = %{}
-
-    html =
-      rendered_to_string(
-        ~H"<PhoenixPaper.Paper.pp_paper paperize={false}>x</PhoenixPaper.Paper.pp_paper>"
-      )
-
-    refute html =~ "pp-surface-overlay"
-  end
-
   test "color picks the background/foreground pair, surface by default" do
     assigns = %{}
 
     assert rendered_to_string(~H"<PhoenixPaper.Paper.pp_paper>x</PhoenixPaper.Paper.pp_paper>") =~
              "bg-pp-surface text-pp-on-surface"
 
-    for color <- ~w(primary secondary accent error) do
+    for color <- ~w(primary secondary tertiary error) do
       assigns = %{color: color}
 
       html =

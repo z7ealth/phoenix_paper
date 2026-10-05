@@ -42,13 +42,17 @@ defmodule PhoenixPaper.Skeleton do
   end
 
   defp paper_classes(variant, animation) do
-    ["block bg-pp-on-surface/10", shape_classes(variant), animation_classes(animation)]
+    [
+      "block bg-pp-surface-container-highest",
+      shape_classes(variant),
+      animation_classes(animation)
+    ]
   end
 
-  defp shape_classes("text"), do: "rounded"
-  defp shape_classes("circular"), do: "rounded-full"
-  defp shape_classes("rectangular"), do: "rounded-none"
-  defp shape_classes("rounded"), do: "rounded-lg"
+  defp shape_classes("text"), do: "rounded-pp-xs"
+  defp shape_classes("circular"), do: "rounded-pp-full"
+  defp shape_classes("rectangular"), do: "rounded-pp-none"
+  defp shape_classes("rounded"), do: "rounded-pp-md"
 
   defp animation_classes("pulse"), do: "animate-pulse"
   defp animation_classes("wave"), do: "pp-skeleton-wave"

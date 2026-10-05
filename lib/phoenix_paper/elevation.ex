@@ -1,52 +1,62 @@
 defmodule PhoenixPaper.Elevation do
   @moduledoc """
-  Material Design elevation (dp 0-24) as Tailwind utility classes.
+  MD3 elevation levels (0-5) as Tailwind utility classes.
 
-  The actual `box-shadow` values are defined once, in CSS, in
-  `priv/static/phoenix_paper.css` as `@utility pp-elevation-0` .. `pp-elevation-24`.
-  This module only maps an integer level to the matching class name.
+  MD3 has six levels — 0, 1, 3, 6, 8 and 12dp — instead of MD2's 0-24dp
+  scale. In MD3 a surface's height is shown mostly by its
+  *surface-container color* (see `PhoenixPaper.Paper`'s `color`), not by
+  shadow: only a few components keep one (elevated button and card, FAB,
+  menus, the navigation components when scrolled under). This module maps
+  a level to the shadow utility; picking the matching container color is
+  the component's job.
 
-  Class names below are written as full literal strings (never built with
-  string interpolation) so Tailwind's static source scanner can find them in
-  this file — see the "Tailwind class safety" rule in `AGENTS.md`.
+  | Level | dp | Typical use |
+  |-------|----|-------------|
+  | 0 | 0 | flat surfaces, filled/outlined cards |
+  | 1 | 1 | elevated button/card, modal sheets |
+  | 2 | 3 | menus, scrolled top app bar, navigation bar |
+  | 3 | 6 | FAB, dialogs, search view, date/time pickers |
+  | 4 | 8 | hovered FAB |
+  | 5 | 12 | — (reserved by MD3) |
+
+  The `box-shadow` values live in `priv/static/phoenix_paper.css` as
+  `@utility pp-elevation-0` .. `pp-elevation-5`, built from
+  `--color-pp-shadow`. Every class below is a full literal string so
+  Tailwind's scanner finds it (see AGENTS.md, "Tailwind class safety").
   """
 
-  @type level :: 0..24
+  @type level :: 0..5
 
   @doc """
-  Returns the `pp-elevation-N` class for the given level, clamped to 0..24.
+  Returns the `pp-elevation-N` class for the given level, clamped to 0..5.
 
-      iex> PhoenixPaper.Elevation.class(4)
-      "pp-elevation-4"
+      iex> PhoenixPaper.Elevation.class(3)
+      "pp-elevation-3"
 
-      iex> PhoenixPaper.Elevation.class(99)
-      "pp-elevation-24"
+      iex> PhoenixPaper.Elevation.class(12)
+      "pp-elevation-5"
   """
   @spec class(integer()) :: String.t()
   def class(level) when is_integer(level) and level <= 0, do: "pp-elevation-0"
-  def class(0), do: "pp-elevation-0"
   def class(1), do: "pp-elevation-1"
   def class(2), do: "pp-elevation-2"
   def class(3), do: "pp-elevation-3"
   def class(4), do: "pp-elevation-4"
-  def class(5), do: "pp-elevation-5"
-  def class(6), do: "pp-elevation-6"
-  def class(7), do: "pp-elevation-7"
-  def class(8), do: "pp-elevation-8"
-  def class(9), do: "pp-elevation-9"
-  def class(10), do: "pp-elevation-10"
-  def class(11), do: "pp-elevation-11"
-  def class(12), do: "pp-elevation-12"
-  def class(13), do: "pp-elevation-13"
-  def class(14), do: "pp-elevation-14"
-  def class(15), do: "pp-elevation-15"
-  def class(16), do: "pp-elevation-16"
-  def class(17), do: "pp-elevation-17"
-  def class(18), do: "pp-elevation-18"
-  def class(19), do: "pp-elevation-19"
-  def class(20), do: "pp-elevation-20"
-  def class(21), do: "pp-elevation-21"
-  def class(22), do: "pp-elevation-22"
-  def class(23), do: "pp-elevation-23"
-  def class(level) when is_integer(level) and level >= 24, do: "pp-elevation-24"
+  def class(level) when is_integer(level) and level >= 5, do: "pp-elevation-5"
+
+  @doc """
+  Like `class/1`, but prefixed with `hover:` — for components whose
+  elevation rises one level on hover (elevated button, FAB). Literal per
+  level for the same scanner reason.
+
+      iex> PhoenixPaper.Elevation.hover_class(2)
+      "hover:pp-elevation-2"
+  """
+  @spec hover_class(integer()) :: String.t()
+  def hover_class(level) when is_integer(level) and level <= 0, do: "hover:pp-elevation-0"
+  def hover_class(1), do: "hover:pp-elevation-1"
+  def hover_class(2), do: "hover:pp-elevation-2"
+  def hover_class(3), do: "hover:pp-elevation-3"
+  def hover_class(4), do: "hover:pp-elevation-4"
+  def hover_class(level) when is_integer(level) and level >= 5, do: "hover:pp-elevation-5"
 end

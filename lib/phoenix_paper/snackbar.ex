@@ -68,28 +68,18 @@ defmodule PhoenixPaper.Snackbar do
     viewport anchoring — e.g. to stack several inside your own container),
     use `positioned={false}` instead of going fully `paperize={false}`.
 
-  ## `color`
+  ## Look
 
-  Defaults to `"default"` — the inverted `bg-pp-on-surface`/`text-pp-surface`
-  chip described below, unchanged from before this attr existed. Material's
-  own spec keeps a snackbar monochrome regardless of severity/kind (see
-  `PhoenixPaper.Flash`'s moduledoc, which relies on exactly that to stay
-  colorless across `:info`/`:warning`/`:error`) — `color` is a deliberate
-  departure from that spec for callers who *do* want a brand-colored toast
-  (`"primary"`/`"secondary"`/`"accent"`/`"error"`, the same brand scale
-  `PhoenixPaper.Button` uses), the same way `PhoenixPaper.Drawer`'s `color`
-  is an opt-in departure from its own original neutral-only look. The close
-  button and the `auto_hide_duration` timer bar (below) both switch their
-  own contrast to match whichever surface is picked, the same
-  `text-pp-on-<color>`-reaching pattern `Drawer`'s colored variants use for
-  their nested content.
+  MD3's snackbar: an `inverse-surface` chip (dark on a light theme, light
+  on a dark one) with `body-medium` text, 4dp corners and a level-3
+  shadow. Buttons in `:action` get MD3's `inverse-primary` label color
+  automatically (a descendant selector on `pp_button`), so a plain
+  `<.pp_button variant="text">Undo</.pp_button>` is right. `two_line`
+  stacks a long message above its action, MD3's "longer action" layout.
 
-  Always uses `bg-pp-on-surface`/`text-pp-surface` when `color="default"`
-  (unchanged) — an *inverted* surface (dark chip on a light theme, light
-  chip on a dark theme) is the Material spec for a snackbar, not a themed
-  surface like `PhoenixPaper.Paper`. Picking a brand `color` trades that
-  spec-correct inversion for a colored surface instead — a deliberate
-  opt-in, not the default.
+  0.3's `color` attr is gone: MD3 snackbars are always the inverse
+  surface. For a colored, severity-coded message use an `Alert` inside a
+  `paperize={false}` snackbar (above).
   """
   use Phoenix.Component
 
@@ -100,11 +90,7 @@ defmodule PhoenixPaper.Snackbar do
   attr(:paperize, :boolean, default: true)
   attr(:open, :boolean, default: true)
 
-  attr(:color, :string,
-    default: "default",
-    values: ~w(default primary secondary accent error),
-    doc: "default is the inverted monochrome Material spec; the others paint a brand-colored chip"
-  )
+  attr(:two_line, :boolean, default: false, doc: "message above the action (MD3 longer action)")
 
   attr(:anchor_origin, :string,
     default: "bottom-left",
@@ -123,8 +109,6 @@ defmodule PhoenixPaper.Snackbar do
     doc:
       "keep the viewport-anchored `fixed` positioning — set false to drop it and place the chip yourself (e.g. inside PhoenixPaper.Flash's stack)"
   )
-
-  attr(:elevation, :integer, default: 6)
 
   attr(:on_close, JS,
     default: nil,
@@ -154,14 +138,19 @@ defmodule PhoenixPaper.Snackbar do
       class={
         Helpers.classes(
           @paperize,
-          paper_classes(@color, @anchor_origin, @transition, @elevation, @positioned),
+          paper_classes(@anchor_origin, @transition, @positioned, @two_line),
           @class
         )
       }
       {@rest}
     >
-      <div class="text-sm">{render_slot(@inner_block)}</div>
-      <div :if={@action != []} class="flex shrink-0 items-center">{render_slot(@action)}</div>
+      <div class={["min-w-0 py-3.5", @two_line && "w-full"]}>{render_slot(@inner_block)}</div>
+      <div
+        :if={@action != []}
+        class={["flex shrink-0 items-center gap-1 -me-2", @two_line && "ms-auto -mt-2 mb-1"]}
+      >
+        {render_slot(@action)}
+      </div>
       <button
         :if={@on_close}
         type="button"
@@ -171,19 +160,19 @@ defmodule PhoenixPaper.Snackbar do
         class={
           Helpers.classes(
             @paperize,
-            ["-mr-1 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors", close_button_classes(@color)],
+            "relative -me-2 inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-pp-inverse-on-surface pp-state-layer pp-focus-ring",
             nil
           )
         }
       >
-        <.pp_icon name="hero-x-mark-mini" size="sm" />
+        <.pp_icon name="hero-x-mark" size="sm" />
       </button>
       <span
         :if={@on_close && @auto_hide_duration}
         aria-hidden="true"
         class={[
           "pp-snackbar-timeout pointer-events-none absolute",
-          Helpers.classes(@paperize, ["inset-x-0 bottom-0 h-1", timer_bar_classes(@color)], nil)
+          Helpers.classes(@paperize, "inset-x-0 bottom-0 h-1 bg-pp-inverse-primary/60", nil)
         ]}
         style={"--pp-snackbar-timeout: #{@auto_hide_duration}ms"}
         onanimationend="var b=this.parentNode.querySelector('[data-pp-snackbar-close]');if(b){b.click()}"
@@ -192,42 +181,16 @@ defmodule PhoenixPaper.Snackbar do
     """
   end
 
-  defp paper_classes(color, anchor_origin, transition, elevation, positioned) do
+  defp paper_classes(anchor_origin, transition, positioned, two_line) do
     [
-      "relative z-50 mx-auto flex w-fit max-w-md items-center gap-4 overflow-hidden rounded-lg px-4 py-3",
-      surface_classes(color),
+      "relative z-50 mx-auto flex w-fit min-w-[min(344px,100%)] max-w-[672px] items-center gap-x-2 overflow-hidden rounded-pp-xs ps-4 pe-2 pp-body-medium",
+      "bg-pp-inverse-surface text-pp-inverse-on-surface [&_[data-pp-component=button]]:text-pp-inverse-primary",
+      two_line && "flex-wrap",
+      Elevation.class(3),
       if(positioned, do: anchor_classes(anchor_origin)),
-      transition_classes(transition, anchor_origin),
-      Elevation.class(elevation)
+      transition_classes(transition, anchor_origin)
     ]
   end
-
-  defp surface_classes("default"), do: "bg-pp-on-surface text-pp-surface"
-  defp surface_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
-  defp surface_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp surface_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
-  defp surface_classes("error"), do: "bg-pp-error text-pp-on-error"
-
-  defp close_button_classes("default"),
-    do: "text-pp-surface/80 hover:bg-pp-surface/10 hover:text-pp-surface"
-
-  defp close_button_classes("primary"),
-    do: "text-pp-on-primary/80 hover:bg-pp-on-primary/10 hover:text-pp-on-primary"
-
-  defp close_button_classes("secondary"),
-    do: "text-pp-on-secondary/80 hover:bg-pp-on-secondary/10 hover:text-pp-on-secondary"
-
-  defp close_button_classes("accent"),
-    do: "text-pp-on-accent/80 hover:bg-pp-on-accent/10 hover:text-pp-on-accent"
-
-  defp close_button_classes("error"),
-    do: "text-pp-on-error/80 hover:bg-pp-on-error/10 hover:text-pp-on-error"
-
-  defp timer_bar_classes("default"), do: "bg-pp-surface/40"
-  defp timer_bar_classes("primary"), do: "bg-pp-on-primary/40"
-  defp timer_bar_classes("secondary"), do: "bg-pp-on-secondary/40"
-  defp timer_bar_classes("accent"), do: "bg-pp-on-accent/40"
-  defp timer_bar_classes("error"), do: "bg-pp-on-error/40"
 
   defp anchor_classes("bottom-left"), do: "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:left-4"
 

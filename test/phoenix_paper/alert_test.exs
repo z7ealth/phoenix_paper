@@ -8,7 +8,7 @@ defmodule PhoenixPaper.AlertTest do
   test "severity (default: info) picks the color and icon" do
     html = render_component(&info/1)
 
-    assert html =~ "bg-pp-info/10"
+    assert html =~ "bg-pp-info-container"
     assert html =~ "hero-information-circle"
     assert html =~ "Heads up"
   end
@@ -22,7 +22,7 @@ defmodule PhoenixPaper.AlertTest do
   test "severity=\"error\" uses the error color and icon" do
     html = render_component(&error/1)
 
-    assert html =~ "bg-pp-error/10"
+    assert html =~ "bg-pp-error-container"
     assert html =~ "hero-x-circle"
   end
 

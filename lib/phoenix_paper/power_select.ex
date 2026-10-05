@@ -114,7 +114,7 @@ defmodule PhoenixPaper.PowerSelect do
   ## Look
 
   `variant` (`outlined`/`filled`), `shape`, `label`, `placeholder`,
-  `search_placeholder`, `helper_text`, `disabled`, and the messages
+  `search_placeholder`, `supporting_text`, `disabled`, and the messages
   (`no_matches_message`, `loading_message`, `search_message`), all strings
   you can translate. `paperize={false}` drops every built-in class; the
   dropdown's positioning stays, like `PhoenixPaper.Menu`'s.
@@ -148,8 +148,8 @@ defmodule PhoenixPaper.PowerSelect do
     debounce: 300,
     on_change: nil,
     variant: "outlined",
-    shape: :sm,
-    helper_text: nil,
+    shape: :xs,
+    supporting_text: nil,
     errors: [],
     paperize: true,
     class: nil,
@@ -438,7 +438,7 @@ defmodule PhoenixPaper.PowerSelect do
           >
             <span
               :for={option <- @selected}
-              class={Helpers.classes(@paperize, "inline-flex max-w-full items-center gap-1 rounded-full bg-pp-on-surface/10 py-0.5 pl-2.5 pr-1 text-xs", nil)}
+              class={Helpers.classes(@paperize, "inline-flex h-7 max-w-full items-center gap-1 rounded-pp-sm border border-pp-outline-variant ps-3 pe-1 pp-label-large text-pp-on-surface-variant", nil)}
             >
               <span class="truncate">{option.label}</span>
               <span
@@ -450,7 +450,7 @@ defmodule PhoenixPaper.PowerSelect do
                 phx-click="remove"
                 phx-value-key={option.key}
                 phx-target={@myself}
-                class={Helpers.classes(@paperize, "inline-flex size-4 cursor-pointer items-center justify-center rounded-full hover:bg-pp-on-surface/20", nil)}
+                class={Helpers.classes(@paperize, "relative inline-flex size-5 cursor-pointer items-center justify-center overflow-hidden rounded-pp-full pp-state-layer", nil)}
               >
                 ✕
               </span>
@@ -468,7 +468,7 @@ defmodule PhoenixPaper.PowerSelect do
               phx-keyup="search"
               phx-debounce={@debounce}
               phx-target={@myself}
-              class={Helpers.classes(@paperize, "min-w-16 flex-1 bg-transparent py-0.5 text-sm text-pp-on-surface outline-none placeholder:text-pp-outline", nil)}
+              class={Helpers.classes(@paperize, "min-w-16 flex-1 bg-transparent py-0.5 pp-body-large text-pp-on-surface outline-none placeholder:text-pp-on-surface-variant", nil)}
             />
             <button
               :if={!@search_box?}
@@ -477,7 +477,7 @@ defmodule PhoenixPaper.PowerSelect do
               disabled={@disabled}
               aria-label={@label || @placeholder || "Open"}
               phx-click={toggle(@id, @myself)}
-              class={Helpers.classes(@paperize, "min-w-8 flex-1 cursor-pointer self-stretch text-left text-sm text-pp-outline outline-none disabled:cursor-not-allowed", nil)}
+              class={Helpers.classes(@paperize, "min-w-8 flex-1 cursor-pointer self-stretch text-start pp-body-large text-pp-on-surface-variant outline-none disabled:cursor-default", nil)}
             >
               {@selected == [] && @placeholder}
             </button>
@@ -491,13 +491,13 @@ defmodule PhoenixPaper.PowerSelect do
             phx-click="clear"
             phx-target={@myself}
             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"
-            class={Helpers.classes(@paperize, "absolute right-8 top-1/2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-pp-outline hover:bg-pp-on-surface/10", nil)}
+            class={Helpers.classes(@paperize, "absolute end-9 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center overflow-hidden rounded-pp-full text-pp-on-surface-variant pp-state-layer", nil)}
           >
             ✕
           </span>
           <span
             :if={@paperize}
-            class="pointer-events-none absolute right-3 top-1/2 size-0 -translate-y-1/2 border-x-4 border-t-4 border-x-transparent border-t-pp-outline"
+            class="pointer-events-none absolute end-4 top-1/2 size-0 -translate-y-1/2 border-x-[5px] border-t-[5px] border-x-transparent border-t-pp-on-surface-variant"
           />
         </div>
 
@@ -507,8 +507,9 @@ defmodule PhoenixPaper.PowerSelect do
           class="absolute inset-x-0 top-full z-40 mt-1 hidden"
         >
           <.pp_paper
-            elevation={8}
-            shape={@shape}
+            color="surface-container"
+            elevation={2}
+            shape={:xs}
             paperize={@paperize}
             component="power-select-panel"
             class={Helpers.classes(@paperize, "overflow-hidden", nil)}
@@ -525,7 +526,7 @@ defmodule PhoenixPaper.PowerSelect do
               phx-keyup="search"
               phx-debounce={@debounce}
               phx-target={@myself}
-              class={Helpers.classes(@paperize, "block w-full border-b border-pp-outline/40 bg-transparent px-3 py-2 text-sm text-pp-on-surface outline-none placeholder:text-pp-outline", nil)}
+              class={Helpers.classes(@paperize, "block w-full border-b border-pp-outline-variant bg-transparent px-4 py-3 pp-body-large text-pp-on-surface outline-none placeholder:text-pp-on-surface-variant", nil)}
             />
             <ul
               id={"#{@id}-listbox"}
@@ -564,10 +565,13 @@ defmodule PhoenixPaper.PowerSelect do
           </.pp_paper>
         </div>
       </div>
-      <p :if={@helper_text && @errors == []} class={@paperize && "text-xs text-pp-outline"}>
-        {@helper_text}
+      <p
+        :if={@supporting_text && @errors == []}
+        class={@paperize && "px-4 pp-body-small text-pp-on-surface-variant"}
+      >
+        {@supporting_text}
       </p>
-      <p :for={msg <- @errors} class={@paperize && "text-xs text-pp-error"}>{msg}</p>
+      <p :for={msg <- @errors} class={@paperize && "px-4 pp-body-small text-pp-error"}>{msg}</p>
     </div>
     """
   end
@@ -805,65 +809,69 @@ defmodule PhoenixPaper.PowerSelect do
 
   defp wrapper_classes("outlined", shape, []) do
     [
-      "relative flex min-h-14 border border-pp-outline bg-transparent transition-colors focus-within:border-2 focus-within:border-pp-primary",
+      "relative flex min-h-14 border border-pp-outline bg-transparent pp-motion-effects-fast hover:border-pp-on-surface focus-within:border-2 focus-within:!border-pp-primary",
       Shape.class(shape)
     ]
   end
 
   defp wrapper_classes("outlined", shape, _errors),
-    do: ["relative flex min-h-14 border-2 border-pp-error", Shape.class(shape)]
+    do: [
+      "relative flex min-h-14 border border-pp-error focus-within:border-2",
+      Shape.class(shape)
+    ]
 
   defp wrapper_classes("filled", shape, []) do
     [
-      "relative flex min-h-14 border-b border-pp-outline bg-pp-surface-variant transition-colors focus-within:border-b-2 focus-within:border-pp-primary",
+      "relative flex min-h-14 bg-pp-surface-container-highest shadow-[inset_0_-1px_0_0_var(--color-pp-on-surface-variant)] focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-primary)]",
       Shape.class(shape, :top)
     ]
   end
 
   defp wrapper_classes("filled", shape, _errors) do
     [
-      "relative flex min-h-14 border-b-2 border-pp-error bg-pp-surface-variant",
+      "relative flex min-h-14 bg-pp-surface-container-highest shadow-[inset_0_-1px_0_0_var(--color-pp-error)] focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-error)]",
       Shape.class(shape, :top)
     ]
   end
 
   defp label_classes([]),
     do:
-      "pointer-events-none absolute left-3 top-2 text-xs text-pp-outline transition-colors [div:focus-within>&]:text-pp-primary"
+      "pointer-events-none absolute start-4 top-2 pp-body-small text-pp-on-surface-variant transition-colors [div:focus-within>&]:text-pp-primary"
 
   defp label_classes(_errors),
-    do: "pointer-events-none absolute left-3 top-2 text-xs text-pp-error"
+    do: "pointer-events-none absolute start-4 top-2 pp-body-small text-pp-error"
 
   defp single_trigger_classes(nil),
     do:
-      "flex w-full min-w-0 cursor-pointer items-center py-4 pl-3 pr-14 text-left text-sm text-pp-on-surface outline-none disabled:cursor-not-allowed disabled:opacity-40"
+      "flex w-full min-w-0 cursor-pointer items-center py-4 ps-4 pe-14 text-start pp-body-large text-pp-on-surface outline-none disabled:cursor-default disabled:opacity-38"
 
   defp single_trigger_classes(_label),
     do:
-      "flex w-full min-w-0 cursor-pointer items-center pt-6 pb-2 pl-3 pr-14 text-left text-sm text-pp-on-surface outline-none disabled:cursor-not-allowed disabled:opacity-40"
+      "flex w-full min-w-0 cursor-pointer items-center pt-6 pb-2 ps-4 pe-14 text-start pp-body-large text-pp-on-surface outline-none disabled:cursor-default disabled:opacity-38"
 
   defp multiple_trigger_classes(nil, false),
-    do: "flex w-full min-w-0 cursor-text flex-wrap items-center gap-1 py-3 pl-3 pr-8"
+    do: "flex w-full min-w-0 cursor-text flex-wrap items-center gap-1 py-3 ps-4 pe-8"
 
   defp multiple_trigger_classes(_label, false),
-    do: "flex w-full min-w-0 cursor-text flex-wrap items-center gap-1 pt-6 pb-2 pl-3 pr-8"
+    do: "flex w-full min-w-0 cursor-text flex-wrap items-center gap-1 pt-6 pb-2 ps-4 pe-8"
 
   defp multiple_trigger_classes(nil, true),
-    do: "flex w-full min-w-0 flex-wrap items-center gap-1 py-3 pl-3 pr-8 opacity-40"
+    do: "flex w-full min-w-0 flex-wrap items-center gap-1 py-3 ps-4 pe-8 opacity-38"
 
   defp multiple_trigger_classes(_label, true),
-    do: "flex w-full min-w-0 flex-wrap items-center gap-1 pt-6 pb-2 pl-3 pr-8 opacity-40"
+    do: "flex w-full min-w-0 flex-wrap items-center gap-1 pt-6 pb-2 ps-4 pe-8 opacity-38"
 
+  # MD3 menu items: 48dp, label-large, state layer via hover/focus tints;
+  # the selected option uses the Expressive selected-item color.
   defp option_classes do
-    "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-pp-on-surface outline-none hover:bg-pp-on-surface/10 focus:bg-pp-on-surface/10 disabled:cursor-not-allowed disabled:opacity-40 aria-selected:bg-pp-primary/10 aria-selected:font-medium aria-selected:text-pp-primary"
+    "flex min-h-12 w-full cursor-pointer items-center gap-3 px-4 py-2 text-start pp-label-large text-pp-on-surface outline-none hover:bg-pp-on-surface/8 focus:bg-pp-on-surface/10 disabled:cursor-default disabled:opacity-38 aria-selected:bg-pp-secondary-container aria-selected:text-pp-on-secondary-container"
   end
 
   defp group_classes(false),
-    do: "block px-3 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-pp-outline"
+    do: "block px-4 pt-3 pb-1 pp-title-small text-pp-on-surface-variant"
 
   defp group_classes(true),
-    do:
-      "block px-3 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-pp-outline opacity-40"
+    do: "block px-4 pt-3 pb-1 pp-title-small text-pp-on-surface-variant opacity-38"
 
-  defp message_classes, do: "px-3 py-2 text-sm text-pp-outline"
+  defp message_classes, do: "px-4 py-3 pp-body-medium text-pp-on-surface-variant"
 end

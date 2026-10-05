@@ -1,0 +1,17 @@
+{
+  "name": "phoenix_paper",
+  "version": "0.4.0",
+  "description": "The optional LiveView hook for PhoenixPaper (Material Design 3 components for Phoenix).",
+  "license": "MIT",
+  "type": "module",
+  "module": "./priv/static/phoenix_paper.js",
+  "main": "./priv/static/phoenix_paper.js",
+  "exports": {
+    ".": "./priv/static/phoenix_paper.js",
+    "./priv/static/phoenix_paper.css": "./priv/static/phoenix_paper.css"
+  },
+  "files": [
+    "priv/static/phoenix_paper.js",
+    "priv/static/phoenix_paper.css"
+  ]
+}

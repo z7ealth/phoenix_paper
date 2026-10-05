@@ -1,13 +1,37 @@
 defmodule PhoenixPaper.Card do
   @moduledoc """
-  A Material Design card (`pp_card/1`): `PhoenixPaper.Paper` (the surface)
-  plus padding and optional title/actions slots.
+  An MD3 card (`pp_card/1`): `PhoenixPaper.Paper` plus padding and
+  optional media/title/subhead/actions slots.
+
+      <.pp_card variant="filled">
+        <:media><img src={~p"/images/lake.jpg"} alt="" class="h-40 w-full object-cover" /></:media>
+        <:title>Lake trip</:title>
+        <:subhead>3 days · 4 people</:subhead>
+        Pack light; the cabin has everything else.
+        <:actions><.pp_button variant="text">Share</.pp_button></:actions>
+      </.pp_card>
+
+  ## Variants
+
+  | `variant` | surface |
+  |-----------|---------|
+  | `elevated` (default) | `surface-container-low`, level-1 shadow |
+  | `filled` | `surface-container-highest`, no shadow |
+  | `outlined` | `surface` with an `outline-variant` border |
+
+  Corners default to `:md` (12dp, MD3's card shape). `:media` renders
+  edge to edge above the padded content and is clipped to the card's
+  corners. The title is `title-large`, the subhead `body-medium` in
+  `on-surface-variant`. `padding` (a `PhoenixPaper.Spacing` token) is the
+  content padding.
+
+  0.3's `elevation` attr is gone: MD3 fixes each variant's elevation.
 
   ## Link mode
 
   Pass `href`, `navigate` or `patch` and the card's title and body become
-  one `Phoenix.Component.link/1` — MUI's `CardActionArea`. It gets a hover
-  tint, a focus ring, and a ripple on click (`ripple`, default `true`, the
+  one `Phoenix.Component.link/1` — MUI's `CardActionArea`. It gets the
+  MD3 hover state layer (and the elevated card rises to level 2), a focus ring, and a ripple on click (`ripple`, default `true`, the
   same as `PhoenixPaper.Button`/`PhoenixPaper.ListItem`):
 
       <.pp_card navigate={~p"/components/button"}>
@@ -44,16 +68,16 @@ defmodule PhoenixPaper.Card do
   import PhoenixPaper.Paper, only: [pp_paper: 1]
 
   attr(:paperize, :boolean, default: true)
-  attr(:elevation, :integer, default: 1)
+  attr(:variant, :string, default: "elevated", values: ~w(elevated filled outlined))
   attr(:padding, :atom, default: :md, values: ~w(none xs sm md lg xl 2xl)a)
 
   attr(:shape, :atom,
-    default: :lg,
-    values: ~w(none xs sm md lg xl full)a,
+    default: :md,
+    values: PhoenixPaper.Shape.tokens(),
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
-  attr(:href, :any, default: nil, doc: "makes the title and body a link (MUI's CardActionArea)")
+  attr(:href, :any, default: nil, doc: "makes the media, title and body a link")
   attr(:navigate, :any, default: nil, doc: "like href, a LiveView live navigation")
   attr(:patch, :any, default: nil, doc: "like href, a LiveView live patch")
   attr(:target, :string, default: nil, doc: "link mode: the link's target, e.g. _blank")
@@ -61,13 +85,15 @@ defmodule PhoenixPaper.Card do
 
   attr(:ripple, :boolean,
     default: true,
-    doc: "the Material ripple on click in link mode — off whenever paperize is false"
+    doc: "the ripple on click in link mode — off whenever paperize is false"
   )
 
   attr(:class, :any, default: nil)
   attr(:rest, :global)
 
+  slot(:media, doc: "full-bleed media above the content (an image, a video)")
   slot(:title)
+  slot(:subhead)
   slot(:actions)
   slot(:inner_block, required: true)
 
@@ -85,30 +111,36 @@ defmodule PhoenixPaper.Card do
     ~H"""
     <.pp_paper
       :if={!@linked?}
-      elevation={@elevation}
+      color={surface(@variant)}
+      elevation={elevation(@variant)}
+      outlined={@variant == "outlined"}
       shape={@shape}
       paperize={@paperize}
       component="card"
-      class={Helpers.classes(@paperize, Spacing.padding(@padding), @class)}
+      class={[@media != [] && "overflow-hidden", @class]}
       {@rest}
     >
-      <div :if={@title != []} class="mb-2 text-lg font-medium">
-        {render_slot(@title)}
-      </div>
-
-      {render_slot(@inner_block)}
-
-      <div :if={@actions != []} class="mt-4 flex items-center justify-end gap-2">
-        {render_slot(@actions)}
+      <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
+      <div class={Helpers.classes(@paperize, Spacing.padding(@padding), nil)}>
+        {card_heading(assigns)}
+        {render_slot(@inner_block)}
+        <div :if={@actions != []} class="mt-4 flex flex-wrap items-center justify-end gap-2">
+          {render_slot(@actions)}
+        </div>
       </div>
     </.pp_paper>
     <.pp_paper
       :if={@linked?}
-      elevation={@elevation}
+      color={surface(@variant)}
+      elevation={elevation(@variant)}
+      outlined={@variant == "outlined"}
       shape={@shape}
       paperize={@paperize}
       component="card"
-      class={["relative", Helpers.classes(@paperize, "overflow-hidden", @class)]}
+      class={[
+        "relative",
+        Helpers.classes(@paperize, ["overflow-hidden pp-motion-effects-default", hover_lift(@variant)], @class)
+      ]}
       {@rest}
     >
       <.link
@@ -118,19 +150,14 @@ defmodule PhoenixPaper.Card do
         target={@target}
         rel={@rel}
         data-pp-card-action-area
-        class={
-          [
-            stretch_classes(),
-            Helpers.classes(@paperize, [action_area_classes(), Spacing.padding(@padding)], nil)
-          ]
-        }
+        class={[stretch_classes(), Helpers.classes(@paperize, action_area_classes(), nil)]}
         onclick={Ripple.on_click(@ripple?)}
       >
-        <div :if={@title != []} class="mb-2 text-lg font-medium">
-          {render_slot(@title)}
+        <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
+        <div class={Helpers.classes(@paperize, Spacing.padding(@padding), nil)}>
+          {card_heading(assigns)}
+          {render_slot(@inner_block)}
         </div>
-
-        {render_slot(@inner_block)}
       </.link>
 
       <div
@@ -140,7 +167,7 @@ defmodule PhoenixPaper.Card do
           actions_layer_classes(),
           Helpers.classes(
             @paperize,
-            ["flex items-center justify-end gap-2 !pt-0", Spacing.padding(@padding)],
+            ["flex flex-wrap items-center justify-end gap-2 !pt-0", Spacing.padding(@padding)],
             nil
           )
         ]}
@@ -151,6 +178,34 @@ defmodule PhoenixPaper.Card do
     """
   end
 
+  defp card_heading(assigns) do
+    ~H"""
+    <div :if={@title != [] or @subhead != []} class="mb-2 flex flex-col gap-0.5">
+      <div :if={@title != []} class={Helpers.classes(@paperize, "pp-title-large", nil)}>
+        {render_slot(@title)}
+      </div>
+      <div
+        :if={@subhead != []}
+        class={Helpers.classes(@paperize, "pp-body-medium text-pp-on-surface-variant", nil)}
+      >
+        {render_slot(@subhead)}
+      </div>
+    </div>
+    """
+  end
+
+  defp surface("elevated"), do: "surface-container-low"
+  defp surface("filled"), do: "surface-container-highest"
+  defp surface("outlined"), do: "surface"
+
+  defp elevation("elevated"), do: 1
+  defp elevation(_variant), do: 0
+
+  # An elevated card rises a level while its link is hovered; the others
+  # keep MD3's flat look and only show the state layer.
+  defp hover_lift("elevated"), do: "has-[[data-pp-card-action-area]:hover]:pp-elevation-2"
+  defp hover_lift(_variant), do: nil
+
   # The "stretched link": the link's ::after covers the whole card (the
   # root is `relative`), so the card is clickable everywhere, actions row
   # included. Unconditional like Menu's positioning — it defines what's
@@ -159,10 +214,13 @@ defmodule PhoenixPaper.Card do
     "block after:absolute after:inset-0 after:content-['']"
   end
 
-  # The hover tint and focus ring are painted on that same ::after overlay,
-  # so they cover the whole card too.
+  # The state layer and focus ring are painted on that same ::after
+  # overlay, so they cover the whole card too. The layer is a translucent
+  # background (not `opacity`, which would fade the ring with it), and the
+  # ring is inset, since the root's `overflow-hidden` clips anything
+  # outside it.
   defp action_area_classes do
-    "text-inherit no-underline outline-none after:transition-colors hover:after:bg-pp-on-surface/5 focus-visible:after:bg-pp-on-surface/10 focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-pp-primary"
+    "text-inherit no-underline outline-none after:rounded-[inherit] after:transition-colors hover:after:bg-current/8 focus-visible:after:bg-current/10 active:after:bg-current/10 focus-visible:after:outline-3 focus-visible:after:-outline-offset-3 focus-visible:after:outline-solid focus-visible:after:outline-pp-secondary"
   end
 
   # The actions row sits above the overlay (`relative z-10`) so its own

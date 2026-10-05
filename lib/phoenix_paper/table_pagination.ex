@@ -45,13 +45,14 @@ defmodule PhoenixPaper.TablePagination do
   use Phoenix.Component
 
   alias PhoenixPaper.Helpers
-  import PhoenixPaper.Button, only: [pp_button: 1]
-  import PhoenixPaper.Icon, only: [pp_icon: 1]
-  import PhoenixPaper.List, only: [pp_list: 1]
-  import PhoenixPaper.ListItem, only: [pp_list_item: 1]
-  import PhoenixPaper.Menu, only: [pp_menu: 1]
+  import PhoenixPaper.IconButton, only: [pp_icon_button: 1]
+  import PhoenixPaper.Menu, only: [pp_menu: 1, pp_menu_item: 1]
 
-  attr(:id, :string, required: true, doc: "used for the rows-per-page menu")
+  attr(:id, :string,
+    required: true,
+    doc: "the root element's id; the rows-per-page menu derives its own from it"
+  )
+
   attr(:page, :integer, required: true, doc: "the current page, 1-based")
   attr(:count, :integer, required: true, doc: "the total number of rows")
   attr(:rows_per_page, :integer, required: true)
@@ -115,8 +116,9 @@ defmodule PhoenixPaper.TablePagination do
 
     ~H"""
     <div
+      id={@id}
       data-pp-component="table-pagination"
-      class={Helpers.classes(@paperize, "flex flex-wrap items-center justify-end gap-x-6 gap-y-2 px-4 py-2 text-sm text-pp-on-surface", @class)}
+      class={Helpers.classes(@paperize, "flex flex-wrap items-center justify-end gap-x-6 gap-y-2 px-4 py-2 pp-body-medium text-pp-on-surface-variant", @class)}
       {@rest}
     >
       <div :if={@rows_per_page_options != []} class="flex items-center gap-2">
@@ -126,15 +128,10 @@ defmodule PhoenixPaper.TablePagination do
           anchor="top-end"
           trigger_variant="text"
           trigger_color="inherit"
-          trigger_size="small"
           paperize={@paperize}
-          class="!min-w-20"
         >
-          <:trigger>
-            {@rows_per_page}<.pp_icon name="hero-chevron-down-mini" size="sm" />
-          </:trigger>
-          <.pp_list dense paperize={@paperize}>
-            <.rows_option
+          <:trigger>{@rows_per_page}</:trigger>
+          <.rows_option
               :for={option <- @rows_per_page_options}
               option={option}
               selected={option == @rows_per_page}
@@ -144,7 +141,6 @@ defmodule PhoenixPaper.TablePagination do
               target={@target}
               paperize={@paperize}
             />
-          </.pp_list>
         </.pp_menu>
       </div>
       <span>{@displayed}</span>
@@ -177,33 +173,29 @@ defmodule PhoenixPaper.TablePagination do
     assigns = assign(assigns, link_attrs(assigns.link, path.(1, assigns.option)))
 
     ~H"""
-    <.pp_list_item
+    <.pp_menu_item
       href={@href}
       navigate={@navigate}
       patch={@patch}
-      active={@selected}
-      dense
+      selected={@selected}
       paperize={@paperize}
     >
       {@option}
-    </.pp_list_item>
+    </.pp_menu_item>
     """
   end
 
   defp rows_option(assigns) do
     ~H"""
-    <.pp_list_item
-      active={@selected}
-      dense
+    <.pp_menu_item
+      selected={@selected}
       paperize={@paperize}
-      class="cursor-pointer"
-      role="menuitem"
       phx-click={@event}
       phx-value-rows_per_page={@event && @option}
       phx-target={@event && @target}
     >
       {@option}
-    </.pp_list_item>
+    </.pp_menu_item>
     """
   end
 
@@ -220,36 +212,30 @@ defmodule PhoenixPaper.TablePagination do
     assigns = assign(assigns, link_attrs(assigns.link, url))
 
     ~H"""
-    <.pp_button
-      variant="icon"
+    <.pp_icon_button
+      icon={icon(@kind)}
+      label={aria_label(@kind)}
       color="inherit"
-      size="small"
       href={@href}
       navigate={@navigate}
       patch={@patch}
       paperize={@paperize}
-      aria-label={aria_label(@kind)}
-    >
-      <.pp_icon name={icon(@kind)} />
-    </.pp_button>
+    />
     """
   end
 
   defp nav_button(assigns) do
     ~H"""
-    <.pp_button
-      variant="icon"
+    <.pp_icon_button
+      icon={icon(@kind)}
+      label={aria_label(@kind)}
       color="inherit"
-      size="small"
       disabled={@disabled}
       paperize={@paperize}
-      aria-label={aria_label(@kind)}
       phx-click={!@disabled && @event}
       phx-value-page={!@disabled && @event && @to}
       phx-target={!@disabled && @event && @target}
-    >
-      <.pp_icon name={icon(@kind)} />
-    </.pp_button>
+    />
     """
   end
 

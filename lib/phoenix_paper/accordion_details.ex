@@ -27,7 +27,7 @@ defmodule PhoenixPaper.AccordionDetails do
     ~H"""
     <div
       data-pp-component="accordion-details"
-      class={Helpers.classes(@paperize, "hidden border-t border-pp-outline/20 px-4 py-3 text-sm peer-checked:block", @class)}
+      class={Helpers.classes(@paperize, "hidden border-t border-pp-outline-variant px-4 py-3 pp-body-medium text-pp-on-surface-variant peer-checked:block", @class)}
       {@rest}
     >
       {render_slot(@inner_block)}

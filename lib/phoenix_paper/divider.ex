@@ -23,6 +23,6 @@ defmodule PhoenixPaper.Divider do
     """
   end
 
-  defp paper_classes(false), do: "my-1 border-t border-pp-outline/20"
-  defp paper_classes(true), do: "my-1 ml-14 border-t border-pp-outline/20"
+  defp paper_classes(false), do: "border-t border-pp-outline-variant"
+  defp paper_classes(true), do: "ms-14 border-t border-pp-outline-variant"
 end

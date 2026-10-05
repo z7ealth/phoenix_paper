@@ -9,7 +9,7 @@ defmodule PhoenixPaper.TableHeadTest do
     html = render_component(&head/1)
 
     assert html =~ "<thead"
-    assert html =~ "th]:border-b-2"
+    assert html =~ "th]:border-b"
     assert html =~ "content"
   end
 

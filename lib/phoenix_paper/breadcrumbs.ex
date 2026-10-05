@@ -39,12 +39,12 @@ defmodule PhoenixPaper.Breadcrumbs do
   to `items_before_collapse` (default 1) + an ellipsis + `items_after_collapse`
   (default 1), with a click on the ellipsis expanding to the full list —
   pure CSS, no JS/LiveView, the same hidden-checkbox-plus-`peer-checked:`
-  trick `PhoenixPaper.Accordion`/`PhoenixPaper.Drawer` use. Unlike those,
+  trick `PhoenixPaper.Accordion`/`PhoenixPaper.NavigationRail` use. Unlike those,
   the checkbox's `id` is generated internally (via `System.unique_integer/1`)
   rather than caller-supplied: nothing outside this component ever needs to
   reference it, unlike `Accordion`'s id (shared with `AccordionSummary`/
-  `Details`/`Actions`) or `Drawer`'s (referenced by an external
-  `pp_drawer_toggle`). Both the collapsed and the fully-expanded `<ol>` are
+  `Details`/`Actions`) or the rail's (referenced by an external
+  `pp_navigation_rail_toggle`). Both the collapsed and the fully-expanded `<ol>` are
   always rendered (one hidden via `peer-checked:hidden`/`peer-checked:flex`
   swapping which is visible) — the same "always in the DOM, toggle
   visibility" trade-off as `Dialog`, needed because there's no JS here to
@@ -107,7 +107,7 @@ defmodule PhoenixPaper.Breadcrumbs do
     <nav
       aria-label="breadcrumb"
       data-pp-component="breadcrumbs"
-      class={Helpers.classes(@paperize, "text-sm", @class)}
+      class={Helpers.classes(@paperize, "pp-body-medium text-pp-on-surface-variant", @class)}
       {@rest}
     >
       <input :if={@collapse?} type="checkbox" id={@expand_id} class="peer sr-only" />
@@ -163,7 +163,7 @@ defmodule PhoenixPaper.Breadcrumbs do
         class={
           Helpers.classes(
             @paperize,
-            "cursor-pointer rounded px-1 text-pp-outline transition-colors select-none hover:bg-pp-on-surface/10 hover:text-pp-on-surface",
+            "relative cursor-pointer select-none overflow-hidden rounded-pp-xs px-1 text-pp-on-surface-variant pp-state-layer",
             nil
           )
         }
@@ -189,14 +189,14 @@ defmodule PhoenixPaper.Breadcrumbs do
         href={@item[:href]}
         navigate={@item[:navigate]}
         patch={@item[:patch]}
-        class={Helpers.classes(@paperize, "text-pp-primary hover:underline", nil)}
+        class={Helpers.classes(@paperize, "rounded-pp-xs text-pp-primary underline-offset-4 hover:underline pp-focus-ring", nil)}
       >
         {render_slot(@item)}
       </.link>
       <span
         :if={!@linked?}
         aria-current="page"
-        class={Helpers.classes(@paperize, "font-medium text-pp-on-surface", nil)}
+        class={Helpers.classes(@paperize, "text-pp-on-surface", nil)}
       >
         {render_slot(@item)}
       </span>

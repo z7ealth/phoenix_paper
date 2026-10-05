@@ -5,270 +5,208 @@ defmodule PhoenixPaper.ButtonTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Button
 
-  test "paperize (default): renders Material classes and merges caller class" do
-    html = render_component(&raised_primary/1)
+  alias Phoenix.LiveView.JS
 
-    assert html =~ "bg-pp-primary"
-    assert html =~ "pp-elevation-2"
-    assert html =~ "border-4"
-    assert html =~ "Save"
+  defp html(assigns \\ %{}, fun), do: rendered_to_string(fun.(assigns))
+
+  test "filled (default): primary container, MD3 small size, state layer, focus ring, round shape" do
+    html = html(fn assigns -> ~H"<.pp_button class='extra'>Save</.pp_button>" end)
+
+    assert html =~ "bg-pp-primary text-pp-on-primary"
+    assert html =~ "h-10"
+    assert html =~ "pp-label-large"
+    assert html =~ "pp-state-layer"
+    assert html =~ "pp-focus-ring"
+    assert html =~ "rounded-[20px]"
+    assert html =~ "active:rounded-pp-sm"
+    assert html =~ "pp-motion-spatial-fast"
+    assert html =~ "cursor-pointer"
+    assert html =~ "extra"
+    refute html =~ "uppercase"
   end
 
-  defp raised_primary(assigns) do
-    ~H"""
-    <.pp_button class="border-4">Save</.pp_button>
-    """
+  test "each variant uses its MD3 roles" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button variant="tonal">T</.pp_button>
+        <.pp_button variant="elevated">E</.pp_button>
+        <.pp_button variant="outlined">O</.pp_button>
+        <.pp_button variant="text">X</.pp_button>
+        """
+      end)
+
+    assert html =~ "bg-pp-secondary-container text-pp-on-secondary-container"
+
+    assert html =~
+             "bg-pp-surface-container-low text-pp-primary pp-elevation-1 hover:pp-elevation-2"
+
+    assert html =~ "border border-pp-outline-variant text-pp-primary"
+    assert html =~ ~s(class="inline-flex)
   end
 
-  test "paperize={false}: no built-in classes, only the caller's" do
-    html = render_component(&bare/1)
+  test "color swaps the role: tertiary filled and tonal" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button color="tertiary">A</.pp_button>
+        <.pp_button variant="tonal" color="tertiary">B</.pp_button>
+        """
+      end)
+
+    assert html =~ "bg-pp-tertiary text-pp-on-tertiary"
+    assert html =~ "bg-pp-tertiary-container text-pp-on-tertiary-container"
+  end
+
+  test "color=inherit follows currentColor" do
+    html =
+      html(fn assigns -> ~H"<.pp_button variant='outlined' color='inherit'>A</.pp_button>" end)
+
+    assert html =~ "border-current/40 text-inherit"
+  end
+
+  test "Expressive sizes scale height, padding, type role and icon size" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button size="xs">A</.pp_button>
+        <.pp_button size="md">B</.pp_button>
+        <.pp_button size="xl">C</.pp_button>
+        """
+      end)
+
+    assert html =~ "h-8 gap-1 px-3"
+    assert html =~ "h-14 gap-2 px-6 pp-title-medium"
+    assert html =~ "h-[8.5rem]"
+    assert html =~ "pp-headline-large"
+  end
+
+  test "square shape uses the corner scale and still morphs on press" do
+    html = html(fn assigns -> ~H"<.pp_button shape='square' size='md'>A</.pp_button>" end)
+    assert html =~ "rounded-pp-lg active:rounded-pp-md"
+  end
+
+  test "selected makes it a toggle button: aria-pressed, toggle colors, round→square morph" do
+    html = html(fn assigns -> ~H"<.pp_button selected>Bold</.pp_button>" end)
+
+    assert html =~ ~s(aria-pressed="true")
+    assert html =~ "bg-pp-surface-container text-pp-on-surface-variant"
+    assert html =~ "aria-pressed:bg-pp-primary"
+    assert html =~ "aria-pressed:rounded-pp-md"
+    refute html =~ "phx-click"
+  end
+
+  test "a plain button has no aria-pressed" do
+    html = html(fn assigns -> ~H"<.pp_button>Save</.pp_button>" end)
+    refute html =~ "aria-pressed"
+  end
+
+  test "toggle wires the client-side JS toggle; group makes it exclusive" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button toggle selected={false}>B</.pp_button>
+        <.pp_button group="view">Day</.pp_button>
+        """
+      end)
+
+    assert html =~ ~s(aria-pressed="false")
+    assert html =~ "toggle_attr"
+    assert html =~ ~s(data-pp-toggle-group="view")
+    assert html =~ "set_attr"
+  end
+
+  test "PhoenixPaper.Toggle.js builds the exact op chains" do
+    assert PhoenixPaper.Toggle.js(nil, JS.push("x")).ops == [
+             ["toggle_attr", %{attr: ["aria-pressed", "true", "false"]}],
+             ["push", %{event: "x"}]
+           ]
+
+    assert PhoenixPaper.Toggle.js("v").ops == [
+             ["set_attr", %{to: ~s([data-pp-toggle-group="v"]), attr: ["aria-pressed", "false"]}],
+             ["set_attr", %{attr: ["aria-pressed", "true"]}]
+           ]
+  end
+
+  test "disabled uses MD3's disabled colors" do
+    html = html(fn assigns -> ~H"<.pp_button disabled>Save</.pp_button>" end)
+
+    assert html =~ "disabled"
+    assert html =~ "disabled:bg-pp-on-surface/10"
+    assert html =~ "disabled:text-pp-on-surface/38"
+  end
+
+  test "ripple (default) wires the click handler and the container classes; ripple false drops the handler" do
+    on = html(fn assigns -> ~H"<.pp_button>Save</.pp_button>" end)
+    off = html(fn assigns -> ~H"<.pp_button ripple={false}>Save</.pp_button>" end)
+
+    assert on =~ "onclick="
+    assert on =~ "relative overflow-hidden"
+    refute off =~ "onclick="
+  end
+
+  test "paperize={false}: no built-in classes and no ripple" do
+    html = html(fn assigns -> ~H"<.pp_button paperize={false} class='mine'>Save</.pp_button>" end)
 
     refute html =~ "bg-pp-primary"
-    refute html =~ "rounded-full"
-    assert html =~ "my-custom-class"
-    assert html =~ "Save"
-  end
-
-  test "paperize={false}: ripple is off too, even though ripple defaults true — nothing left to size/clip its span" do
-    html = render_component(&bare/1)
-
     refute html =~ "onclick="
-  end
-
-  defp bare(assigns) do
-    ~H"""
-    <.pp_button paperize={false} class="my-custom-class">Save</.pp_button>
-    """
-  end
-
-  test "disabled sets the disabled attribute" do
-    html = render_component(&disabled/1)
-    assert html =~ "disabled"
-  end
-
-  defp disabled(assigns) do
-    ~H"""
-    <.pp_button disabled>Save</.pp_button>
-    """
-  end
-
-  test "ripple (default): wires the click handler and the relative/overflow-hidden container classes" do
-    html = render_component(&raised_primary/1)
-
-    assert html =~ "onclick="
-    assert html =~ "relative"
-    assert html =~ "overflow-hidden"
-  end
-
-  test "ripple={false}: no click handler, no container classes" do
-    html = render_component(&no_ripple/1)
-
-    refute html =~ "onclick="
-    refute html =~ "overflow-hidden"
-  end
-
-  defp no_ripple(assigns) do
-    ~H"""
-    <.pp_button ripple={false}>Save</.pp_button>
-    """
-  end
-
-  test "shows a pointer cursor on hover (browsers default <button> to cursor:default, not pointer)" do
-    html = render_component(&raised_primary/1)
-    assert html =~ "cursor-pointer"
-  end
-
-  test "does not force uppercase text — inherits text-transform instead" do
-    html = render_component(&raised_primary/1)
-
-    refute html =~ "uppercase"
-    assert html =~ "[text-transform:inherit]"
-  end
-
-  test "size (default medium) renders the medium padding/text-size classes" do
-    html = render_component(&raised_primary/1)
-
-    assert html =~ "px-6"
-    assert html =~ "py-2.5"
-    assert html =~ "text-sm"
-  end
-
-  test "size=small and size=large render different padding/text-size classes" do
-    small = render_component(&small_button/1)
-    large = render_component(&large_button/1)
-
-    assert small =~ "px-4"
-    assert small =~ "text-xs"
-    refute small =~ "px-6"
-
-    assert large =~ "px-8"
-    assert large =~ "text-base"
-    refute large =~ "px-6"
-  end
-
-  defp small_button(assigns) do
-    ~H"""
-    <.pp_button size="small">Save</.pp_button>
-    """
-  end
-
-  defp large_button(assigns) do
-    ~H"""
-    <.pp_button size="large">Save</.pp_button>
-    """
-  end
-
-  test "size affects icon-variant padding too" do
-    html = render_component(&small_icon_button/1)
-
-    assert html =~ "p-1"
-  end
-
-  defp small_icon_button(assigns) do
-    ~H"""
-    <.pp_button variant="icon" size="small"><span class="hero-star" /></.pp_button>
-    """
+    assert html =~ "mine"
   end
 
   test "start_icon and end_icon render around the label" do
-    html = render_component(&with_icons/1)
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button>
+          <:start_icon><span id="s" /></:start_icon>
+          Label
+          <:end_icon><span id="e" /></:end_icon>
+        </.pp_button>
+        """
+      end)
 
-    assert html =~ "hero-trash"
-    assert html =~ "hero-arrow-right"
-    assert html =~ "Delete"
+    assert html =~ ~s(id="s")
+    assert html =~ ~s(id="e")
   end
 
-  defp with_icons(assigns) do
-    ~H"""
-    <.pp_button>
-      <:start_icon><span class="hero-trash" /></:start_icon>
-      Delete
-      <:end_icon><span class="hero-arrow-right" /></:end_icon>
-    </.pp_button>
-    """
-  end
+  test "href/navigate/patch render a link with the same look; disabled becomes aria-disabled" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button href="/a" target="_blank">A</.pp_button>
+        <.pp_button navigate="/b" disabled>B</.pp_button>
+        """
+      end)
 
-  test "href renders an <a> instead of a <button>, keeping the Material classes and ripple" do
-    html = render_component(&link_button/1)
-
-    assert html =~ ~s(<a)
-    refute html =~ ~s(<button)
-    assert html =~ ~s(href="/issues")
-    assert html =~ "bg-pp-primary"
-    assert html =~ "onclick="
-    assert html =~ "Issues"
-  end
-
-  defp link_button(assigns) do
-    ~H"""
-    <.pp_button href="/issues">Issues</.pp_button>
-    """
-  end
-
-  test "navigate/patch also switch to link mode" do
-    assert render_component(&nav_button/1) =~ ~s(<a)
-    assert render_component(&patch_button/1) =~ ~s(<a)
-  end
-
-  defp nav_button(assigns) do
-    ~H"""
-    <.pp_button navigate="/new">New</.pp_button>
-    """
-  end
-
-  defp patch_button(assigns) do
-    ~H"""
-    <.pp_button patch="/tab/2">Tab</.pp_button>
-    """
-  end
-
-  test "link-mode passes link attrs through and honors disabled without a disabled attribute" do
-    html = render_component(&disabled_link/1)
-
-    assert html =~ ~s(method="delete")
+    assert html =~ ~s(href="/a")
+    assert html =~ ~s(target="_blank")
     assert html =~ ~s(aria-disabled="true")
-    assert html =~ "pointer-events-none"
-    refute html =~ "onclick="
+    assert html =~ "aria-disabled:text-pp-on-surface/38"
+    refute html =~ "<button"
   end
 
-  defp disabled_link(assigns) do
-    ~H"""
-    <.pp_button href="/logout" method="delete" disabled>Sign out</.pp_button>
-    """
-  end
-
-  test "loading disables the button, drops the ripple handler, and swaps start_icon for a spinner" do
-    html = render_component(&loading/1)
+  test "loading disables, drops the ripple and shows a spinner instead of start_icon" do
+    html =
+      html(fn assigns ->
+        ~H"""
+        <.pp_button loading>
+          <:start_icon><span id="s" /></:start_icon>
+          Save
+        </.pp_button>
+        """
+      end)
 
     assert html =~ "disabled"
-    assert html =~ ~s(aria-busy="true")
     assert html =~ "animate-spin"
+    assert html =~ ~s(aria-busy="true")
+    refute html =~ ~s(id="s")
     refute html =~ "onclick="
-    refute html =~ "hero-trash"
   end
 
-  defp loading(assigns) do
-    ~H"""
-    <.pp_button loading>
-      <:start_icon><span class="hero-trash" /></:start_icon>
-      Delete
-    </.pp_button>
-    """
-  end
-
-  describe "color=inherit" do
-    test "text/outlined/icon follow currentColor instead of a brand color" do
-      for variant <- ~w(text outlined icon) do
-        assigns = %{variant: variant}
-
-        html =
-          rendered_to_string(
-            ~H"<PhoenixPaper.Button.pp_button variant={@variant} color='inherit'>x</PhoenixPaper.Button.pp_button>"
-          )
-
-        assert html =~ "text-inherit"
-        assert html =~ "hover:bg-current/10"
-        assert html =~ "focus-visible:outline-current"
-        refute html =~ "pp-primary"
-      end
-    end
-
-    test "raised falls back to a neutral surface chip" do
-      assigns = %{}
-
-      html =
-        rendered_to_string(
-          ~H"<PhoenixPaper.Button.pp_button color='inherit'>x</PhoenixPaper.Button.pp_button>"
-        )
-
-      assert html =~ "bg-pp-surface-variant text-pp-on-surface"
-    end
-  end
-
-  test "position emits a single position class, keeping the ripple's overflow-hidden" do
-    html = render_component(&fixed_position/1)
+  test "position emits exactly one position class" do
+    html = html(fn assigns -> ~H"<.pp_button position='fixed'>A</.pp_button>" end)
 
     assert html =~ "fixed overflow-hidden"
-    assert html =~ "bottom-6"
-    refute html =~ "relative"
-  end
-
-  defp fixed_position(assigns) do
-    ~H"""
-    <.pp_button position="fixed" class="bottom-6 right-6">+</.pp_button>
-    """
-  end
-
-  test "position without ripple still emits the position" do
-    html = render_component(&absolute_no_ripple/1)
-
-    assert html =~ "absolute"
-    refute html =~ "overflow-hidden"
-  end
-
-  defp absolute_no_ripple(assigns) do
-    ~H"""
-    <.pp_button position="absolute" ripple={false}>+</.pp_button>
-    """
+    refute html =~ "relative overflow-hidden"
   end
 end

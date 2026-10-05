@@ -50,7 +50,7 @@ defmodule PhoenixPaper.AvatarTest do
   test "variant=rounded uses a smaller radius than the default circular" do
     html = render_component(&rounded/1)
 
-    assert html =~ "rounded-md"
+    assert html =~ "rounded-pp-md"
     refute html =~ "rounded-full"
   end
 
@@ -62,7 +62,7 @@ defmodule PhoenixPaper.AvatarTest do
 
   test "variant=square drops rounding entirely" do
     html = render_component(&square/1)
-    assert html =~ "rounded-none"
+    assert html =~ "rounded-pp-none"
   end
 
   defp square(assigns) do
@@ -104,13 +104,13 @@ defmodule PhoenixPaper.AvatarTest do
     """
   end
 
-  test "color paints the fallback with a theme color pair, default stays neutral" do
+  test "color paints the fallback with an MD3 container pair, primary by default" do
     for {color, class} <- [
-          {"default", "bg-pp-surface-variant text-pp-on-surface"},
-          {"primary", "bg-pp-primary text-pp-on-primary"},
-          {"secondary", "bg-pp-secondary text-pp-on-secondary"},
-          {"accent", "bg-pp-accent text-pp-on-accent"},
-          {"error", "bg-pp-error text-pp-on-error"}
+          {"primary", "bg-pp-primary-container text-pp-on-primary-container"},
+          {"secondary", "bg-pp-secondary-container text-pp-on-secondary-container"},
+          {"tertiary", "bg-pp-tertiary-container text-pp-on-tertiary-container"},
+          {"error", "bg-pp-error-container text-pp-on-error-container"},
+          {"surface", "bg-pp-surface-container-highest text-pp-on-surface-variant"}
         ] do
       assigns = %{color: color}
 

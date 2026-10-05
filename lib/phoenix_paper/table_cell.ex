@@ -61,26 +61,26 @@ defmodule PhoenixPaper.TableCell do
 
   defp head_classes(align) do
     [
-      "px-4 py-3 text-xs font-medium uppercase tracking-wide whitespace-nowrap text-pp-on-surface/70",
+      "px-4 py-3 pp-title-small whitespace-nowrap text-pp-on-surface-variant",
       align_classes(align)
     ]
   end
 
   defp body_classes(align) do
-    ["px-4 py-3 text-sm text-pp-on-surface", align_classes(align)]
+    ["px-4 py-3", align_classes(align)]
   end
 
-  defp align_classes("left"), do: "text-left"
+  defp align_classes("left"), do: "text-start"
   defp align_classes("center"), do: "text-center"
-  defp align_classes("right"), do: "text-right"
+  defp align_classes("right"), do: "text-end"
 
   defp sort_button_classes do
-    "inline-flex cursor-pointer select-none items-center gap-1 uppercase tracking-wide hover:text-pp-primary"
+    "inline-flex cursor-pointer select-none items-center gap-1 hover:text-pp-on-surface"
   end
 
-  defp sort_arrow_classes(nil), do: "inline-block text-xs opacity-30 transition-transform"
-  defp sort_arrow_classes("asc"), do: "inline-block text-xs opacity-100 transition-transform"
+  defp sort_arrow_classes(nil), do: "inline-block text-xs opacity-30 pp-motion-spatial-fast"
+  defp sort_arrow_classes("asc"), do: "inline-block text-xs opacity-100 pp-motion-spatial-fast"
 
   defp sort_arrow_classes("desc"),
-    do: "inline-block rotate-180 text-xs opacity-100 transition-transform"
+    do: "inline-block rotate-180 text-xs opacity-100 pp-motion-spatial-fast"
 end

@@ -96,7 +96,7 @@ defmodule PhoenixPaper.PaginationTest do
     assert html =~ ~s(phx-target="#list")
     assert html =~ ~s(aria-label="Go to first page")
     assert html =~ ~s(aria-label="Go to last page")
-    assert html =~ "border-pp-secondary/50 bg-pp-secondary/10"
+    assert html =~ "bg-pp-secondary-container text-pp-on-secondary-container"
   end
 
   defp bare(assigns) do

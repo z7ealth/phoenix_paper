@@ -69,10 +69,10 @@ defmodule PhoenixPaper.DialogTest do
         )
 
       container = container_tag(html)
-      assert container =~ "hidden w-full max-w-2xl"
+      assert container =~ "hidden w-full min-w-[280px] max-w-2xl"
 
       content = content_tag(html)
-      assert content =~ "w-full p-6"
+      assert content =~ "w-full rounded-pp-xl bg-pp-surface-container-high p-6"
       refute content =~ "max-w-"
     end
 
@@ -84,14 +84,14 @@ defmodule PhoenixPaper.DialogTest do
           ~H"<PhoenixPaper.Dialog.pp_dialog id='d'>x</PhoenixPaper.Dialog.pp_dialog>"
         )
 
-      assert container_tag(html) =~ "max-w-md"
+      assert container_tag(html) =~ "max-w-lg"
     end
 
     test "maps each value to a literal max-w class" do
       for {value, class} <- [
             {"xs", "max-w-xs"},
             {"sm", "max-w-sm"},
-            {"lg", "max-w-lg"},
+            {"md", "max-w-md"},
             {"2xl", "max-w-2xl"},
             {"5xl", "max-w-5xl"},
             {"full", "max-w-full"}
@@ -105,7 +105,7 @@ defmodule PhoenixPaper.DialogTest do
 
         tag = container_tag(html)
         assert tag =~ class
-        refute tag =~ "max-w-md"
+        refute tag =~ "max-w-lg"
       end
     end
 

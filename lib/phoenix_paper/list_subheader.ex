@@ -18,7 +18,7 @@ defmodule PhoenixPaper.ListSubheader do
     ~H"""
     <div
       data-pp-component="list-subheader"
-      class={Helpers.classes(@paperize, "px-4 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-pp-outline", @class)}
+      class={Helpers.classes(@paperize, "px-4 py-2 pp-title-small text-pp-on-surface-variant", @class)}
       {@rest}
     >
       {render_slot(@inner_block)}

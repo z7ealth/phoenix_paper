@@ -3,57 +3,63 @@ defmodule PhoenixPaper.ButtonGroupTest do
 
   use Phoenix.Component
   import Phoenix.LiveViewTest
-  import PhoenixPaper.Button
   import PhoenixPaper.ButtonGroup
+  import PhoenixPaper.Button
 
-  test "rounds only the group's outer corners and collapses inner borders" do
-    html = render_component(&group/1)
+  test "standard (default): spaced group with the press-expand utility and size vars" do
+    assigns = %{}
 
-    assert html =~ "first-child]:rounded-l-md"
-    assert html =~ "last-child]:rounded-r-md"
-    assert html =~ "not(:first-child)]:-ml-px"
+    html =
+      rendered_to_string(~H"""
+      <.pp_button_group aria-label="Actions">
+        <.pp_button>One</.pp_button>
+        <.pp_button>Two</.pp_button>
+      </.pp_button_group>
+      """)
+
+    assert html =~ ~s(role="group")
+    assert html =~ "pp-button-group-standard"
+    assert html =~ "gap-3"
+    assert html =~ "[--pp-group-pad:16px]"
   end
 
-  defp group(assigns) do
-    ~H"""
-    <.pp_button_group>
-      <.pp_button variant="outlined">Left</.pp_button>
-      <.pp_button variant="outlined">Right</.pp_button>
-    </.pp_button_group>
-    """
+  test "connected: the connected utility with per-size radii" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_button_group variant="connected" size="md">
+        <.pp_button size="md" group="v" selected>Day</.pp_button>
+        <.pp_button size="md" group="v" selected={false}>Week</.pp_button>
+      </.pp_button_group>
+      """)
+
+    assert html =~ "pp-button-group-connected"
+    assert html =~ "[--pp-group-outer:28px]"
+    assert html =~ ~s(data-pp-toggle-group="v")
+    assert html =~ ~s(aria-pressed="true")
   end
 
-  test "orientation=\"vertical\" rounds top/bottom instead of left/right and collapses top borders" do
-    html = render_component(&vertical/1)
+  test "full_width shares the width" do
+    assigns = %{}
 
-    assert html =~ "first-child]:rounded-t-md"
-    assert html =~ "last-child]:rounded-b-md"
-    assert html =~ "not(:first-child)]:-mt-px"
-    refute html =~ "rounded-l-md"
-    refute html =~ "rounded-r-md"
+    html =
+      rendered_to_string(
+        ~H"<.pp_button_group full_width><.pp_button>A</.pp_button></.pp_button_group>"
+      )
+
+    assert html =~ "[&amp;&gt;*]:flex-1"
   end
 
-  defp vertical(assigns) do
-    ~H"""
-    <.pp_button_group orientation="vertical">
-      <.pp_button variant="outlined">Top</.pp_button>
-      <.pp_button variant="outlined">Bottom</.pp_button>
-    </.pp_button_group>
-    """
-  end
+  test "paperize={false} drops the group classes" do
+    assigns = %{}
 
-  test "disable_elevation forces every child's elevation shadow to 0" do
-    html = render_component(&disable_elevation/1)
+    html =
+      rendered_to_string(
+        ~H"<.pp_button_group paperize={false} class='mine'><span>x</span></.pp_button_group>"
+      )
 
-    assert html =~ "*]:pp-elevation-0"
-  end
-
-  defp disable_elevation(assigns) do
-    ~H"""
-    <.pp_button_group disable_elevation>
-      <.pp_button>Left</.pp_button>
-      <.pp_button>Right</.pp_button>
-    </.pp_button_group>
-    """
+    refute html =~ "pp-button-group"
+    assert html =~ "mine"
   end
 end

@@ -37,8 +37,8 @@ defmodule PhoenixPaper.ListTest do
       rendered_to_string(~H"<.pp_list dense nested inset><span>x</span></.pp_list>")
 
     assert html =~ "[&amp;_[data-pp-component=list-item]]:py-1"
-    assert html =~ "pl-4"
-    assert html =~ ":not(:has([data-pp-list-item-leading]))]:pl-13"
+    assert html =~ "ps-4"
+    assert html =~ ":not(:has([data-pp-list-item-leading]))]:ps-14"
   end
 
   describe "pp_list_group" do

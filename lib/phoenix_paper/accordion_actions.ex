@@ -26,7 +26,7 @@ defmodule PhoenixPaper.AccordionActions do
     ~H"""
     <div
       data-pp-component="accordion-actions"
-      class={Helpers.classes(@paperize, "hidden items-center justify-end gap-2 border-t border-pp-outline/20 px-2 py-2 peer-checked:flex", @class)}
+      class={Helpers.classes(@paperize, "hidden items-center justify-end gap-2 border-t border-pp-outline-variant px-3 py-2 peer-checked:flex", @class)}
       {@rest}
     >
       {render_slot(@inner_block)}

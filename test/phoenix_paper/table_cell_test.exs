@@ -35,7 +35,7 @@ defmodule PhoenixPaper.TableCellTest do
 
   test "align=\"right\" applies text-right" do
     html = render_component(&right_aligned/1)
-    assert html =~ "text-right"
+    assert html =~ "text-end"
   end
 
   defp right_aligned(assigns) do

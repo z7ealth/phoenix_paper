@@ -51,9 +51,8 @@ defmodule PhoenixPaper.List do
   It works the same way as `PhoenixPaper.Collapse` (a hidden checkbox, a
   `<label>` trigger, height animated with CSS grid rows, no JS), with the
   trigger styled as a list item. The trigger carries
-  `data-pp-component="list-item"`, so the list's `dense`/`inset` and a
-  colored `PhoenixPaper.Drawer`'s text/hover colors reach it like any
-  other item. The nested items are indented one step. It lives in this
+  `data-pp-component="list-item"`, so the list's `dense`/`inset` reach it
+  like any other item. The nested items are indented one step. It lives in this
   module rather than its own because it has no use outside a list.
   """
   use Phoenix.Component
@@ -124,22 +123,22 @@ defmodule PhoenixPaper.List do
         <span
           :if={@leading != []}
           data-pp-list-item-leading
-          class="flex shrink-0 items-center justify-center [&>*]:size-6"
+          class="flex shrink-0 items-center justify-center text-pp-on-surface-variant"
         >
           {render_slot(@leading)}
         </span>
-        <span class="block min-w-0 flex-1 truncate text-sm">{render_slot(@label)}</span>
+        <span class="block min-w-0 flex-1 truncate pp-body-large">{render_slot(@label)}</span>
         <span
           :if={@paperize}
           data-pp-collapse-icon
-          class="inline-flex shrink-0 transition-transform duration-200"
+          class="inline-flex shrink-0 text-pp-on-surface-variant pp-motion-spatial-fast"
         >
-          <.pp_icon name="hero-chevron-down-mini" />
+          <.pp_icon name="hero-chevron-down" />
         </span>
       </label>
       <div id={Collapse.content_id(@id)} class={Collapse.content_classes()}>
         <div class="min-h-0 overflow-hidden">
-          <div role="list" class={Helpers.classes(@paperize, "flex flex-col pl-4", nil)}>
+          <div role="list" class={Helpers.classes(@paperize, "flex flex-col ps-4", nil)}>
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -149,26 +148,28 @@ defmodule PhoenixPaper.List do
   end
 
   defp list_classes(dense, nested, inset) do
-    ["flex flex-col py-1", dense_classes(dense), nested_classes(nested), inset_classes(inset)]
+    ["flex flex-col py-2", dense_classes(dense), nested_classes(nested), inset_classes(inset)]
   end
 
-  defp dense_classes(true), do: "[&_[data-pp-component=list-item]]:py-1"
+  defp dense_classes(true),
+    do: "[&_[data-pp-component=list-item]]:min-h-12 [&_[data-pp-component=list-item]]:py-1"
+
   defp dense_classes(false), do: ""
 
-  defp nested_classes(true), do: "pl-4"
+  defp nested_classes(true), do: "ps-4"
   defp nested_classes(false), do: ""
 
   # px-4 item padding + size-6 leading icon + gap-3 = 13 spacing units.
   defp inset_classes(true),
     do:
-      "[&_[data-pp-component=list-item]:not(:has([data-pp-list-item-leading]))]:pl-13 [&_[data-pp-component=list-subheader]]:pl-13"
+      "[&_[data-pp-component=list-item]:not(:has([data-pp-list-item-leading]))]:ps-14 [&_[data-pp-component=list-subheader]]:ps-14"
 
   defp inset_classes(false), do: ""
 
   defp group_trigger_classes(dense) do
     [
-      "flex select-none items-center gap-3 rounded-full px-4 text-pp-on-surface transition-colors hover:bg-pp-on-surface/10 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-pp-primary peer-checked:[&>[data-pp-collapse-icon]]:rotate-180",
-      if(dense, do: "py-1", else: "py-2")
+      "relative flex select-none items-center gap-4 overflow-hidden px-4 text-pp-on-surface pp-state-layer peer-focus-visible:outline-3 peer-focus-visible:-outline-offset-3 peer-focus-visible:outline-solid peer-focus-visible:outline-pp-secondary peer-checked:[&>[data-pp-collapse-icon]]:rotate-180",
+      if(dense, do: "min-h-12 py-1", else: "min-h-14 py-2")
     ]
   end
 end

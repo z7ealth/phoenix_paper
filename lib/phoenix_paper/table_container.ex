@@ -18,6 +18,12 @@ defmodule PhoenixPaper.TableContainer do
   `class="max-h-96 overflow-y-auto"`, since a table wide enough to need
   horizontal scroll but not tall enough to need vertical scroll is the more
   common case, and forcing both isn't always wanted).
+
+  `variant` picks the surface the way `PhoenixPaper.Card`'s does:
+  `outlined` (default — an `outline-variant` border), `elevated`
+  (`surface-container-low` + level-1 shadow) or `filled`
+  (`surface-container-highest`). 0.3's `elevation` attr is gone. A sticky
+  header inherits the container's background.
   """
   use Phoenix.Component
 
@@ -26,11 +32,16 @@ defmodule PhoenixPaper.TableContainer do
   import PhoenixPaper.Paper, only: [pp_paper: 1]
 
   attr(:paperize, :boolean, default: true)
-  attr(:elevation, :integer, default: 1)
+
+  attr(:variant, :string,
+    default: "outlined",
+    values: ~w(elevated filled outlined),
+    doc: "the surface, as for PhoenixPaper.Card"
+  )
 
   attr(:shape, :atom,
-    default: :lg,
-    values: ~w(none xs sm md lg xl full)a,
+    default: :md,
+    values: PhoenixPaper.Shape.tokens(),
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
@@ -43,7 +54,9 @@ defmodule PhoenixPaper.TableContainer do
   def pp_table_container(assigns) do
     ~H"""
     <.pp_paper
-      elevation={@elevation}
+      color={surface(@variant)}
+      elevation={if @variant == "elevated", do: 1, else: 0}
+      outlined={@variant == "outlined"}
       shape={@shape}
       paperize={@paperize}
       component="table-container"
@@ -54,4 +67,8 @@ defmodule PhoenixPaper.TableContainer do
     </.pp_paper>
     """
   end
+
+  defp surface("elevated"), do: "surface-container-low"
+  defp surface("filled"), do: "surface-container-highest"
+  defp surface("outlined"), do: "surface"
 end

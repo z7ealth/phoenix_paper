@@ -5,168 +5,76 @@ defmodule PhoenixPaper.TooltipTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Tooltip
 
-  test "renders the title in a hidden-until-hover bubble" do
-    html = render_component(&basic/1)
+  test "plain (default): inverse-surface bubble, hidden until hover/focus of its named group" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_tooltip title='Delete'><button>x</button></.pp_tooltip>")
 
+    assert html =~ ~s(role="tooltip")
     assert html =~ "Delete"
-    assert html =~ "opacity-0"
-    assert html =~ "group-hover:opacity-100"
-    assert html =~ "group-focus-within:opacity-100"
+    assert html =~ "group/tooltip"
+    assert html =~ "bg-pp-inverse-surface"
+    assert html =~ "pp-body-small"
+    assert html =~ "invisible opacity-0"
+    assert html =~ "group-hover/tooltip:visible"
+    assert html =~ "group-focus-within/tooltip:opacity-100"
+    assert html =~ "group-hover/tooltip:delay-300"
+    assert html =~ "pointer-events-none"
   end
 
-  defp basic(assigns) do
-    ~H"""
-    <.pp_tooltip title="Delete">
-      <button>x</button>
-    </.pp_tooltip>
-    """
+  test "nil or empty title renders only the trigger" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_tooltip title={nil}><button>a</button></.pp_tooltip>
+      <.pp_tooltip title=""><button>b</button></.pp_tooltip>
+      """)
+
+    refute html =~ "role=\"tooltip\""
   end
 
-  test "title=nil renders only the trigger, no tooltip bubble" do
-    html = render_component(&no_title/1)
+  test "rich: surface-container card with subhead and actions, interactive" do
+    assigns = %{}
 
-    refute html =~ "tooltip-bubble"
-    assert html =~ "trigger"
+    html =
+      rendered_to_string(~H"""
+      <.pp_tooltip variant="rich" subhead="Autosave" title="Saved as you type.">
+        <button>i</button>
+        <:actions><a href="/help">Learn more</a></:actions>
+      </.pp_tooltip>
+      """)
+
+    assert html =~ "bg-pp-surface-container"
+    assert html =~ "pp-elevation-2"
+    assert html =~ "Autosave"
+    assert html =~ "pp-title-small"
+    assert html =~ "Learn more"
+    assert html =~ "pointer-events-auto"
   end
 
-  defp no_title(assigns) do
-    ~H"""
-    <.pp_tooltip>
-      <span>trigger</span>
-    </.pp_tooltip>
-    """
+  test "placement picks the offset; the gap is padding" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_tooltip title="A" placement="bottom"><b>a</b></.pp_tooltip>
+      <.pp_tooltip title="B" placement="right"><b>b</b></.pp_tooltip>
+      """)
+
+    assert html =~ "top-full left-1/2 -translate-x-1/2 pt-1"
+    assert html =~ "left-full top-1/2 -translate-y-1/2 ps-1"
   end
 
-  test "title=\"\" also disables the tooltip, matching MUI" do
-    html = render_component(&empty_title/1)
-    refute html =~ "tooltip-bubble"
-  end
+  test "paperize={false}: no built-in bubble classes" do
+    assigns = %{}
 
-  defp empty_title(assigns) do
-    ~H"""
-    <.pp_tooltip title="">
-      <span>trigger</span>
-    </.pp_tooltip>
-    """
-  end
+    html =
+      rendered_to_string(
+        ~H"<.pp_tooltip title='A' paperize={false} class='mine'><b>a</b></.pp_tooltip>"
+      )
 
-  test "placement picks the position classes" do
-    html = render_component(&right_placement/1)
-    assert html =~ "left-full"
-  end
-
-  defp right_placement(assigns) do
-    ~H"""
-    <.pp_tooltip title="Info" placement="right">
-      <span>trigger</span>
-    </.pp_tooltip>
-    """
-  end
-
-  test "arrow renders an extra rotated square" do
-    html = render_component(&with_arrow/1)
-    assert html =~ "rotate-45"
-  end
-
-  defp with_arrow(assigns) do
-    ~H"""
-    <.pp_tooltip title="Info" arrow>
-      <span>trigger</span>
-    </.pp_tooltip>
-    """
-  end
-
-  test "arrow={false} (default) renders no rotated square" do
-    html = render_component(&basic/1)
-    refute html =~ "rotate-45"
-  end
-
-  test "paperize={false}: no built-in classes on the bubble, only the caller's" do
-    html = render_component(&bare/1)
-
-    refute html =~ "bg-pp-on-surface"
-    assert html =~ "my-class"
-  end
-
-  defp bare(assigns) do
-    ~H"""
-    <.pp_tooltip title="Info" paperize={false} class="my-class">
-      <span>trigger</span>
-    </.pp_tooltip>
-    """
-  end
-
-  describe "colors and styles" do
-    test "defaults to the raised inverted chip, unchanged" do
-      html = render_component(&basic/1)
-      assert html =~ "bg-pp-on-surface text-pp-surface"
-      assert html =~ "shadow-md"
-      assert html =~ "px-2 py-1 text-xs"
-      assert html =~ ~s( rounded")
-    end
-
-    test "color fills the bubble and the arrow with a brand color pair" do
-      for color <- ~w(primary secondary accent error) do
-        assigns = %{color: color}
-
-        html =
-          rendered_to_string(~H"""
-          <.pp_tooltip title="t" color={@color} arrow><button>x</button></.pp_tooltip>
-          """)
-
-        assert html =~ "bg-pp-#{color} text-pp-on-#{color}"
-        assert html =~ ~r/rotate-45 bg-pp-#{color}/
-      end
-    end
-
-    test "flat drops the shadow" do
-      assigns = %{}
-      html = rendered_to_string(~H"<.pp_tooltip title='t' variant='flat'><b>x</b></.pp_tooltip>")
-      refute html =~ "shadow-md"
-      assert html =~ "bg-pp-on-surface"
-    end
-
-    test "outlined is a bordered surface, arrow bordered on its outer edges" do
-      assigns = %{}
-
-      html =
-        rendered_to_string(~H"""
-        <.pp_tooltip title="t" variant="outlined" color="error" arrow><b>x</b></.pp_tooltip>
-        """)
-
-      assert html =~ "border border-pp-error bg-pp-surface text-pp-error"
-      assert html =~ "bg-pp-surface border-pp-error border-b border-r"
-      refute html =~ "shadow-md"
-    end
-
-    test "outlined arrow edges follow the placement" do
-      for {placement, edges} <- [
-            {"top", "border-b border-r"},
-            {"bottom", "border-t border-l"},
-            {"left", "border-t border-r"},
-            {"right", "border-b border-l"}
-          ] do
-        assigns = %{placement: placement}
-
-        html =
-          rendered_to_string(~H"""
-          <.pp_tooltip title="t" variant="outlined" placement={@placement} arrow><b>x</b></.pp_tooltip>
-          """)
-
-        assert html =~ edges
-      end
-    end
-
-    test "size and shape" do
-      assigns = %{}
-
-      html =
-        rendered_to_string(~H"""
-        <.pp_tooltip title="t" size="large" shape={:full}><b>x</b></.pp_tooltip>
-        """)
-
-      assert html =~ "px-3 py-1.5 text-sm"
-      assert html =~ "rounded-full"
-    end
+    refute html =~ "bg-pp-inverse-surface"
+    assert html =~ "mine"
+    assert html =~ "group/tooltip relative inline-flex"
   end
 end

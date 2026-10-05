@@ -1,83 +1,68 @@
 defmodule PhoenixPaper.Slider do
   @moduledoc """
-  A Material Design slider (`pp_slider/1`) — a native `<input
-  type="range">`, in the spirit of MUI's `Slider`.
+  An MD3 slider (`pp_slider/1`), with the M3 Expressive sizes, centered
+  slider and value indicator — built on native `<input type="range">`.
 
       <.pp_slider name="volume" value={60} label="Volume" />
+      <.pp_slider name="balance" value={0} min={-50} max={50} track="centered" />
+      <.pp_slider name="price" value={{20, 80}} label="Price" value_indicator />
 
-  Colored/sized via a small set of literal, mutually-exclusive CSS
-  utilities in `priv/static/phoenix_paper.css` (`pp-slider`/
-  `pp-slider-small`/`pp-slider-vertical`/`pp-slider-vertical-small`, plus
-  `pp-slider-primary`/etc. and `pp-slider-track-none`/
-  `pp-slider-track-inverted`) rather than `accent-color` alone — see that
-  file's own comment for why `accent-color` can't give the *unfilled* part
-  of the track a controlled color once you also want control over its
-  thickness/rounding. The filled segment is a `linear-gradient` positioned
-  by a `--pp-slider-percent` CSS custom property, set inline for the first
-  paint and kept in sync on drag by a tiny vanilla `oninput` snippet — the
-  same "small inline script, no hook, no bundler" approach
-  `PhoenixPaper.Ripple`/`PhoenixPaper.NumberField`'s steppers already use.
+  ## Look
 
-  ## Sizes
+  The current MD3 slider: a thick rounded track — the active part in
+  `color`, the inactive part in its container role (`secondary-container`
+  for `primary`) — a 4dp bar handle that narrows to 2dp while pressed,
+  6dp gaps on each side of the handle, and a 4dp stop indicator at the
+  end of the inactive track (`stop_indicator={false}` drops it). The
+  handle has MD3's focus ring when focused by keyboard.
 
-  `size="small"` shrinks the track/thumb, matching MUI's own `size` prop.
+  `size` (Expressive) is the track thickness: `xs` (16dp, default — the
+  baseline MD3 slider), `sm` (24dp), `md` (40dp), `lg` (56dp), `xl`
+  (96dp); the handle grows with it.
 
-  ## Track
+  `track` is `normal` (active from the start), `inverted` (active from the
+  handle to the end), `centered` (Expressive: active between the center
+  and the handle — for values around a midpoint) or `none` (no active
+  segment). Range sliders always fill between their handles.
 
-  `track="none"` hides the filled segment entirely (still shows the
-  neutral track + a colored thumb) — MUI's `track={false}`. `track="inverted"`
-  fills from the thumb to `max` instead of from `min` to the thumb — MUI's
-  `track="inverted"`. Both are ignored for range sliders (see below), which
-  always show the colored segment *between* the two thumbs.
+  `value_indicator` shows the Expressive value bubble (an
+  `inverse-surface` pill above the handle) while dragging or focused.
+  `label` adds a header row with the label and the current value.
 
   ## Marks
 
-  `marks={true}` ticks every `step`; `marks={[10, 50, 90]}` ticks specific
-  values; `marks={[{0, "0°C"}, {100, "100°C"}]}` ticks specific values
-  *with* labels drawn below the track. Ticks render via the native
-  `<datalist>`/`list=` pairing (real HTML, not a custom widget) — Chrome
-  and Firefox both draw tick marks and snap the thumb near them for free.
-  Label positioning assumes `orientation="horizontal"`; it isn't
-  implemented for vertical sliders.
+  `marks={true}` adds a stop at every `step`; `marks={[10, 50, 90]}` at
+  specific values; `marks={[{0, "0°C"}, {100, "100°C"}]}` with labels
+  under the track. They're also a native `<datalist>`, so the handle
+  snaps near them.
 
   ## Range sliders
 
-  Pass a `{low, high}` tuple as `value` for a two-thumb range slider —
-  MUI's array `value`. Submits as `"\#{name}_min"`/`"\#{name}_max"` (two
-  separate native inputs; there's no native two-handle range input, and
-  splitting the name avoids the query-string array-parsing ambiguity a
-  shared name would need to resolve). Built the well-known way two
-  overlapping native range inputs fake a range slider: each input's own
-  track is made fully transparent (`pointer-events: none` on the input,
-  re-enabled only on its own thumb via `[&::-webkit-slider-thumb]:pointer-events-auto`/
-  `[&::-moz-range-thumb]:pointer-events-auto`, so clicking near either thumb
-  reaches it and nothing else), and the colored segment *between* the two
-  thumbs is a separate absolutely-positioned `<div>` kept in sync by the
-  same kind of inline `oninput` snippet. Known, inherent limitation of this
-  technique (shared by essentially every native-input-based range slider):
-  a low thumb dragged past the high thumb's value (or vice versa) is
-  clamped by the inline script on `input`, not prevented at the OS/browser
-  drag-gesture level, so there's a narrow window where the two can briefly
-  overlap before the clamp corrects it. `marks`/`orientation="vertical"`
-  aren't supported in range mode.
+  A `{low, high}` tuple as `value` renders two handles, submitted as
+  `"\#{name}_min"`/`"\#{name}_max"`. It's two overlapping native inputs
+  whose tracks are transparent and whose thumbs alone take the pointer; an
+  inline `oninput` snippet clamps a handle dragged past the other (after
+  the fact — the usual limitation of this technique). No `marks`,
+  `orientation` or `track` in range mode.
+
+  ## How it stays in sync
+
+  The visible track is a separate element painted by one CSS gradient
+  from custom properties on the wrapper (`--pp-slider-f`, or `-lo`/`-hi`),
+  set for the first paint by the server and on every `input` event by a
+  small inline script (which also updates the value text). No hook. See
+  the slider section of `phoenix_paper.css`.
 
   ## Orientation
 
-  `orientation="vertical"` uses `writing-mode: vertical-lr` (Chromium/WebKit)
-  plus the still-supported non-standard `-moz-orient: vertical`
-  (Firefox) — the current cross-browser way to get a vertical native range
-  input; there's no vendor-neutral standard property for this yet.
+  `orientation="vertical"` (single sliders) runs bottom to top, using
+  `writing-mode: vertical-lr` plus Firefox's `-moz-orient`. Give the
+  slider a height via `class` (default `h-48`).
 
-  ## Not implemented
+  ## Migrating from 0.3
 
-  MUI's `valueLabelDisplay` (a tooltip that tracks the thumb's exact pixel
-  position while dragging) and non-linear `scale` functions both need real
-  per-frame JS computing pixel offsets or transforming displayed numbers —
-  more than a "small inline snippet" can reasonably do without becoming a
-  bespoke JS hook, which this library avoids. The always-visible
-  `label`/current-value header serves the same purpose as
-  `valueLabelDisplay="on"` without needing to track the thumb's position at
-  all.
+  `size` `medium`/`small` → `xs`..`xl`, `color="accent"` → `tertiary`,
+  `track` gains `centered`. Ticks are now MD3 stop dots on the track.
   """
   use Phoenix.Component
 
@@ -85,29 +70,20 @@ defmodule PhoenixPaper.Slider do
 
   attr(:id, :any, default: nil)
   attr(:name, :any, default: nil)
-
-  attr(:value, :any,
-    default: nil,
-    doc: "a number, or a {low, high} tuple for a range slider"
-  )
-
+  attr(:value, :any, default: nil, doc: "a number, or a {low, high} tuple for a range slider")
   attr(:min, :any, default: 0)
   attr(:max, :any, default: 100)
   attr(:step, :any, default: 1)
-  attr(:color, :string, default: "primary", values: ~w(primary secondary accent error))
-  attr(:size, :string, default: "medium", values: ~w(medium small))
+  attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
+  attr(:size, :string, default: "xs", values: ~w(xs sm md lg xl))
   attr(:orientation, :string, default: "horizontal", values: ~w(horizontal vertical))
-
-  attr(:track, :string,
-    default: "normal",
-    values: ~w(normal none inverted),
-    doc:
-      "none hides the filled segment; inverted fills from the thumb to max — ignored for range sliders"
-  )
+  attr(:track, :string, default: "normal", values: ~w(normal inverted centered none))
+  attr(:stop_indicator, :boolean, default: true)
+  attr(:value_indicator, :boolean, default: false, doc: "Expressive value bubble while dragging")
 
   attr(:marks, :any,
     default: false,
-    doc: "true (tick every step), a list of values, or a list of {value, label} tuples"
+    doc: "true (every step), a list of values, or a list of {value, label} tuples"
   )
 
   attr(:label, :string, default: nil)
@@ -115,8 +91,9 @@ defmodule PhoenixPaper.Slider do
   attr(:disabled, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form autofocus phx-change))
+  attr(:rest, :global, include: ~w(form autofocus))
 
+  @doc "Renders a slider. See the module doc."
   def pp_slider(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
     |> assign(field: nil)
@@ -126,75 +103,88 @@ defmodule PhoenixPaper.Slider do
     |> pp_slider()
   end
 
-  def pp_slider(%{value: {_lo, _hi}} = assigns) do
-    {lo, hi} = assigns.value
-
+  def pp_slider(%{value: {lo, hi}} = assigns) do
     assigns =
       assigns
       |> assign(:lo, lo)
       |> assign(:hi, hi)
-      |> assign(:lo_percent, percent(lo, assigns.min, assigns.max))
-      |> assign(:hi_percent, percent(hi, assigns.min, assigns.max))
+      |> assign(:lo_f, fraction(lo, assigns.min, assigns.max))
+      |> assign(:hi_f, fraction(hi, assigns.min, assigns.max))
+      |> assign(:sync_js, range_sync_script())
 
     ~H"""
-    <div data-pp-component="slider" class={Helpers.classes(@paperize, "flex flex-col gap-1", @class)}>
-      <div :if={@label} class="flex items-center justify-between text-sm">
+    <div data-pp-component="slider" class={Helpers.classes(@paperize, "flex flex-col gap-2", @class)}>
+      <div :if={@label} class={Helpers.classes(@paperize, header_classes(), nil)}>
         <span>{@label}</span>
-        <span class="tabular-nums opacity-70">{@lo} – {@hi}</span>
+        <span class="tabular-nums" data-pp-slider-current>{@lo} – {@hi}</span>
       </div>
-      <div class="relative flex h-5 items-center">
-        <div class={Helpers.classes(@paperize, "pointer-events-none absolute h-1 rounded-full bg-pp-outline/40 inset-x-0", nil)} />
-        <div
-          data-pp-slider-between
-          class={Helpers.classes(@paperize, ["pointer-events-none absolute h-1 rounded-full", between_classes(@color)], nil)}
-          style={"left: #{@lo_percent}%; right: #{100 - @hi_percent}%"}
-        />
+      <div
+        class={["group/slider relative flex items-center", Helpers.classes(@paperize, [size_vars(@size), color_vars(@color), "has-[:disabled]:opacity-38"], nil)]}
+        style={"--pp-slider-lo: #{@lo_f}; --pp-slider-hi: #{@hi_f}"}
+      >
+        <div :if={@paperize} class={["pp-slider-track-shape pp-slider-track-range", !@stop_indicator && "pp-slider-no-stop"]} />
         <input
+          :for={{bound, value, suffix} <- [{:lo, @lo, "_min"}, {:hi, @hi, "_max"}]}
           type="range"
-          name={@name && "#{@name}_min"}
-          value={@lo}
+          id={@id && "#{@id}#{suffix}"}
+          name={@name && "#{@name}#{suffix}"}
+          value={value}
           min={@min}
           max={@max}
           step={@step}
           disabled={@disabled}
-          style={"--pp-slider-percent: #{@lo_percent}%"}
-          oninput={range_sync_script()}
-          class={
-            Helpers.classes(
-              @paperize,
-              [
-                "pointer-events-none absolute inset-x-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto",
-                slider_shape_classes(@size, "horizontal"),
-                color_classes(@color),
-                "pp-slider-range-input"
-              ],
-              nil
-            )
-          }
+          aria-label={@label && "#{@label} (#{bound_label(bound)})"}
+          data-pp-slider-bound={bound}
+          oninput={@sync_js}
+          class={[
+            "absolute inset-x-0",
+            Helpers.classes(@paperize, "pp-slider-input pp-slider-input-range", nil)
+          ]}
           {@rest}
         />
+        <span
+          :for={{bound, value} <- [{"lo", @lo}, {"hi", @hi}]}
+          :if={@value_indicator && @paperize}
+          data-pp-slider-value={bound}
+          class={value_indicator_classes(bound)}
+        >
+          {value}
+        </span>
+      </div>
+    </div>
+    """
+  end
+
+  def pp_slider(%{orientation: "vertical"} = assigns) do
+    assigns =
+      assigns
+      |> assign(:value, assigns.value || midpoint(assigns.min, assigns.max))
+      |> then(&assign(&1, :f, fraction(&1.value, &1.min, &1.max)))
+      |> assign(:sync_js, sync_script())
+
+    ~H"""
+    <div data-pp-component="slider" class={Helpers.classes(@paperize, "inline-flex flex-col items-center gap-2", @class)}>
+      <div :if={@label} class={Helpers.classes(@paperize, header_classes(), nil)}>
+        <span>{@label}</span>
+        <span class="tabular-nums" data-pp-slider-current>{@value}</span>
+      </div>
+      <div
+        class={["relative flex h-48 justify-center", Helpers.classes(@paperize, [size_vars(@size), color_vars(@color), "has-[:disabled]:opacity-38"], nil)]}
+        style={"--pp-slider-f: #{@f}"}
+      >
+        <div :if={@paperize} class="pp-slider-track-vertical" />
         <input
           type="range"
-          name={@name && "#{@name}_max"}
-          value={@hi}
+          id={@id}
+          name={@name}
+          value={@value}
           min={@min}
           max={@max}
           step={@step}
           disabled={@disabled}
-          style={"--pp-slider-percent: #{@hi_percent}%"}
-          oninput={range_sync_script()}
-          class={
-            Helpers.classes(
-              @paperize,
-              [
-                "pointer-events-none absolute inset-x-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto",
-                slider_shape_classes(@size, "horizontal"),
-                color_classes(@color),
-                "pp-slider-range-input"
-              ],
-              nil
-            )
-          }
+          aria-label={@label}
+          oninput={@sync_js}
+          class={["relative", Helpers.classes(@paperize, "pp-slider-input-vertical", nil)]}
           {@rest}
         />
       </div>
@@ -206,55 +196,65 @@ defmodule PhoenixPaper.Slider do
     assigns =
       assigns
       |> assign(:value, assigns.value || midpoint(assigns.min, assigns.max))
-      |> then(fn assigns ->
-        assign(assigns, :percent, percent(assigns.value, assigns.min, assigns.max))
-      end)
+      |> then(&assign(&1, :f, fraction(&1.value, &1.min, &1.max)))
       |> assign(:mark_values, mark_values(assigns.marks, assigns.min, assigns.max, assigns.step))
       |> assign(:labeled_marks, labeled_marks(assigns.marks))
-      |> assign_new(:datalist_id, fn ->
-        assigns.marks &&
-          "#{assigns.id || assigns.name || System.unique_integer([:positive])}-marks"
+      |> assign(:sync_js, sync_script())
+      |> then(fn a ->
+        assign(
+          a,
+          :datalist_id,
+          a.marks && "#{a.id || a.name || System.unique_integer([:positive])}-marks"
+        )
       end)
 
     ~H"""
-    <div data-pp-component="slider" class={Helpers.classes(@paperize, "flex flex-col gap-1", @class)}>
-      <div :if={@label} class="flex items-center justify-between text-sm">
+    <div data-pp-component="slider" class={Helpers.classes(@paperize, "flex flex-col gap-2", @class)}>
+      <div :if={@label} class={Helpers.classes(@paperize, header_classes(), nil)}>
         <span>{@label}</span>
-        <span class="tabular-nums opacity-70">{@value}</span>
+        <span class="tabular-nums" data-pp-slider-current>{@value}</span>
       </div>
-      <input
-        type="range"
-        id={@id}
-        name={@name}
-        value={@value}
-        min={@min}
-        max={@max}
-        step={@step}
-        disabled={@disabled}
-        list={@datalist_id}
-        style={"--pp-slider-percent: #{@percent}%"}
-        oninput={percent_sync_script()}
-        class={
-          Helpers.classes(
-            @paperize,
-            [
-              slider_shape_classes(@size, @orientation),
-              color_classes(@color),
-              track_classes(@track)
-            ],
-            nil
-          )
-        }
-        {@rest}
-      />
+      <div
+        class={["group/slider relative flex items-center", Helpers.classes(@paperize, [size_vars(@size), color_vars(@color), "has-[:disabled]:opacity-38"], nil)]}
+        style={"--pp-slider-f: #{@f}"}
+      >
+        <div :if={@paperize} class={["pp-slider-track-shape", track_mode(@track), !@stop_indicator && "pp-slider-no-stop"]}>
+          <span
+            :for={v <- @mark_values}
+            class="absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pp-on-secondary-container/70"
+            style={"left: calc(2px + (100% - 4px) * #{fraction(v, @min, @max)})"}
+          />
+        </div>
+        <input
+          type="range"
+          id={@id}
+          name={@name}
+          value={@value}
+          min={@min}
+          max={@max}
+          step={@step}
+          disabled={@disabled}
+          list={@datalist_id}
+          aria-label={@label}
+          oninput={@sync_js}
+          class={["relative", Helpers.classes(@paperize, "pp-slider-input", nil)]}
+          {@rest}
+        />
+        <span :if={@value_indicator && @paperize} data-pp-slider-value class={value_indicator_classes("f")}>
+          {@value}
+        </span>
+      </div>
       <datalist :if={@marks} id={@datalist_id}>
         <option :for={v <- @mark_values} value={v} />
       </datalist>
-      <div :if={@labeled_marks != [] and @orientation == "horizontal"} class="relative mt-1 h-4 text-xs text-pp-outline">
+      <div
+        :if={@labeled_marks != []}
+        class={Helpers.classes(@paperize, "relative h-4 pp-label-medium text-pp-on-surface-variant", nil)}
+      >
         <span
           :for={{v, text} <- @labeled_marks}
           class="absolute -translate-x-1/2"
-          style={"left: #{percent(v, @min, @max)}%"}
+          style={"left: calc(2px + (100% - 4px) * #{fraction(v, @min, @max)})"}
         >
           {text}
         </span>
@@ -263,40 +263,74 @@ defmodule PhoenixPaper.Slider do
     """
   end
 
-  defp slider_shape_classes("medium", "horizontal"), do: "pp-slider"
-  defp slider_shape_classes("small", "horizontal"), do: "pp-slider-small"
-  defp slider_shape_classes("medium", "vertical"), do: "pp-slider-vertical"
-  defp slider_shape_classes("small", "vertical"), do: "pp-slider-vertical-small"
+  defp header_classes, do: "flex items-center justify-between pp-label-large text-pp-on-surface"
 
-  defp color_classes("primary"), do: "pp-slider-primary"
-  defp color_classes("secondary"), do: "pp-slider-secondary"
-  defp color_classes("accent"), do: "pp-slider-accent"
-  defp color_classes("error"), do: "pp-slider-error"
+  defp bound_label(:lo), do: "minimum"
+  defp bound_label(:hi), do: "maximum"
 
-  defp track_classes("normal"), do: ""
-  defp track_classes("none"), do: "pp-slider-track-none"
-  defp track_classes("inverted"), do: "pp-slider-track-inverted"
+  defp track_mode("normal"), do: "pp-slider-track-normal"
+  defp track_mode("inverted"), do: "pp-slider-track-inverted"
+  defp track_mode("centered"), do: "pp-slider-track-centered"
+  defp track_mode("none"), do: "pp-slider-track-none"
 
-  defp between_classes("primary"), do: "bg-pp-primary"
-  defp between_classes("secondary"), do: "bg-pp-secondary"
-  defp between_classes("accent"), do: "bg-pp-accent"
-  defp between_classes("error"), do: "bg-pp-error"
+  # Track thickness, handle height and inactive-track corner radius per
+  # Expressive size.
+  defp size_vars("xs"),
+    do: "[--pp-slider-track-size:16px] [--pp-slider-handle:44px] [--pp-slider-radius:8px]"
 
-  defp percent(value, min, max) do
-    v = to_float(value)
+  defp size_vars("sm"),
+    do: "[--pp-slider-track-size:24px] [--pp-slider-handle:44px] [--pp-slider-radius:8px]"
+
+  defp size_vars("md"),
+    do: "[--pp-slider-track-size:40px] [--pp-slider-handle:52px] [--pp-slider-radius:12px]"
+
+  defp size_vars("lg"),
+    do: "[--pp-slider-track-size:56px] [--pp-slider-handle:68px] [--pp-slider-radius:16px]"
+
+  defp size_vars("xl"),
+    do: "[--pp-slider-track-size:96px] [--pp-slider-handle:108px] [--pp-slider-radius:28px]"
+
+  defp color_vars("primary"),
+    do:
+      "[--pp-slider-active:var(--color-pp-primary)] [--pp-slider-inactive:var(--color-pp-secondary-container)]"
+
+  defp color_vars("secondary"),
+    do:
+      "[--pp-slider-active:var(--color-pp-secondary)] [--pp-slider-inactive:var(--color-pp-secondary-container)]"
+
+  defp color_vars("tertiary"),
+    do:
+      "[--pp-slider-active:var(--color-pp-tertiary)] [--pp-slider-inactive:var(--color-pp-tertiary-container)]"
+
+  defp color_vars("error"),
+    do:
+      "[--pp-slider-active:var(--color-pp-error)] [--pp-slider-inactive:var(--color-pp-error-container)]"
+
+  # The Expressive value bubble: above the handle, shown while the slider
+  # is pressed or keyboard-focused.
+  defp value_indicator_classes(bound) do
+    [
+      "pointer-events-none absolute bottom-full mb-1 inline-flex h-11 min-w-12 -translate-x-1/2 scale-75 items-center justify-center rounded-pp-full bg-pp-inverse-surface px-4 pp-label-large text-pp-inverse-on-surface opacity-0 pp-motion-spatial-fast",
+      "group-has-[:active]/slider:scale-100 group-has-[:active]/slider:opacity-100 group-has-[:focus-visible]/slider:scale-100 group-has-[:focus-visible]/slider:opacity-100",
+      bubble_left(bound)
+    ]
+  end
+
+  defp bubble_left("f"), do: "left-[calc(2px+(100%-4px)*var(--pp-slider-f))]"
+  defp bubble_left("lo"), do: "left-[calc(2px+(100%-4px)*var(--pp-slider-lo))]"
+  defp bubble_left("hi"), do: "left-[calc(2px+(100%-4px)*var(--pp-slider-hi))]"
+
+  defp fraction(value, min, max) do
     lo = to_float(min)
     hi = to_float(max)
 
-    ((v - lo) / (hi - lo) * 100)
+    ((to_float(value) - lo) / (hi - lo))
     |> max(0.0)
-    |> min(100.0)
+    |> min(1.0)
+    |> Float.round(4)
   end
 
-  defp midpoint(min, max) do
-    lo = to_float(min)
-    hi = to_float(max)
-    trunc((lo + hi) / 2)
-  end
+  defp midpoint(min, max), do: trunc((to_float(min) + to_float(max)) / 2)
 
   defp to_float(value) do
     {f, _} = value |> to_string() |> Float.parse()
@@ -323,28 +357,11 @@ defmodule PhoenixPaper.Slider do
   defp labeled_marks(marks) when is_list(marks), do: Enum.filter(marks, &match?({_v, _label}, &1))
   defp labeled_marks(_marks), do: []
 
-  defp percent_sync_script do
-    "this.style.setProperty('--pp-slider-percent',((this.value-this.min)/(this.max-this.min)*100)+'%')"
+  defp sync_script do
+    "var w=this.parentNode;w.style.setProperty('--pp-slider-f',(this.value-this.min)/(this.max-this.min));var b=w.querySelector('[data-pp-slider-value]');if(b)b.textContent=this.value;var c=this.closest('[data-pp-component=slider]').querySelector('[data-pp-slider-current]');if(c)c.textContent=this.value;"
   end
 
   defp range_sync_script do
-    """
-    (function(el){
-      var root=el.closest('[data-pp-component="slider"]');
-      var inputs=root.querySelectorAll('input[type="range"]');
-      var lo=inputs[0],hi=inputs[1];
-      if(parseFloat(lo.value)>parseFloat(hi.value)){
-        if(el===lo){lo.value=hi.value;}else{hi.value=lo.value;}
-      }
-      var min=parseFloat(lo.min),max=parseFloat(hi.max);
-      var loPct=(parseFloat(lo.value)-min)/(max-min)*100;
-      var hiPct=(parseFloat(hi.value)-min)/(max-min)*100;
-      lo.style.setProperty('--pp-slider-percent',loPct+'%');
-      hi.style.setProperty('--pp-slider-percent',hiPct+'%');
-      var between=root.querySelector('[data-pp-slider-between]');
-      between.style.left=loPct+'%';
-      between.style.right=(100-hiPct)+'%';
-    })(this)
-    """
+    "var w=this.parentNode;var lo=w.querySelector('[data-pp-slider-bound=lo]'),hi=w.querySelector('[data-pp-slider-bound=hi]');if(parseFloat(lo.value)>parseFloat(hi.value)){if(this===lo){lo.value=hi.value}else{hi.value=lo.value}}var min=parseFloat(lo.min),max=parseFloat(lo.max);w.style.setProperty('--pp-slider-lo',(lo.value-min)/(max-min));w.style.setProperty('--pp-slider-hi',(hi.value-min)/(max-min));var bl=w.querySelector('[data-pp-slider-value=lo]'),bh=w.querySelector('[data-pp-slider-value=hi]');if(bl)bl.textContent=lo.value;if(bh)bh.textContent=hi.value;var c=this.closest('[data-pp-component=slider]').querySelector('[data-pp-slider-current]');if(c)c.textContent=lo.value+' – '+hi.value;"
   end
 end

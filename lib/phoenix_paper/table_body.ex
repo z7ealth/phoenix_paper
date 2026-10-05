@@ -41,11 +41,11 @@ defmodule PhoenixPaper.TableBody do
 
   defp paper_classes(striped) do
     [
-      "[&>tr]:border-b [&>tr]:border-pp-outline/15 [&>tr:last-child]:border-b-0",
+      "[&>tr]:border-b [&>tr]:border-pp-outline-variant [&>tr:last-child]:border-b-0",
       striped_classes(striped)
     ]
   end
 
   defp striped_classes(false), do: ""
-  defp striped_classes(true), do: "[&>tr:nth-child(even)]:bg-pp-surface-variant/30"
+  defp striped_classes(true), do: "[&>tr:nth-child(even)]:bg-pp-surface-container"
 end

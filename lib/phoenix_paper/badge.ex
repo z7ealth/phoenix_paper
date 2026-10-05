@@ -36,14 +36,10 @@ defmodule PhoenixPaper.Badge do
   the same distinction MUI's `overlap` prop makes; `anchor_origin` (default
   `"top-right"`) picks which corner.
 
-  Deliberately no `color="default"` (MUI's own default): every other color
-  attr in this library is `primary`/`secondary`/`accent`/`error` plus
-  `success`/`warning`/`info` for status (see `PhoenixPaper.Alert`) — adding
-  an eighth, gray "default" here just for `Badge` would be a new token this
-  library otherwise never needs. `color` defaults to `"error"` instead,
-  since an unread/notification count (the most common real-world `Badge`)
-  reads immediately as attention-grabbing red — pass `color="primary"` (or
-  any other token) for a neutral count.
+  MD3 badges: `variant="dot"` is the 6dp small badge, `standard` the
+  16dp large badge with `label-small` text. `color` defaults to `"error"`,
+  MD3's badge color; `primary`/`secondary`/`tertiary` and the
+  `success`/`warning`/`info` status roles are there for other meanings.
 
   The wrapping `<span>`'s `relative inline-flex shrink-0` is not gated by
   `paperize` — like `Autocomplete`'s dropdown-anchor wrapper (see
@@ -75,7 +71,7 @@ defmodule PhoenixPaper.Badge do
 
   attr(:color, :string,
     default: "error",
-    values: ~w(primary secondary accent error success warning info)
+    values: ~w(error primary secondary tertiary success warning info)
   )
 
   attr(:overlap, :string,
@@ -125,7 +121,7 @@ defmodule PhoenixPaper.Badge do
 
   defp badge_classes(variant, color, overlap, anchor_origin) do
     [
-      "pointer-events-none absolute z-10 flex items-center justify-center rounded-full font-medium leading-none",
+      "pointer-events-none absolute z-10 flex items-center justify-center rounded-pp-full",
       variant_size_classes(variant),
       color_classes(color),
       position_classes(anchor_origin, overlap)
@@ -133,11 +129,11 @@ defmodule PhoenixPaper.Badge do
   end
 
   defp variant_size_classes("dot"), do: "size-1.5"
-  defp variant_size_classes("standard"), do: "h-5 min-w-5 px-1.5 text-xs"
+  defp variant_size_classes("standard"), do: "h-4 min-w-4 px-1 pp-label-small"
 
   defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
   defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
+  defp color_classes("tertiary"), do: "bg-pp-tertiary text-pp-on-tertiary"
   defp color_classes("error"), do: "bg-pp-error text-pp-on-error"
   defp color_classes("success"), do: "bg-pp-success text-pp-on-success"
   defp color_classes("warning"), do: "bg-pp-warning text-pp-on-warning"

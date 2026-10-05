@@ -20,7 +20,7 @@ defmodule PhoenixPaper.DividerTest do
 
   test "inset adds a left margin to align past a leading icon column" do
     html = render_component(&inset/1)
-    assert html =~ "ml-14"
+    assert html =~ "ms-14"
   end
 
   defp inset(assigns) do

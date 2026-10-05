@@ -4,14 +4,14 @@ defmodule PhoenixPaper.FormTest do
   use Phoenix.Component
   import Phoenix.LiveViewTest
   import PhoenixPaper.Form
-  import PhoenixPaper.Input
+  import PhoenixPaper.TextField
 
   defp live_form(assigns) do
     assigns = assign(assigns, :form, to_form(%{"email" => "a@b.c"}, as: :user))
 
     ~H"""
     <.pp_form :let={f} for={@form} id="user-form" phx-change="validate" phx-submit="save">
-      <.pp_input field={f[:email]} label="Email" />
+      <.pp_text_field field={f[:email]} label="Email" />
       <:actions><button type="submit">Save</button></:actions>
     </.pp_form>
     """

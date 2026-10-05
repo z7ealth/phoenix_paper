@@ -10,9 +10,10 @@ defmodule PhoenixPaper.Icon do
 
   ## Size: use the attr, not `class`
 
-  `size` picks the icon's `size-*` class: `xs` (`size-3`), `sm` (`size-4`),
-  `md` (`size-5`, the default), `lg` (`size-6`) or `xl` (`size-8`). A plain
-  `class="size-4"` next to the built-in `size-5` doesn't reliably win (see
+  `size` follows MD3's icon sizes: `xs` (16dp, `size-4`), `sm` (20dp,
+  `size-5`), `md` (24dp, `size-6`, the default — MD3's standard icon),
+  `lg` (32dp, `size-8`) or `xl` (40dp, `size-10`). A plain
+  `class="size-4"` next to the built-in `size-6` doesn't reliably win (see
   AGENTS.md, "Overriding built-in classes via `class`"); for any other size,
   pass `size="none"` and set it yourself:
 
@@ -31,7 +32,7 @@ defmodule PhoenixPaper.Icon do
   attr(:size, :string,
     default: "md",
     values: ~w(xs sm md lg xl none),
-    doc: "xs=size-3, sm=size-4, md=size-5, lg=size-6, xl=size-8; none emits no size class"
+    doc: "xs=16dp, sm=20dp, md=24dp, lg=32dp, xl=40dp; none emits no size class"
   )
 
   attr(:paperize, :boolean, default: true)
@@ -47,10 +48,10 @@ defmodule PhoenixPaper.Icon do
     """
   end
 
-  defp size_class("xs"), do: "size-3"
-  defp size_class("sm"), do: "size-4"
-  defp size_class("md"), do: "size-5"
-  defp size_class("lg"), do: "size-6"
-  defp size_class("xl"), do: "size-8"
+  defp size_class("xs"), do: "size-4"
+  defp size_class("sm"), do: "size-5"
+  defp size_class("md"), do: "size-6"
+  defp size_class("lg"), do: "size-8"
+  defp size_class("xl"), do: "size-10"
   defp size_class("none"), do: nil
 end

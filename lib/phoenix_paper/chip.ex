@@ -1,150 +1,141 @@
 defmodule PhoenixPaper.Chip do
   @moduledoc """
-  A compact element for input, attribute, or action (`pp_chip/1`), in the
-  spirit of MUI's `Chip`.
+  MD3 chips (`pp_chip/1`): assist, filter, input and suggestion.
 
-      <.pp_chip>Basic</.pp_chip>
-      <.pp_chip variant="outlined" color="primary">Outlined</.pp_chip>
-
-      <.pp_chip deletable on_delete={JS.push("remove_tag", value: %{tag: "react"})}>
-        React
-        <:icon><.pp_icon name="hero-check" /></:icon>
+      <%!-- assist: a smart action, with a leading icon --%>
+      <.pp_chip variant="assist" phx-click="add_to_calendar">
+        <:icon><.pp_icon name="hero-calendar" /></:icon>
+        Add to calendar
       </.pp_chip>
 
-      <.pp_chip clickable phx-click="select_filter" phx-value-id="unread">
+      <%!-- filter: toggles; a check appears when selected --%>
+      <.pp_chip variant="filter" toggle selected={false} on_toggle={JS.push("filter", value: %{f: "unread"})}>
         Unread
       </.pp_chip>
 
-  `clickable` (default `false`) picks the root element: a real `<button>`
-  (gets native keyboard/focus/disabled handling and a `Button`-style
-  ripple for free — see `PhoenixPaper.Ripple`) when `true`, a plain `<div>`
-  otherwise, the same conditional-root-tag approach `PhoenixPaper.ListItem`
-  uses for link-vs-static (see AGENTS.md) — HEEx can't parameterize a tag
-  name, so this is two `:if`/`:if={!...}` branches sharing one private
-  `chip_content/1` for the icon/label/delete markup. Pass `phx-click`
-  through `rest` (like `PhoenixPaper.ToggleButton`) for the click itself;
-  `clickable={false}` (the default) with `deletable={true}` is exactly
-  MUI's "chip with a delete affordance but no other interaction" case — a
-  static tag the caller can still remove.
+      <%!-- input: a user-entered value, removable --%>
+      <.pp_chip variant="input" deletable on_delete={JS.push("remove_tag", value: %{tag: "elixir"})}>
+        elixir
+      </.pp_chip>
 
-  The delete "button" (only rendered when `deletable` is `true`) is
-  deliberately a `<span role="button" tabindex="0">`, not a real `<button>`
-  — a real `<button>` nested inside `clickable`'s own `<button>` root would
-  be invalid HTML (browsers auto-close the outer one, breaking the whole
-  chip's layout). A small `onkeydown` snippet (Enter/Space triggers a
-  synthetic click, same "small vanilla snippet, no hook" precedent as
-  `PhoenixPaper.Ripple`) keeps it keyboard-operable despite not being a real
-  button.
+      <%!-- suggestion: a dynamically generated reply/query --%>
+      <.pp_chip variant="suggestion" phx-click="reply" phx-value-text="Sounds good">Sounds good</.pp_chip>
 
-  **Does not call `event.stopPropagation()`** — an earlier version did, to
-  stop clicking delete on a `clickable` chip from also firing the chip's own
-  click, but that broke `on_delete` entirely: LiveView's `phx-click` binding
-  is one delegated `window`-level listener (bound during the bubble phase),
-  so `stopPropagation()` on the delete span prevented the click from ever
-  reaching it, and the delete control silently did nothing. Confirmed with a
-  real click in a real browser, not just a static render — the rendered
-  markup and `phx-click` attribute both looked correct in isolation.
-  Unnecessary anyway: LiveView resolves a click to the *nearest*
-  `phx-click`-bearing ancestor-or-self via `closestPhxBinding` (starting
-  from the actual event target and walking up), so a click on the delete
-  span already resolves to the delete span's own `phx-click`, never the
-  outer button's — no manual propagation-stopping needed for that.
+  All chips are 32dp tall with 8dp corners and `label-large` text, on an
+  `outline-variant` outline; `elevated` swaps the outline for a
+  `surface-container-low` fill and a level-1 shadow (assist, filter and
+  suggestion chips; MD3 uses it on busy backgrounds).
 
-  `disabled` dims and disables **both** the root (when `clickable`, a real
-  `disabled` attribute; when not, `pointer-events-none` — a plain `<div>`
-  has no native `disabled`) and the delete control (`pointer-events-none`
-  plus `tabindex="-1"`, removing it from the tab order) — it isn't gated
-  behind `clickable` since `deletable`-only chips (no other interaction)
-  can still need to be disabled.
+  ## Kinds
 
-  `color="default"` (gray, using `--color-pp-surface-variant`/
-  `-on-surface`/`-outline` — the same neutral tokens `Input`/`Select`/
-  `NumberField` already use for their filled backgrounds) is the default
-  here, unlike every other colored component in this library — a plain tag
-  chip (MUI's most common real-world case) is neutral, not brand-colored.
-  Every other `color` value (`primary`/`secondary`/`accent`/`error`, plus
-  `success`/`warning`/`info` for status, see `PhoenixPaper.Alert`) is also
-  available.
+  - `assist` (default): a `<button>`; its leading `:icon` is `primary`.
+  - `filter`: a toggle `<button>` — `selected` plus the
+    `toggle`/`group`/`on_toggle` attrs `PhoenixPaper.Button` uses (see
+    `PhoenixPaper.Toggle`), so a set of filter chips can be multi-select
+    (`toggle`) or single-select (`group="sort"`), client-side or controlled
+    by the server. Selected chips turn `secondary-container` and show a
+    leading check.
+  - `input`: a `<div>` (or a `<button>` with `clickable`) for a value the
+    user entered; `deletable` adds the trailing remove control running
+    `on_delete`. `selected` gives it the selected color.
+  - `suggestion`: a `<button>` like `assist`, without the colored icon.
 
-  `clickable`'s hover/active feedback is one `filter: brightness()` step
-  (`hover:brightness-95 active:brightness-90`) applied uniformly across
-  every `color`/`variant` combination, rather than a hand-picked
-  color-matched tint per branch the way `PhoenixPaper.Button`'s `outlined`/
-  `text` variants do (`hover:bg-pp-primary/10`, etc.) — simpler, and the
-  one place a chip's hover feedback is a little more subtle for an
-  `outlined`/transparent-background chip than for a `filled` one, since a
-  brightness filter has less visible effect over a transparent background.
+  ## The remove control
+
+  It's a `<span role="button" tabindex="0">`, not a `<button>`: a button
+  nested in a clickable chip's `<button>` is invalid HTML. A small
+  `onkeydown` snippet makes Enter/Space click it. It doesn't stop
+  propagation — LiveView resolves a click to the nearest `phx-click`, so
+  the remove control's own binding wins over the chip's.
+
+  ## Migrating from 0.3
+
+  `variant` `filled`/`outlined` → the four kinds (`outlined` look is the
+  default; `elevated` for a fill), `clickable` now only matters for input
+  chips, `color` and `size` are gone (MD3 chips have one color scheme and
+  one size), `deletable`/`on_delete` stay.
   """
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  alias PhoenixPaper.{Helpers, Ripple}
+  alias PhoenixPaper.{Helpers, Ripple, Toggle}
   import PhoenixPaper.Icon, only: [pp_icon: 1]
 
   @keydown_activate "if(event.key==='Enter'||event.key===' '){event.preventDefault();event.currentTarget.click();}"
 
   attr(:paperize, :boolean, default: true)
-  attr(:variant, :string, default: "filled", values: ~w(filled outlined))
+  attr(:variant, :string, default: "assist", values: ~w(assist filter input suggestion))
+  attr(:elevated, :boolean, default: false, doc: "fill + shadow instead of the outline")
 
-  attr(:color, :string,
-    default: "default",
-    values: ~w(default primary secondary accent error success warning info)
+  attr(:selected, :boolean,
+    default: nil,
+    doc: "filter/input chips: the (initial) selected state"
   )
 
-  attr(:size, :string, default: "medium", values: ~w(small medium))
+  attr(:toggle, :boolean, default: false, doc: "filter chips: toggle on the client")
+  attr(:group, :string, default: nil, doc: "filter chips: single-select group name")
+  attr(:on_toggle, JS, default: %JS{}, doc: "filter chips: JS run after a client toggle")
 
   attr(:clickable, :boolean,
     default: false,
-    doc: "renders as a real <button> with hover/focus/ripple, for filter/action chips"
+    doc: "input chips: render a <button> instead of a static <div>"
   )
 
-  attr(:ripple, :boolean,
-    default: true,
-    doc:
-      "the Material ripple effect on click/tap when clickable — off whenever paperize is false, see PhoenixPaper.Ripple"
-  )
-
+  attr(:ripple, :boolean, default: true)
   attr(:disabled, :boolean, default: false)
   attr(:type, :string, default: "button", values: ~w(button submit reset))
-
-  attr(:deletable, :boolean,
-    default: false,
-    doc: "renders a trailing delete (x) control wired to on_delete"
-  )
+  attr(:deletable, :boolean, default: false, doc: "trailing remove control (input chips)")
 
   attr(:on_delete, JS,
     default: %JS{},
-    doc: ~s[JS command run when the delete control is clicked, e.g. JS.push("remove_chip")]
+    doc: ~s[JS run by the remove control, e.g. JS.push("remove_chip")]
   )
 
+  attr(:delete_label, :string, default: "Remove")
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form name value phx-click))
+  attr(:rest, :global, include: ~w(form name value))
 
   slot(:icon, doc: "a leading icon or avatar")
   slot(:inner_block, required: true, doc: "the chip's label")
 
   @doc "Renders a chip. See the module doc."
   def pp_chip(assigns) do
-    assigns = assign(assigns, :ripple?, assigns.clickable and assigns.ripple and assigns.paperize)
+    button? = assigns.variant != "input" or assigns.clickable
+    filter? = assigns.variant == "filter"
+    client_toggle? = filter? and (assigns.toggle or assigns.group != nil)
+
+    assigns =
+      assigns
+      |> assign(:button?, button?)
+      |> assign(:filter?, filter?)
+      |> assign(:client_toggle?, client_toggle?)
+      |> assign(
+        :ripple?,
+        button? and assigns.ripple and assigns.paperize and not assigns.disabled
+      )
 
     ~H"""
     <button
-      :if={@clickable}
+      :if={@button?}
       type={@type}
       disabled={@disabled}
+      aria-pressed={@filter? && Toggle.aria_pressed(@selected, true)}
       data-pp-component="chip"
       data-pp-variant={@variant}
-      class={Helpers.classes(@paperize, paper_classes(@variant, @color, @size, true, @disabled, @ripple?), @class)}
+      data-pp-toggle-group={@filter? && @group}
+      class={Helpers.classes(@paperize, paper_classes(assigns, true), @class)}
       onclick={Ripple.on_click(@ripple?)}
+      phx-click={@client_toggle? && Toggle.js(@group, @on_toggle)}
       {@rest}
     >
       {chip_content(assigns)}
     </button>
     <div
-      :if={!@clickable}
+      :if={!@button?}
       data-pp-component="chip"
       data-pp-variant={@variant}
-      class={Helpers.classes(@paperize, paper_classes(@variant, @color, @size, false, @disabled, false), @class)}
+      aria-disabled={@disabled && "true"}
+      class={Helpers.classes(@paperize, paper_classes(assigns, false), @class)}
       {@rest}
     >
       {chip_content(assigns)}
@@ -154,93 +145,80 @@ defmodule PhoenixPaper.Chip do
 
   defp chip_content(assigns) do
     ~H"""
-    <span :if={@icon != []} class={icon_slot_classes(@size)}>{render_slot(@icon)}</span>
+    <.pp_icon
+      :if={@filter?}
+      name="hero-check"
+      size="sm"
+      class="-ms-2 shrink-0 [[aria-pressed=false]>&]:hidden"
+    />
+    <span :if={@icon != []} class={icon_slot_classes(@variant)}>{render_slot(@icon)}</span>
     <span class="truncate">{render_slot(@inner_block)}</span>
     <span
       :if={@deletable}
       role="button"
       tabindex={if @disabled, do: "-1", else: "0"}
-      aria-label="Remove"
+      aria-label={@delete_label}
       aria-disabled={to_string(@disabled)}
       data-pp-component="chip-delete"
-      class={Helpers.classes(@paperize, delete_classes(@size, @disabled), nil)}
+      class={Helpers.classes(@paperize, delete_classes(@disabled), nil)}
       onkeydown={keydown_activate_script()}
       phx-click={@on_delete}
     >
-      <.pp_icon name="hero-x-mark-mini" size="none" class={icon_size_classes(@size)} />
+      <.pp_icon name="hero-x-mark" size="none" class="size-[18px]" />
     </span>
     """
   end
 
-  defp paper_classes(variant, color, size, clickable, disabled, ripple) do
+  defp paper_classes(assigns, interactive?) do
     [
-      "inline-flex items-center gap-1.5 rounded-full font-medium select-none transition-colors",
-      size_classes(size),
-      color_classes(variant, color),
-      clickable_classes(clickable),
-      disabled_classes(disabled),
-      Ripple.container_classes(ripple)
+      "relative inline-flex h-8 max-w-full items-center gap-2 overflow-hidden rounded-pp-sm px-4 pp-label-large select-none pp-motion-effects-fast",
+      (assigns.icon != [] or assigns.filter?) && "ps-2",
+      assigns.deletable && "pe-2",
+      surface_classes(assigns.variant, assigns.elevated, assigns.selected),
+      interactive? && "cursor-pointer pp-state-layer pp-focus-ring",
+      "disabled:pointer-events-none disabled:border-pp-on-surface/12 disabled:text-pp-on-surface/38 aria-disabled:pointer-events-none aria-disabled:border-pp-on-surface/12 aria-disabled:text-pp-on-surface/38"
     ]
   end
 
-  defp size_classes("small"), do: "h-6 px-2.5 text-xs"
-  defp size_classes("medium"), do: "h-8 px-3 text-sm"
+  # Filter chips style the selected state off aria-pressed (it may flip on
+  # the client); input chips off the server's `selected`.
+  defp surface_classes("filter", false, _selected),
+    do:
+      "border border-pp-outline-variant text-pp-on-surface-variant aria-pressed:border-transparent aria-pressed:bg-pp-secondary-container aria-pressed:text-pp-on-secondary-container"
 
-  defp icon_slot_classes("small"), do: "flex shrink-0 items-center [&>*]:size-3.5"
-  defp icon_slot_classes("medium"), do: "flex shrink-0 items-center [&>*]:size-4"
+  defp surface_classes("filter", true, _selected),
+    do:
+      "bg-pp-surface-container-low text-pp-on-surface-variant pp-elevation-1 aria-pressed:bg-pp-secondary-container aria-pressed:text-pp-on-secondary-container"
 
-  defp icon_size_classes("small"), do: "size-3.5"
-  defp icon_size_classes("medium"), do: "size-4"
+  defp surface_classes("input", _elevated, true),
+    do: "bg-pp-secondary-container text-pp-on-secondary-container"
+
+  defp surface_classes("input", _elevated, _selected),
+    do: "border border-pp-outline-variant text-pp-on-surface-variant"
+
+  defp surface_classes("assist", false, _selected),
+    do: "border border-pp-outline-variant text-pp-on-surface"
+
+  defp surface_classes("assist", true, _selected),
+    do: "bg-pp-surface-container-low text-pp-on-surface pp-elevation-1"
+
+  defp surface_classes("suggestion", false, _selected),
+    do: "border border-pp-outline-variant text-pp-on-surface-variant"
+
+  defp surface_classes("suggestion", true, _selected),
+    do: "bg-pp-surface-container-low text-pp-on-surface-variant pp-elevation-1"
+
+  defp icon_slot_classes("assist"),
+    do: "flex shrink-0 items-center text-pp-primary [&>*]:size-[18px]"
+
+  defp icon_slot_classes(_variant), do: "flex shrink-0 items-center [&>*]:size-[18px]"
 
   defp keydown_activate_script, do: @keydown_activate
 
-  defp clickable_classes(false), do: ""
-
-  defp clickable_classes(true),
-    do:
-      "cursor-pointer hover:brightness-95 active:brightness-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-
-  defp disabled_classes(false), do: ""
-  defp disabled_classes(true), do: "pointer-events-none opacity-40"
-
-  defp delete_classes(size, disabled) do
+  defp delete_classes(disabled) do
     [
-      "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full opacity-70 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1",
-      icon_size_classes(size),
-      if(disabled, do: "pointer-events-none", else: "")
+      "relative z-10 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-pp-full pp-state-layer pp-focus-ring",
+      disabled && "pointer-events-none"
     ]
   end
-
-  defp color_classes("filled", "default"), do: "bg-pp-surface-variant text-pp-on-surface"
-  defp color_classes("filled", "primary"), do: "bg-pp-primary text-pp-on-primary"
-  defp color_classes("filled", "secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("filled", "accent"), do: "bg-pp-accent text-pp-on-accent"
-  defp color_classes("filled", "error"), do: "bg-pp-error text-pp-on-error"
-  defp color_classes("filled", "success"), do: "bg-pp-success text-pp-on-success"
-  defp color_classes("filled", "warning"), do: "bg-pp-warning text-pp-on-warning"
-  defp color_classes("filled", "info"), do: "bg-pp-info text-pp-on-info"
-
-  defp color_classes("outlined", "default"),
-    do: "bg-transparent text-pp-on-surface border border-pp-outline"
-
-  defp color_classes("outlined", "primary"),
-    do: "bg-transparent text-pp-primary border border-pp-primary"
-
-  defp color_classes("outlined", "secondary"),
-    do: "bg-transparent text-pp-secondary border border-pp-secondary"
-
-  defp color_classes("outlined", "accent"),
-    do: "bg-transparent text-pp-accent border border-pp-accent"
-
-  defp color_classes("outlined", "error"),
-    do: "bg-transparent text-pp-error border border-pp-error"
-
-  defp color_classes("outlined", "success"),
-    do: "bg-transparent text-pp-success border border-pp-success"
-
-  defp color_classes("outlined", "warning"),
-    do: "bg-transparent text-pp-warning border border-pp-warning"
-
-  defp color_classes("outlined", "info"),
-    do: "bg-transparent text-pp-info border border-pp-info"
 end

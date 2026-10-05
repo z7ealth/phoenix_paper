@@ -40,7 +40,7 @@ defmodule PhoenixPaper.RatingTest do
     html = render_component(&readonly/1)
 
     refute html =~ "type=\"radio\""
-    assert Regex.scan(~r/text-pp-secondary/, html) |> length() == 3
+    assert Regex.scan(~r/text-pp-primary/, html) |> length() == 3
   end
 
   defp readonly(assigns) do

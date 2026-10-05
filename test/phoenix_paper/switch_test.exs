@@ -26,7 +26,7 @@ defmodule PhoenixPaper.SwitchTest do
   test "checked switch gets the checked-state classes via has-[:checked], not peer-checked" do
     html = render_component(&checked/1)
 
-    assert html =~ "has-[:checked]:bg-pp-primary/50"
+    assert html =~ "has-[:checked]:bg-pp-primary"
     assert html =~ "checked"
   end
 
@@ -56,9 +56,10 @@ defmodule PhoenixPaper.SwitchTest do
     """
   end
 
-  test "ripple (default): wires the click handler on the track" do
-    html = render_component(&checked/1)
-    assert html =~ "onclick="
+  test "ripple={true} wires the centered ripple on the handle (off by default)" do
+    assigns = %{}
+    assert rendered_to_string(~H"<.pp_switch name='w' ripple />") =~ "onclick="
+    refute rendered_to_string(~H"<.pp_switch name='w' />") =~ "onclick="
   end
 
   test "ripple={false}: no click handler" do
@@ -72,8 +73,25 @@ defmodule PhoenixPaper.SwitchTest do
     """
   end
 
-  test "paperize={false}: no click handler either, even though ripple defaults true" do
+  test "paperize={false}: no click handler" do
     html = render_component(&bare/1)
     refute html =~ "onclick="
+  end
+
+  test "MD3 switch: 52x32 track, growing handle, icons option" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_switch name="a" />
+      <.pp_switch name="b" icons />
+      """)
+
+    assert html =~ "h-8 w-[52px]"
+    assert html =~ "group-has-[:checked]/switch:size-6"
+    assert html =~ "group-active/switch:size-7"
+    assert html =~ ~s(role="switch")
+    assert html =~ "hero-check"
+    assert html =~ "pp-state-layer-target"
   end
 end

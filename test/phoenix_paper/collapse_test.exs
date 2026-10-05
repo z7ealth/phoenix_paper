@@ -32,8 +32,8 @@ defmodule PhoenixPaper.CollapseTest do
   test "default paperize styles the trigger and shows a rotating chevron" do
     html = render_component(&collapse/1)
 
-    assert html =~ "hover:bg-pp-on-surface/5"
-    assert html =~ "hero-chevron-down-mini"
+    assert html =~ "pp-state-layer"
+    assert html =~ "hero-chevron-down"
     assert html =~ "peer-checked:[&amp;&gt;[data-pp-collapse-icon]]:rotate-180"
   end
 
@@ -62,7 +62,7 @@ defmodule PhoenixPaper.CollapseTest do
       </.pp_collapse>
       """)
 
-    refute html =~ "hero-chevron-down-mini"
+    refute html =~ "hero-chevron-down"
   end
 
   test "paperize={false} drops the skin but keeps the show/hide wiring" do
@@ -80,6 +80,6 @@ defmodule PhoenixPaper.CollapseTest do
     assert html =~ "peer sr-only"
     assert html =~ "peer-checked:grid-rows-[1fr]"
     refute html =~ "hover:bg-pp-on-surface/5"
-    refute html =~ "hero-chevron-down-mini"
+    refute html =~ "hero-chevron-down"
   end
 end

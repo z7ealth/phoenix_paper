@@ -26,7 +26,7 @@ defmodule PhoenixPaper.FlashTest do
     html = render_group(%{"info" => "Saved!"})
 
     assert html =~ "Saved!"
-    assert html =~ "bg-pp-on-surface"
+    assert html =~ "bg-pp-inverse-surface"
     assert html =~ ~s(id="pp-flash-info")
     refute html =~ ~s(id="pp-flash-error")
   end
@@ -58,7 +58,7 @@ defmodule PhoenixPaper.FlashTest do
   test "custom kinds are supported, unknown kinds render without an icon" do
     html = render_group(%{"warning" => "Careful"}, kinds: [:warning])
     assert html =~ "Careful"
-    assert html =~ "hero-exclamation-triangle-mini"
+    assert html =~ "hero-exclamation-triangle"
   end
 
   test "defaults to the top-right corner" do

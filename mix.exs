@@ -1,9 +1,9 @@
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
   @source_url "https://github.com/z7ealth/phoenix_paper"
-  @description "A Material Design component library for Phoenix and LiveView, styled with Tailwind CSS."
+  @description "Material Design 3 (including M3 Expressive) components for Phoenix and LiveView, styled with Tailwind CSS."
 
   def project do
     [
@@ -35,7 +35,7 @@ defmodule PhoenixPaper.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_view, "~> 1.1"},
       # `phoenix_live_view` only lists `jason` as an *optional* dependency,
       # but `Phoenix.LiveView.JS.to_iodata/1` needs it at runtime to encode
       # its command payloads — used by `Tabs`/`Dialog`. This library used
@@ -59,7 +59,8 @@ defmodule PhoenixPaper.MixProject do
         "GitHub" => @source_url,
         "Changelog" => @source_url <> "/blob/master/CHANGELOG.md"
       },
-      files: ~w(lib priv .formatter.exs mix.exs README.md LICENSE CHANGELOG.md AGENTS.md)
+      files:
+        ~w(lib priv .formatter.exs mix.exs package.json README.md LICENSE CHANGELOG.md AGENTS.md)
     ]
   end
 

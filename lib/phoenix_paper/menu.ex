@@ -1,195 +1,142 @@
 defmodule PhoenixPaper.Menu do
   @moduledoc """
-  A trigger that opens a small anchored popover list of actions
-  (`pp_menu/1`), in the spirit of MUI's `Menu`/`MenuItem`
-  (mui.com/material-ui/react-menu/) — an overflow ("...") menu, a profile
-  menu, anything where clicking a button reveals a short list of things to
-  do next.
+  An MD3 menu (`pp_menu/1`, `pp_menu_item/1`) with the M3 Expressive menu
+  shape and colors — a trigger that opens a short anchored list of
+  actions (an overflow menu, a profile menu).
 
-      <.pp_menu id="profile-menu">
-        <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
-        <.pp_list>
-          <.pp_list_item navigate={~p"/profile"}>Profile</.pp_list_item>
-          <.pp_list_item navigate={~p"/settings"}>Settings</.pp_list_item>
-          <.pp_list_item phx-click="log_out">Log out</.pp_list_item>
-        </.pp_list>
+      <.pp_menu id="more" trigger_icon="hero-ellipsis-vertical" trigger_label="More options">
+        <.pp_menu_item icon="hero-pencil" trailing_text="⌘E" phx-click="edit">Edit</.pp_menu_item>
+        <.pp_menu_item icon="hero-document-duplicate" phx-click="duplicate">Duplicate</.pp_menu_item>
+        <.pp_divider class="my-1" />
+        <.pp_menu_item icon="hero-trash" navigate={~p"/trash"}>Move to trash</.pp_menu_item>
       </.pp_menu>
 
-  `:inner_block` is opaque content, same as `PhoenixPaper.Dialog`'s body —
-  typically a `PhoenixPaper.List` of `PhoenixPaper.ListItem`s (already
-  styled for a clickable row with hover/active states and link-or-button
-  dispatch, the same reasoning `ListItem`'s own moduledoc gives for reuse
-  "standalone, e.g. inside a Card" — a menu item is just another place a
-  styled list item is useful on its own), but any content works.
+  ## Trigger
 
-  ## Why this isn't the checkbox/`peer-checked:` trick
+  Either an icon button — `trigger_icon` (a `hero-*` name) plus
+  `trigger_label` (its accessible name) — or a common button whose label is
+  the `:trigger` slot. `trigger_variant` is passed through
+  (`standard`/`filled`/`tonal`/`outlined` for icon triggers,
+  `filled`/`tonal`/`elevated`/`outlined`/`text` for button triggers;
+  defaults `standard` and `text`); `"none"` renders a bare `<button>`
+  holding the `:trigger` slot. `trigger_color` and `trigger_class` pass
+  through too. The trigger carries `aria-haspopup`/`aria-expanded`/
+  `aria-controls` and toggles the menu.
 
-  Every other reveal-on-interaction component in this library
-  (`Accordion`, `Drawer`, `SpeedDial`, `Checkbox`/`Switch`/`RadioGroup`'s
-  own state styling) is pure CSS: a hidden checkbox plus `peer-checked:`/
-  `has-[:checked]:`. That trick can only express "is *some* sibling
-  checked" — it has no way to close itself when the user clicks an item
-  inside the popover or clicks anywhere else on the page, both of which
-  are baseline expected behavior for a menu (MUI's own `Menu` does both).
-  Detecting "a click happened outside this element" needs actual JS, so
-  `pp_menu/1` is built the same way `PhoenixPaper.Dialog` is — the other
-  component in this library that isn't stateless-and-simple — with plain
-  `Phoenix.LiveView.JS` commands (`JS.toggle`/`JS.hide`/
-  `JS.toggle_attribute`) and LiveView's built-in `phx-click-away` binding,
-  not a custom hook.
+  ## Panel and items
 
-  Unlike `Dialog`, the trigger and the popover panel are rendered by this
-  *same* component rather than the trigger living wherever the caller puts
-  it (`Dialog.show/2` is called from a button anywhere on the page) — a
-  menu's popover has to be positioned right under its own trigger, and the
-  only way to do that without a JS hook measuring `getBoundingClientRect`
-  (the "bespoke JS hook" this library consistently avoids — see
-  `PhoenixPaper.Slider`'s `valueLabelDisplay`/`PhoenixPaper.Tabs`'s
-  sliding-indicator moduledoc notes for the same trade-off elsewhere) is
-  plain CSS: `absolute`-position the panel against a `relative` wrapper
-  that also contains the trigger. That means trigger and panel can't be
-  decoupled the way `Dialog`'s are.
+  The panel is `surface-container` (or `tertiary-container` with
+  `color="vibrant"`, Expressive), level-2 shadow, `lg` corners and 4dp of
+  inner padding. `pp_menu_item/1` is a 48dp row: optional leading `icon`,
+  the label, optional `supporting_text` under it and `trailing_text` (a
+  shortcut) or a `:trailing` slot. `selected` gives it the Expressive
+  selected look (`secondary-container`, or `tertiary` on vibrant) and
+  `aria-checked`; `disabled` dims it. Items link with `href`/`navigate`/
+  `patch`, or are buttons firing whatever `phx-click` you give them. Any
+  other content works in the panel too (`pp_divider`, a
+  `pp_list_subheader` for a group heading).
 
-  ## Closing behavior
+  ## Submenus
 
-  - **Clicking the trigger again** toggles it via `phx-click={toggle(@id)}`.
-  - **Clicking anywhere inside the panel** closes it — a plain
-    `phx-click={close(@id)}` on the panel itself, relying on the native
-    DOM click bubbling from whatever item was actually clicked up to this
-    listener, *after* that item's own `phx-click`/`JS` (if any) already
-    ran. This is what closes the menu after picking an item, with zero
-    cooperation needed from whatever `inner_block` renders — a plain `<a>`,
-    a `ListItem`, a raw `<button>`, all bubble the same way. The one thing
-    this can't support is an item meant to stay open after its own click
-    (e.g. a submenu trigger, or a `Switch` toggled from inside the menu) —
-    not handled here, same class of gap `Accordion`'s one-way radio close
-    or `Tabs`' non-roving focus already document as a known, accepted
-    limitation rather than a bug to chase.
-  - **Clicking outside** closes it via `phx-click-away` (the same LiveView
-    binding `PhoenixPaper.Dialog`'s focus-trap container uses for its
-    backdrop-click case).
-  - **Escape** closes it via `phx-window-keydown`/`phx-key="escape"`, again
-    matching `Dialog`.
+  `pp_submenu/1` is a cascading submenu: an item with a trailing chevron
+  whose panel opens beside it (`side="end"`, default, or `"start"` near
+  the right edge — there's no automatic flipping).
 
-  No focus trapping (`Dialog`'s `focus_wrap/1`) and no roving
-  `tabindex`/arrow-key item navigation like MUI's real `Menu` — tab order
-  moves through whatever `inner_block` renders in normal document order,
-  the same simplification `Tabs` makes for its own tablist.
-
-  ## `paperize`
-
-  `paperize={false}` drops the popover's `PhoenixPaper.Paper` surface (its
-  background/elevation/rounded corners) and its cosmetic sizing, same as
-  everywhere else — but the panel's `absolute`/anchor-offset positioning
-  stays unconditional. `paperize` is also passed on to the trigger
-  `pp_button`, so `paperize={false}` gives an unstyled trigger too (style
-  it with `trigger_class`); the `trigger_variant="none"` button keeps its
-  `cursor-pointer` either way. That positioning
-  is plumbing the popover can't work without (without it the panel would
-  render in normal document flow instead of anchored under its trigger),
-  not part of the visual skin — the same reasoning `PhoenixPaper.Badge`'s
-  wrapping `<span>` and `PhoenixPaper.Autocomplete`'s anchor `<div>` give
-  for their own hardcoded structural classes (see AGENTS.md, "The
-  `paperize` contract").
-
-  ## The trigger
-
-  The trigger is a real `PhoenixPaper.Button`, so it looks and behaves
-  like every other button (hover tint, focus ring, ripple) with no custom
-  CSS. `:trigger` is only its content — an icon or a label — and
-  `trigger_variant`/`trigger_color`/`trigger_size` (plus `trigger_class`)
-  pass straight through to that button:
-
-      <.pp_menu id="row-menu">
-        <:trigger><.pp_icon name="hero-ellipsis-vertical" /></:trigger>
-        ...
+      <.pp_menu id="m" trigger_icon="hero-ellipsis-vertical" trigger_label="More">
+        <.pp_menu_item phx-click="copy">Copy</.pp_menu_item>
+        <.pp_submenu id="m-share" label="Share" icon="hero-share">
+          <.pp_menu_item phx-click="share_email">Email</.pp_menu_item>
+          <.pp_menu_item phx-click="share_link">Copy link</.pp_menu_item>
+        </.pp_submenu>
       </.pp_menu>
 
-      <.pp_menu id="export-menu" trigger_variant="outlined">
-        <:trigger>Export <.pp_icon name="hero-chevron-down-mini" /></:trigger>
-        ...
-      </.pp_menu>
+  It opens on hover and on keyboard focus (CSS `:hover`/`:focus-within` —
+  Tab from the trigger walks into it). Clicking the trigger sets its
+  `aria-expanded` and moves focus into the submenu (`JS.set_attribute` +
+  `JS.focus_first`; the panel shows off the attribute in CSS), which is
+  how it opens on touch and in Safari. The trigger's own `phx-click` also
+  keeps the parent menu open: LiveView runs only the nearest `phx-click`,
+  so the panel's close-on-click never sees it. Picking an item inside
+  closes the whole menu as usual, and `close/2` collapses nested
+  submenus.
 
-  `trigger_variant` defaults to `"icon"` (the overflow-"⋮" case); any
-  `pp_button` variant works. Inside a colored `PhoenixPaper.AppBar` use
-  `trigger_color="inherit"` so the trigger doesn't vanish into the bar.
-  `trigger_variant="none"` renders a bare, unstyled `<button>` (only
-  `cursor-pointer`) for a fully custom trigger. Never put your own button
-  or link inside `:trigger` — it's already rendered inside one, and a
-  button inside a button is invalid HTML.
+  ## Behavior
 
-  ## `anchor`
+  `Phoenix.LiveView.JS` + `phx-click-away`, the `Dialog` mechanism: the
+  trigger toggles the panel, clicking outside or pressing Escape closes
+  it, and clicking any item closes it by bubbling up to the panel's own
+  `phx-click`. It needs the LiveView JS client on the page.
 
-  `"bottom-start"` (default), `"bottom-end"`, `"top-start"`, `"top-end"` —
-  a fixed corner/offset relative to the trigger, the same "no collision
-  detection/auto-flip like MUI's Popper-based positioning" trade-off
-  `PhoenixPaper.Tooltip`'s `placement` already documents, for the same
-  reason: real auto-flip needs to measure available viewport space at
-  runtime, which is a JS hook this library doesn't add.
+  Positioning is plain CSS (`absolute` against the menu's `relative`
+  wrapper): `anchor` (`bottom-start`/`bottom-end`/`top-start`/`top-end`)
+  is where it opens. With the optional JS hook (see
+  `PhoenixPaper.Helpers.hook/1`) the menu and its submenus **flip** to the
+  other side when they'd overflow the viewport — the hook measures the
+  panel as it opens and sets `data-pp-flip`, which `phoenix_paper.css`
+  styles. Without the hook, pick an `anchor`/`side` that fits.
   """
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  alias PhoenixPaper.Helpers
+  alias PhoenixPaper.{Helpers, Icon}
 
-  import PhoenixPaper.Paper, only: [pp_paper: 1]
   import PhoenixPaper.Button, only: [pp_button: 1]
+  import PhoenixPaper.IconButton, only: [pp_icon_button: 1]
 
   attr(:id, :string, required: true)
 
   attr(:anchor, :string,
     default: "bottom-start",
-    values: ~w(bottom-start bottom-end top-start top-end),
-    doc: "fixed corner/offset the panel opens from, relative to the trigger"
+    values: ~w(bottom-start bottom-end top-start top-end)
   )
 
-  attr(:elevation, :integer, default: 8)
-
-  attr(:shape, :atom,
-    default: :sm,
-    values: ~w(none xs sm md lg xl full)a,
-    doc: "corner radius token, see PhoenixPaper.Shape"
-  )
+  attr(:color, :string, default: "standard", values: ~w(standard vibrant))
+  attr(:trigger_icon, :string, default: nil, doc: "renders an icon-button trigger")
+  attr(:trigger_label, :string, default: nil, doc: "the icon trigger's accessible name")
 
   attr(:trigger_variant, :string,
-    default: "icon",
-    values: ~w(icon text outlined raised flat none),
-    doc: "the trigger pp_button's variant; none = bare unstyled button"
+    default: nil,
+    values: [nil | ~w(standard filled tonal elevated outlined text none)],
+    doc: "variant of the trigger button; none = bare button"
   )
 
-  attr(:trigger_color, :string,
-    default: "primary",
-    values: ~w(primary secondary accent error inherit),
-    doc: "the trigger pp_button's color"
-  )
-
-  attr(:trigger_size, :string,
-    default: "medium",
-    values: ~w(small medium large),
-    doc: "the trigger pp_button's size"
-  )
-
-  attr(:trigger_class, :any, default: nil, doc: "extra classes for the trigger button")
+  attr(:trigger_color, :string, default: nil, doc: "color of the trigger button")
+  attr(:trigger_class, :any, default: nil)
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
 
-  slot(:trigger,
-    required: true,
-    doc: "the trigger button's content (an icon or label) — not a button itself"
-  )
+  slot(:trigger, doc: "the trigger button's label (button and bare triggers)")
+  slot(:inner_block, required: true, doc: "pp_menu_item/1s, dividers, ...")
 
-  slot(:inner_block, required: true, doc: "the popover's content, typically a PhoenixPaper.List")
-
-  @doc "Renders a menu trigger and its popover. See the module doc."
+  @doc "Renders a menu trigger and its panel. See the module doc."
   def pp_menu(assigns) do
     ~H"""
-    <div class="relative inline-block" data-pp-component="menu">
+    <div
+      id={@id}
+      phx-hook={Helpers.hook(@id)}
+      class="relative inline-block"
+      data-pp-component="menu"
+    >
+      <.pp_icon_button
+        :if={@trigger_icon}
+        id={"#{@id}-trigger"}
+        icon={@trigger_icon}
+        label={@trigger_label || "Menu"}
+        variant={icon_variant(@trigger_variant)}
+        color={@trigger_color}
+        paperize={@paperize}
+        class={@trigger_class}
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-controls={"#{@id}-panel"}
+        phx-click={toggle(@id)}
+      />
       <button
-        :if={@trigger_variant == "none"}
+        :if={!@trigger_icon && @trigger_variant == "none"}
         type="button"
         id={"#{@id}-trigger"}
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded="false"
         aria-controls={"#{@id}-panel"}
         phx-click={toggle(@id)}
@@ -198,19 +145,19 @@ defmodule PhoenixPaper.Menu do
         {render_slot(@trigger)}
       </button>
       <.pp_button
-        :if={@trigger_variant != "none"}
+        :if={!@trigger_icon && @trigger_variant != "none"}
         id={"#{@id}-trigger"}
-        variant={@trigger_variant}
+        variant={button_variant(@trigger_variant)}
         color={@trigger_color}
-        size={@trigger_size}
         paperize={@paperize}
         class={@trigger_class}
-        aria-haspopup="true"
+        aria-haspopup="menu"
         aria-expanded="false"
         aria-controls={"#{@id}-panel"}
         phx-click={toggle(@id)}
       >
         {render_slot(@trigger)}
+        <:end_icon><Icon.pp_icon name="hero-chevron-down" size="sm" /></:end_icon>
       </.pp_button>
       <div
         id={"#{@id}-panel"}
@@ -220,31 +167,156 @@ defmodule PhoenixPaper.Menu do
         phx-click={close(@id)}
         role="menu"
         aria-labelledby={"#{@id}-trigger"}
-        class={["absolute z-40 hidden", anchor_classes(@anchor)]}
+        data-pp-component="menu-panel"
+        data-pp-color={@color}
+        class={[
+          "group/menu absolute z-40 hidden",
+          anchor_classes(@anchor),
+          Helpers.classes(@paperize, panel_classes(@color), @class)
+        ]}
+        {@rest}
       >
-        <.pp_paper
-          elevation={@elevation}
-          shape={@shape}
-          paperize={@paperize}
-          component="menu-panel"
-          class={Helpers.classes(@paperize, "min-w-[180px] py-2", @class)}
-          {@rest}
-        >
-          {render_slot(@inner_block)}
-        </.pp_paper>
+        {render_slot(@inner_block)}
       </div>
     </div>
     """
   end
 
+  attr(:icon, :string, default: nil, doc: "a leading hero-* icon")
+  attr(:supporting_text, :string, default: nil)
+  attr(:trailing_text, :string, default: nil, doc: "e.g. a keyboard shortcut")
+  attr(:selected, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
+  attr(:href, :any, default: nil)
+  attr(:navigate, :any, default: nil)
+  attr(:patch, :any, default: nil)
+  attr(:paperize, :boolean, default: true)
+  attr(:class, :any, default: nil)
+  attr(:rest, :global, include: ~w(method download target rel replace value name))
+
+  slot(:trailing, doc: "custom trailing content, instead of trailing_text")
+  slot(:inner_block, required: true, doc: "the item label")
+
+  @doc "A row in a `pp_menu/1`. See the module doc."
+  def pp_menu_item(assigns) do
+    linked? =
+      assigns.href not in [nil, false] or assigns.navigate not in [nil, false] or
+        assigns.patch not in [nil, false]
+
+    assigns = assign(assigns, :linked?, linked?)
+
+    ~H"""
+    <.link
+      :if={@linked?}
+      href={@href}
+      navigate={@navigate}
+      patch={@patch}
+      role="menuitem"
+      aria-disabled={@disabled && "true"}
+      aria-current={@selected && "page"}
+      data-pp-component="menu-item"
+      class={Helpers.classes(@paperize, item_classes(@selected), @class)}
+      {@rest}
+    >
+      {menu_item_content(assigns)}
+    </.link>
+    <button
+      :if={!@linked?}
+      type="button"
+      role={if @selected, do: "menuitemradio", else: "menuitem"}
+      aria-checked={@selected && "true"}
+      disabled={@disabled}
+      data-pp-component="menu-item"
+      class={Helpers.classes(@paperize, item_classes(@selected), @class)}
+      {@rest}
+    >
+      {menu_item_content(assigns)}
+    </button>
+    """
+  end
+
+  defp menu_item_content(assigns) do
+    ~H"""
+    <Icon.pp_icon :if={@icon} name={@icon} class="shrink-0 opacity-80" />
+    <span class="flex min-w-0 flex-1 flex-col text-start">
+      <span class="truncate">{render_slot(@inner_block)}</span>
+      <span :if={@supporting_text} class="truncate pp-body-small opacity-80">
+        {@supporting_text}
+      </span>
+    </span>
+    <span :if={@trailing_text} class="shrink-0 pp-label-large opacity-80">{@trailing_text}</span>
+    {render_slot(@trailing)}
+    """
+  end
+
+  attr(:id, :string, required: true)
+  attr(:label, :string, required: true, doc: "the submenu trigger's text")
+  attr(:icon, :string, default: nil, doc: "a leading hero-* icon")
+  attr(:side, :string, default: "end", values: ~w(end start), doc: "which side it opens on")
+  attr(:disabled, :boolean, default: false)
+  attr(:paperize, :boolean, default: true)
+  attr(:class, :any, default: nil)
+
+  slot(:inner_block, required: true, doc: "the submenu's pp_menu_item/1s")
+
+  @doc """
+  A cascading submenu inside a `pp_menu/1`: a menu item with a trailing
+  chevron that opens a second panel beside it. See the module doc.
+  """
+  def pp_submenu(assigns) do
+    ~H"""
+    <div data-pp-component="submenu" class="group/sub relative">
+      <button
+        type="button"
+        id={"#{@id}-trigger"}
+        role="menuitem"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        aria-controls={"#{@id}-panel"}
+        disabled={@disabled}
+        phx-click={submenu_open(@id)}
+        class={Helpers.classes(@paperize, item_classes(false), @class)}
+      >
+        <Icon.pp_icon :if={@icon} name={@icon} class="shrink-0 opacity-80" />
+        <span class="min-w-0 flex-1 truncate text-start">{@label}</span>
+        <Icon.pp_icon name="hero-chevron-right" size="sm" class="shrink-0 opacity-80 rtl:rotate-180" />
+      </button>
+      <div
+        id={"#{@id}-panel"}
+        role="menu"
+        aria-labelledby={"#{@id}-trigger"}
+        data-pp-component="menu-panel"
+        class={[
+          "group/menu absolute -top-1 z-50 hidden group-hover/sub:flex group-focus-within/sub:flex group-has-[[aria-expanded=true]]/sub:flex",
+          submenu_side(@side),
+          Helpers.classes(@paperize, panel_classes("standard"), nil)
+        ]}
+      >
+        {render_slot(@inner_block)}
+      </div>
+    </div>
+    """
+  end
+
+  # Opening by click (touch, Safari): the expanded attribute shows the
+  # panel through CSS, synchronously, so focus can move into it right away.
+  @doc false
+  def submenu_open(id) do
+    {"aria-expanded", "true"}
+    |> JS.set_attribute(to: "##{id}-trigger")
+    |> JS.focus_first(to: "##{id}-panel")
+  end
+
+  defp submenu_side("end"), do: "start-full ps-1"
+  defp submenu_side("start"), do: "end-full pe-1"
+
   @doc """
   A `Phoenix.LiveView.JS` command that opens/closes the menu with `id` —
-  wired automatically to the trigger button; expose it if something else
-  on the page should also toggle this menu.
+  wired to the trigger; public for anything else that should toggle it.
   """
   def toggle(js \\ %JS{}, id) do
     js
-    |> JS.toggle(to: "##{id}-panel", display: "block")
+    |> JS.toggle(to: "##{id}-panel", display: "flex")
     |> JS.toggle_attribute({"aria-expanded", "true", "false"}, to: "##{id}-trigger")
   end
 
@@ -253,10 +325,37 @@ defmodule PhoenixPaper.Menu do
     js
     |> JS.hide(to: "##{id}-panel")
     |> JS.set_attribute({"aria-expanded", "false"}, to: "##{id}-trigger")
+    |> JS.set_attribute({"aria-expanded", "false"}, to: "##{id}-panel [aria-haspopup=menu]")
   end
 
-  defp anchor_classes("bottom-start"), do: "top-full left-0 mt-1"
-  defp anchor_classes("bottom-end"), do: "top-full right-0 mt-1"
-  defp anchor_classes("top-start"), do: "bottom-full left-0 mb-1"
-  defp anchor_classes("top-end"), do: "bottom-full right-0 mb-1"
+  defp icon_variant(v) when v in ~w(standard filled tonal outlined), do: v
+  defp icon_variant(_v), do: "standard"
+
+  defp button_variant(v) when v in ~w(filled tonal elevated outlined text), do: v
+  defp button_variant(_v), do: "text"
+
+  defp anchor_classes("bottom-start"), do: "top-full start-0 mt-1"
+  defp anchor_classes("bottom-end"), do: "top-full end-0 mt-1"
+  defp anchor_classes("top-start"), do: "bottom-full start-0 mb-1"
+  defp anchor_classes("top-end"), do: "bottom-full end-0 mb-1"
+
+  defp panel_classes("standard"),
+    do:
+      "min-w-[112px] max-w-[280px] w-max flex-col gap-0.5 rounded-pp-lg bg-pp-surface-container p-1 text-pp-on-surface pp-elevation-2"
+
+  defp panel_classes("vibrant"),
+    do:
+      "min-w-[112px] max-w-[280px] w-max flex-col gap-0.5 rounded-pp-lg bg-pp-tertiary-container p-1 text-pp-on-tertiary-container pp-elevation-2"
+
+  defp item_classes(selected) do
+    [
+      "relative flex min-h-12 w-full cursor-pointer select-none items-center gap-3 overflow-hidden px-3 py-2 pp-label-large pp-state-layer pp-focus-ring pp-motion-effects-fast",
+      "disabled:pointer-events-none disabled:opacity-38 aria-disabled:pointer-events-none aria-disabled:opacity-38",
+      if(selected,
+        do:
+          "rounded-pp-md bg-pp-secondary-container text-pp-on-secondary-container group-data-[pp-color=vibrant]/menu:bg-pp-tertiary group-data-[pp-color=vibrant]/menu:text-pp-on-tertiary",
+        else: "rounded-pp-sm"
+      )
+    ]
+  end
 end

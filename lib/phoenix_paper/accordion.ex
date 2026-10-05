@@ -14,7 +14,7 @@ defmodule PhoenixPaper.Accordion do
       </.pp_accordion>
 
   Pure CSS, no JS/LiveView — the same hidden-checkbox-plus-`peer-checked:`
-  trick as `PhoenixPaper.Drawer`/`PhoenixPaper.Rating`. `pp_accordion/1`
+  trick as `PhoenixPaper.NavigationRail`/`PhoenixPaper.Rating`. `pp_accordion/1`
   renders the (visually hidden) checkbox as the *first* child inside its own
   `PhoenixPaper.Paper` surface; `AccordionSummary`/`AccordionDetails`/
   `AccordionActions` are written as its `inner_block`, making them flat
@@ -40,33 +40,30 @@ defmodule PhoenixPaper.Accordion do
   unlike MUI's JS-driven version.
 
   `default_expanded` sets the checkbox/radio's initial `checked` — like
-  `PhoenixPaper.Drawer`'s toggle, this is a plain, uncontrolled HTML
+  `PhoenixPaper.NavigationRail`'s toggle, this is a plain, uncontrolled HTML
   checkbox with no `checked={@some_assign}` wiring back to the server, so
   there's nothing for a later, unrelated LiveView re-render to fight with
   over who owns the "true" expanded state.
 
   ## Colors and styles
 
-  The same styling attrs as `PhoenixPaper.Button`/`PhoenixPaper.Tooltip`,
-  set once on `pp_accordion/1` and reaching the summary/details/actions
-  inside it:
+  MD3 has no accordion, so this one follows `PhoenixPaper.Card`'s
+  vocabulary, set once on `pp_accordion/1`:
 
-  - `variant` — `"raised"` (default: a `Paper` surface at `elevation`,
-    unchanged from before), `"flat"` (the same surface with no shadow) or
-    `"outlined"` (no shadow, a 1px border — MUI's `variant="outlined"`).
-  - `color` — `"default"` (the neutral surface, unchanged) or
-    `"primary"`/`"secondary"`/`"accent"`/`"error"`. On `raised`/`flat` a
-    brand color fills the whole panel (`bg-pp-primary
-    text-pp-on-primary`, with the details/actions dividers switched to a
-    matching `on-*` tint); on `outlined` it colors the border and the
-    summary text instead, on the normal surface.
+  - `variant` — `"elevated"` (default: `surface-container-low` with a
+    level-1 shadow), `"filled"` (`surface-container-highest`) or
+    `"outlined"` (`outline-variant` border on the surface).
+  - `color` — `"default"` or `"primary"`/`"secondary"`/`"tertiary"`/
+    `"error"`. On `elevated`/`filled` a color fills the panel with that
+    role's *container* (`primary-container` with `on-primary-container`
+    text, details/actions dividers tinted to match); on `outlined` it
+    colors the border and the summary text.
 
         <.pp_accordion id="faq1" color="primary">...</.pp_accordion>
-        <.pp_accordion id="faq2" variant="outlined" color="accent">...</.pp_accordion>
+        <.pp_accordion id="faq2" variant="outlined" color="tertiary">...</.pp_accordion>
 
-  A `pp_button` inside a filled accordion's actions needs
-  `color="inherit"`, or its brand-colored text disappears into the
-  same-colored panel (the AppBar pitfall in AGENTS.md).
+  Buttons in a colored accordion's actions read best as
+  `color="inherit"` text buttons.
 
   There's no `square` prop like MUI's — use `shape={:none}` (the same attr
   every other component's corner radius goes through) instead of a
@@ -95,22 +92,18 @@ defmodule PhoenixPaper.Accordion do
 
   attr(:paperize, :boolean, default: true)
 
-  attr(:elevation, :integer,
-    default: 1,
-    doc: "resting elevation for variant=raised (flat and outlined have none)"
-  )
-
-  attr(:variant, :string, default: "raised", values: ~w(raised flat outlined))
+  attr(:variant, :string, default: "elevated", values: ~w(elevated filled outlined))
 
   attr(:color, :string,
     default: "default",
-    values: ~w(default primary secondary accent error),
-    doc: "fills the panel (raised/flat) or colors border + summary (outlined)"
+    values: ~w(default primary secondary tertiary error),
+    doc:
+      "fills the panel with the role's container (elevated/filled) or colors border + summary (outlined)"
   )
 
   attr(:shape, :atom,
     default: :md,
-    values: ~w(none xs sm md lg xl full)a,
+    values: PhoenixPaper.Shape.tokens(),
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
@@ -123,7 +116,8 @@ defmodule PhoenixPaper.Accordion do
   def pp_accordion(assigns) do
     ~H"""
     <.pp_paper
-      elevation={if @variant == "raised", do: @elevation, else: 0}
+      elevation={if @variant == "elevated", do: 1, else: 0}
+      outlined={@variant == "outlined" && @color == "default"}
       shape={@shape}
       color={paper_color(@variant, @color)}
       paperize={@paperize}
@@ -163,18 +157,21 @@ defmodule PhoenixPaper.Accordion do
   defp gutters_classes(true), do: ""
 
   # Filled variants take their background from Paper's own `color` (so
-  # there's no `bg-pp-surface` left to fight); outlined stays on the
+  # there's no surface class left to fight); outlined stays on the
   # surface and colors its border instead.
   defp paper_color("outlined", _color), do: "surface"
-  defp paper_color(_filled, "default"), do: "surface"
-  defp paper_color(_filled, color), do: color
+  defp paper_color("elevated", "default"), do: "surface-container-low"
+  defp paper_color("filled", "default"), do: "surface-container-highest"
+  defp paper_color(_filled, "primary"), do: "primary-container"
+  defp paper_color(_filled, "secondary"), do: "secondary-container"
+  defp paper_color(_filled, "tertiary"), do: "tertiary-container"
+  defp paper_color(_filled, "error"), do: "error-container"
 
-  # Filled brand colors switch the details/actions dividers to an `on-*`
-  # tint (the default `border-pp-outline/20` barely shows on a brand
-  # fill); outlined colors reach the summary text. Both via
+  # Colored container fills switch the details/actions dividers to an
+  # `on-*-container` tint; outlined colors reach the summary text. Both via
   # `data-pp-component` child selectors, since the parts are separate
   # components with no color attr of their own.
-  defp style_classes("outlined", "default"), do: "border border-pp-outline"
+  defp style_classes("outlined", "default"), do: ""
 
   defp style_classes("outlined", "primary"),
     do: "border border-pp-primary [&>[data-pp-component=accordion-summary]]:text-pp-primary"
@@ -182,8 +179,8 @@ defmodule PhoenixPaper.Accordion do
   defp style_classes("outlined", "secondary"),
     do: "border border-pp-secondary [&>[data-pp-component=accordion-summary]]:text-pp-secondary"
 
-  defp style_classes("outlined", "accent"),
-    do: "border border-pp-accent [&>[data-pp-component=accordion-summary]]:text-pp-accent"
+  defp style_classes("outlined", "tertiary"),
+    do: "border border-pp-tertiary [&>[data-pp-component=accordion-summary]]:text-pp-tertiary"
 
   defp style_classes("outlined", "error"),
     do: "border border-pp-error [&>[data-pp-component=accordion-summary]]:text-pp-error"
@@ -192,17 +189,17 @@ defmodule PhoenixPaper.Accordion do
 
   defp style_classes(_filled, "primary"),
     do:
-      "[&>[data-pp-component=accordion-details]]:border-pp-on-primary/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-primary/20"
+      "[&>[data-pp-component=accordion-details]]:border-pp-on-primary-container/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-primary-container/20"
 
   defp style_classes(_filled, "secondary"),
     do:
-      "[&>[data-pp-component=accordion-details]]:border-pp-on-secondary/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-secondary/20"
+      "[&>[data-pp-component=accordion-details]]:border-pp-on-secondary-container/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-secondary-container/20"
 
-  defp style_classes(_filled, "accent"),
+  defp style_classes(_filled, "tertiary"),
     do:
-      "[&>[data-pp-component=accordion-details]]:border-pp-on-accent/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-accent/20"
+      "[&>[data-pp-component=accordion-details]]:border-pp-on-tertiary-container/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-tertiary-container/20"
 
   defp style_classes(_filled, "error"),
     do:
-      "[&>[data-pp-component=accordion-details]]:border-pp-on-error/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-error/20"
+      "[&>[data-pp-component=accordion-details]]:border-pp-on-error-container/20 [&>[data-pp-component=accordion-actions]]:border-pp-on-error-container/20"
 end

@@ -23,7 +23,7 @@ defmodule PhoenixPaper.SkeletonTest do
   test "variant=\"circular\" defaults to a 40px circle" do
     html = render_component(&circular/1)
 
-    assert html =~ "rounded-full"
+    assert html =~ "rounded-pp-full"
     assert html =~ "width: 40px"
     assert html =~ "height: 40px"
   end

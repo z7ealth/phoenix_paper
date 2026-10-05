@@ -1,58 +1,58 @@
 defmodule PhoenixPaper.ButtonGroup do
   @moduledoc """
-  A Material Design button group (`pp_button_group/1`) — visually joins a
-  row of `PhoenixPaper.Button`s (or `PhoenixPaper.ToggleButton`s) into one
-  segmented control by rounding only the group's outer corners and
-  collapsing the shared borders.
+  An M3 Expressive button group (`pp_button_group/1`) — lays out a row of
+  `pp_button`s and/or `pp_icon_button`s and gives them the group's shape
+  behavior. It replaces 0.3's `ToggleButton`/`ButtonGroup` pair and MD3's
+  (now deprecated) segmented buttons.
 
-  Give each inner button `variant="outlined"` for the classic segmented
-  look — the group overrides each child's own corner rounding regardless of
-  its `shape` attr, so you don't need to set `shape={:none}` yourself.
+  ## Variants
 
-  `orientation="vertical"` stacks buttons top-to-bottom instead of side by
-  side, collapsing the shared borders the same way (top/bottom instead of
-  left/right).
+  - `standard` (default): spaced buttons. Pressing one widens it into the
+    gap while its neighbors stay put — Expressive's "press expands"
+    interaction, CSS only. Icon buttons, being fixed-width, only morph
+    their corners.
+  - `connected`: buttons 2dp apart sharing one pill outline — the outer
+    corners fully round, the inner corners small, squeezing further on
+    press. A selected (`aria-pressed`) button goes fully round. This is
+    the replacement for segmented buttons.
 
-  `disable_elevation` zeroes out every child button's own elevation shadow
-  (the same idea as MUI's `disableElevation`) — set it once on the group
-  instead of `elevation={0}` on every button.
+  `size` must match the children's `size` (it picks the gap and the
+  corner radii); HEEx can't push attrs into child components, so it isn't
+  inherited — set both.
 
-  Unlike MUI, there's no group-level `variant`/`color`/`size` that cascades
-  to children — MUI does that through React context, which HEEx has no
-  equivalent for. `render_slot/1` just re-renders whatever HEEx markup the
-  caller wrote for `inner_block`; there's no hook for a parent component to
-  reach into a child's own assigns and change them. Set those attrs on each
-  `<.pp_button>` yourself.
+  ## Selection
 
-  There's also no built-in "split button" (a button plus a small
-  dropdown-toggle button opening a menu) — that needs a menu/popover
-  component this library doesn't have yet, not just a `ButtonGroup` option.
+  Selection lives on the buttons, via their toggle attrs (see
+  `PhoenixPaper.Toggle`): give each button the same `group` for a
+  single-select group, or plain `toggle` for multi-select.
+
+      <.pp_button_group variant="connected" aria-label="View">
+        <.pp_button variant="tonal" group="view" selected>Day</.pp_button>
+        <.pp_button variant="tonal" group="view" selected={false}>Week</.pp_button>
+        <.pp_button variant="tonal" group="view" selected={false}>Month</.pp_button>
+      </.pp_button_group>
+
+      <.pp_button_group aria-label="Text style">
+        <.pp_icon_button icon="hero-bold" label="Bold" variant="tonal" toggle selected={false} />
+        <.pp_icon_button icon="hero-italic" label="Italic" variant="tonal" toggle selected={false} />
+      </.pp_button_group>
+
+  Controlled groups (server-owned state) pass `selected={@view == "day"}`
+  with a normal `phx-click` instead of `group`.
+
+  `full_width` stretches the group to its container, buttons sharing the
+  width equally — the usual layout for a connected group on mobile.
   """
   use Phoenix.Component
 
   alias PhoenixPaper.Helpers
 
+  attr(:variant, :string, default: "standard", values: ~w(standard connected))
+  attr(:size, :string, default: "sm", values: ~w(xs sm md lg xl))
+  attr(:full_width, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
-
-  attr(:orientation, :string,
-    default: "horizontal",
-    values: ~w(horizontal vertical),
-    doc: "stack buttons side by side or top-to-bottom"
-  )
-
-  attr(:shape, :atom,
-    default: :md,
-    values: ~w(none xs sm md lg xl full)a,
-    doc: "corner radius token, see PhoenixPaper.Shape"
-  )
-
-  attr(:disable_elevation, :boolean,
-    default: false,
-    doc: "zero out every child button's own elevation shadow"
-  )
-
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(role))
+  attr(:rest, :global)
 
   slot(:inner_block, required: true)
 
@@ -60,15 +60,11 @@ defmodule PhoenixPaper.ButtonGroup do
   def pp_button_group(assigns) do
     ~H"""
     <div
-      data-pp-component="button-group"
-      data-pp-orientation={@orientation}
       role="group"
+      data-pp-component="button-group"
+      data-pp-variant={@variant}
       class={
-        Helpers.classes(
-          @paperize,
-          paper_classes(@orientation, @shape, @disable_elevation),
-          @class
-        )
+        Helpers.classes(@paperize, paper_classes(@variant, @size, @full_width), @class)
       }
       {@rest}
     >
@@ -77,64 +73,43 @@ defmodule PhoenixPaper.ButtonGroup do
     """
   end
 
-  defp paper_classes(orientation, shape, disable_elevation) do
+  defp paper_classes(variant, size, full_width) do
     [
-      layout_classes(orientation),
-      corner_classes(orientation, shape),
-      elevation_classes(disable_elevation)
+      variant_classes(variant),
+      size_vars(size),
+      variant == "standard" && gap_classes(size),
+      full_width && "flex w-full [&>*]:flex-1"
     ]
   end
 
-  defp layout_classes("horizontal") do
-    "inline-flex [&>*]:rounded-none [&>*:not(:first-child)]:-ml-px [&>*:focus-visible]:z-10 [&>*:hover]:z-10"
-  end
+  defp variant_classes("standard"), do: "pp-button-group-standard"
+  defp variant_classes("connected"), do: "pp-button-group-connected"
 
-  defp layout_classes("vertical") do
-    "inline-flex flex-col [&>*]:rounded-none [&>*:not(:first-child)]:-mt-px [&>*:focus-visible]:z-10 [&>*:hover]:z-10"
-  end
+  # Expressive standard-group spacing.
+  defp gap_classes("xs"), do: "gap-[18px]"
+  defp gap_classes("sm"), do: "gap-3"
+  defp gap_classes(_size), do: "gap-2"
 
-  defp corner_classes("horizontal", :none),
-    do: "[&>*:first-child]:rounded-none [&>*:last-child]:rounded-none"
+  # Outer (round) radius = half the height; inner and pressed-inner radii
+  # from the Expressive connected-group spec; pad = the button's own
+  # horizontal padding, which the standard group's press widening adds to.
+  defp size_vars("xs"),
+    do:
+      "[--pp-group-outer:16px] [--pp-group-inner:4px] [--pp-group-pressed:2px] [--pp-group-pad:12px]"
 
-  defp corner_classes("horizontal", :xs),
-    do: "[&>*:first-child]:rounded-l-sm [&>*:last-child]:rounded-r-sm"
+  defp size_vars("sm"),
+    do:
+      "[--pp-group-outer:20px] [--pp-group-inner:8px] [--pp-group-pressed:4px] [--pp-group-pad:16px]"
 
-  defp corner_classes("horizontal", :sm),
-    do: "[&>*:first-child]:rounded-l [&>*:last-child]:rounded-r"
+  defp size_vars("md"),
+    do:
+      "[--pp-group-outer:28px] [--pp-group-inner:8px] [--pp-group-pressed:4px] [--pp-group-pad:24px]"
 
-  defp corner_classes("horizontal", :md),
-    do: "[&>*:first-child]:rounded-l-md [&>*:last-child]:rounded-r-md"
+  defp size_vars("lg"),
+    do:
+      "[--pp-group-outer:48px] [--pp-group-inner:16px] [--pp-group-pressed:12px] [--pp-group-pad:48px]"
 
-  defp corner_classes("horizontal", :lg),
-    do: "[&>*:first-child]:rounded-l-lg [&>*:last-child]:rounded-r-lg"
-
-  defp corner_classes("horizontal", :xl),
-    do: "[&>*:first-child]:rounded-l-xl [&>*:last-child]:rounded-r-xl"
-
-  defp corner_classes("horizontal", :full),
-    do: "[&>*:first-child]:rounded-l-full [&>*:last-child]:rounded-r-full"
-
-  defp corner_classes("vertical", :none),
-    do: "[&>*:first-child]:rounded-none [&>*:last-child]:rounded-none"
-
-  defp corner_classes("vertical", :xs),
-    do: "[&>*:first-child]:rounded-t-sm [&>*:last-child]:rounded-b-sm"
-
-  defp corner_classes("vertical", :sm),
-    do: "[&>*:first-child]:rounded-t [&>*:last-child]:rounded-b"
-
-  defp corner_classes("vertical", :md),
-    do: "[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-b-md"
-
-  defp corner_classes("vertical", :lg),
-    do: "[&>*:first-child]:rounded-t-lg [&>*:last-child]:rounded-b-lg"
-
-  defp corner_classes("vertical", :xl),
-    do: "[&>*:first-child]:rounded-t-xl [&>*:last-child]:rounded-b-xl"
-
-  defp corner_classes("vertical", :full),
-    do: "[&>*:first-child]:rounded-t-full [&>*:last-child]:rounded-b-full"
-
-  defp elevation_classes(false), do: ""
-  defp elevation_classes(true), do: "[&>*]:pp-elevation-0"
+  defp size_vars("xl"),
+    do:
+      "[--pp-group-outer:68px] [--pp-group-inner:20px] [--pp-group-pressed:16px] [--pp-group-pad:64px]"
 end

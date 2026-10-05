@@ -73,7 +73,7 @@ defmodule PhoenixPaper.Table do
 
   defp paper_classes(dense, sticky_header) do
     [
-      "w-full border-collapse text-left text-sm text-pp-on-surface",
+      "w-full border-collapse text-start pp-body-medium text-pp-on-surface",
       cell_padding_classes(dense),
       sticky_header_classes(sticky_header)
     ]
@@ -85,5 +85,5 @@ defmodule PhoenixPaper.Table do
   defp sticky_header_classes(false), do: ""
 
   defp sticky_header_classes(true),
-    do: "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-pp-surface"
+    do: "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-inherit"
 end

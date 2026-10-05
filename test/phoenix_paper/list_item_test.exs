@@ -36,8 +36,8 @@ defmodule PhoenixPaper.ListItemTest do
   test "active renders the highlighted primary state, leading/secondary/trailing slots render" do
     html = render_component(&full/1)
 
-    assert html =~ "bg-pp-primary/10"
-    assert html =~ "text-pp-primary"
+    assert html =~ "bg-pp-secondary-container"
+    assert html =~ "text-pp-on-secondary-container"
     assert html =~ "Icon"
     assert html =~ "Subtitle"
     assert html =~ "Badge"

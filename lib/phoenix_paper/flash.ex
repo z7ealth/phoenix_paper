@@ -154,12 +154,12 @@ defmodule PhoenixPaper.Flash do
       phx-connected={JS.set_attribute({"hidden", ""}, to: "##{@id}")}
     >
       <span class="flex items-center gap-3">
-        <.pp_icon name="hero-exclamation-circle-mini" class="shrink-0" />
+        <.pp_icon name="hero-exclamation-circle" size="sm" class="shrink-0" />
         <span>
-          <span class="block font-medium">{@title}</span>
+          <span class="block pp-title-small">{@title}</span>
           <span class="flex items-center gap-1">
             {@text}
-            <.pp_icon name="hero-arrow-path-mini" size="xs" class="motion-safe:animate-spin" />
+            <.pp_icon name="hero-arrow-path" size="xs" class="motion-safe:animate-spin" />
           </span>
         </span>
       </span>
@@ -191,17 +191,17 @@ defmodule PhoenixPaper.Flash do
       paperize={@paperize}
     >
       <span class="flex items-center gap-3">
-        <.pp_icon :if={icon_name(@kind)} name={icon_name(@kind)} class="shrink-0" />
+        <.pp_icon :if={icon_name(@kind)} name={icon_name(@kind)} size="sm" class="shrink-0" />
         <span>{@message}</span>
       </span>
     </.pp_snackbar>
     """
   end
 
-  defp icon_name(:info), do: "hero-information-circle-mini"
-  defp icon_name(:success), do: "hero-check-circle-mini"
-  defp icon_name(:warning), do: "hero-exclamation-triangle-mini"
-  defp icon_name(:error), do: "hero-exclamation-circle-mini"
+  defp icon_name(:info), do: "hero-information-circle"
+  defp icon_name(:success), do: "hero-check-circle"
+  defp icon_name(:warning), do: "hero-exclamation-triangle"
+  defp icon_name(:error), do: "hero-exclamation-circle"
   defp icon_name(_), do: nil
 
   defp stack_classes(anchor_origin) do

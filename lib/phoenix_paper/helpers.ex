@@ -40,7 +40,8 @@ defmodule PhoenixPaper.Helpers do
   The classes for a toggle control's wrapping `<label>` — `Checkbox`,
   `Switch`, and each of `RadioGroup`'s per-option labels all need the same
   `inline-flex items-center gap-2` to arrange their box/track next to the
-  label text.
+  label text, and the `pp-state-group` marker their 40dp state-layer
+  circle (`pp-state-layer-target`) reacts to.
 
   Unlike `classes/3`, this is **not** gated behind `paperize` — it's always
   concatenated in, `extra_class` and all. This layout isn't part of the
@@ -48,7 +49,7 @@ defmodule PhoenixPaper.Helpers do
   own doc: colors/elevation/shape/typography); it's the structural
   arrangement of the label itself, and there's no other `class` attr on
   that specific label for a caller to rebuild it with — same reasoning as
-  `AppBar`'s inner toolbar `<div>` and `Breadcrumbs`'s `<li>`s (see
+  `TopAppBar`'s inner row `<div>` and `Breadcrumbs`'s `<li>`s (see
   AGENTS.md, "The `paperize` contract"). Dropping it doesn't give
   `paperize={false}` a cleaner slate, it just breaks the box-plus-text
   layout with no way back — found from a real screenshot of `Checkbox`'s
@@ -62,7 +63,11 @@ defmodule PhoenixPaper.Helpers do
   """
   @spec toggle_label_classes(class_value()) :: String.t()
   def toggle_label_classes(extra_class),
-    do: join(["inline-flex items-center gap-2 cursor-pointer select-none", extra_class])
+    do:
+      join([
+        "pp-state-group inline-flex items-center gap-2 cursor-pointer select-none has-[:disabled]:cursor-default",
+        extra_class
+      ])
 
   # Flattens an arbitrarily nested list of class values (strings, `nil`,
   # `false`, or nested lists — see `t:class_value/0`) into a single
@@ -74,6 +79,27 @@ defmodule PhoenixPaper.Helpers do
     |> List.flatten()
     |> Enum.reject(&(&1 in [nil, false, ""]))
     |> Enum.map_join(" ", &to_string/1)
+  end
+
+  @doc """
+  The `phx-hook` value for components the optional PhoenixPaper JS hook can
+  enhance (true springs, tab indicator sliding, scroll-aware app bars,
+  slider value labels, sheet dragging, carousel morphing, loading-indicator
+  shape morphing) — `"PhoenixPaper"` when the app opted in with
+
+      config :phoenix_paper, hook: true
+
+  and `nil` otherwise, so HEEx drops the attribute and LiveView never logs
+  an "unknown hook" error in apps that don't register it. Read at render
+  time (not `compile_env`), so toggling it needs no dependency recompile.
+
+  Every component that sets it also needs a DOM `id` (a LiveView hook
+  requirement); components pass `nil` when they don't have one, so the
+  element just keeps its CSS-only behavior. See `priv/static/phoenix_paper.js`.
+  """
+  @spec hook(String.t() | nil) :: String.t() | nil
+  def hook(id \\ "") do
+    if id && Application.get_env(:phoenix_paper, :hook, false), do: "PhoenixPaper"
   end
 
   @doc """

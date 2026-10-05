@@ -1,46 +1,74 @@
 defmodule PhoenixPaper.Fab do
   @moduledoc """
-  A Material Design Floating Action Button (`pp_fab/1`) — a circular,
-  elevated, icon-only button, or (with `extended`) a pill with a label.
+  An MD3 floating action button (`pp_fab/1`), with the M3 Expressive sizes
+  and the extended FAB.
 
-  Anchor it to a screen corner with `position` plus offsets in `class`:
+      <.pp_fab icon="hero-pencil" label="Compose" position="fixed" class="bottom-4 right-4" />
+      <.pp_fab icon="hero-pencil" label="Compose" extended />
 
-      <.pp_fab position="fixed" class="bottom-6 right-6">
-        <.pp_icon name="hero-plus" />
-      </.pp_fab>
+  The icon is the `icon` attr (a `hero-*` name) or the inner block for
+  custom markup. `label` is required: it's the accessible name of an
+  icon-only FAB, and the visible text of an `extended` one.
 
-  Don't put `fixed` in `class`: the ripple makes the root `relative`, and
-  Tailwind's stylesheet orders `.relative` after `.fixed`, so the FAB would
-  stay in the page flow with the offsets only nudging it.
+  ## Size (Expressive)
+
+  | `size` | MD3 name | box | corners | icon |
+  |--------|----------|-----|---------|------|
+  | `default` | FAB | 56dp | 16dp | 24dp |
+  | `medium` | medium FAB | 80dp | 20dp | 28dp |
+  | `large` | large FAB | 96dp | 28dp | 36dp |
+
+  MD3's small (40dp) FAB is deprecated in Expressive and not offered. An
+  `extended` FAB keeps the size's height and corners and grows to fit the
+  label (title-medium, title-large and headline-small type).
+
+  ## Color
+
+  `color` is `primary-container` (default), `secondary-container` or
+  `tertiary-container` — the tonal FABs — or `primary`, `secondary`,
+  `tertiary` — Expressive's higher-contrast FABs — or `surface`
+  (`surface-container-high` with a `primary` icon). `lowered` drops the
+  resting shadow from level 3 to level 1, for a FAB that sits on a
+  surface rather than over content.
+
+  ## Positioning
+
+  Anchor it with `position` plus offsets in `class` — not `class="fixed"`,
+  which would lose to the ripple's `relative` (see AGENTS.md).
+
+  For a FAB that opens a menu of actions, see `PhoenixPaper.FabMenu`.
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.{Elevation, Helpers, Ripple}
+  alias PhoenixPaper.{Elevation, Helpers, Icon, Ripple}
 
-  attr(:color, :string, default: "secondary", values: ~w(primary secondary accent error))
-  attr(:size, :string, default: "md", values: ~w(sm md lg))
-  attr(:extended, :boolean, default: false)
+  attr(:icon, :string, default: nil, doc: "a hero-* icon name; or use the inner block")
+  attr(:label, :string, required: true, doc: "accessible name; the visible text when extended")
+  attr(:extended, :boolean, default: false, doc: "show the label next to the icon")
+  attr(:size, :string, default: "default", values: ~w(default medium large))
 
-  attr(:ripple, :boolean,
-    default: true,
-    doc:
-      "the Material ripple effect on click/tap — off whenever paperize is false, see PhoenixPaper.Ripple"
+  attr(:color, :string,
+    default: "primary-container",
+    values:
+      ~w(primary-container secondary-container tertiary-container primary secondary tertiary surface)
   )
+
+  attr(:lowered, :boolean, default: false, doc: "level-1 resting shadow instead of level 3")
+  attr(:ripple, :boolean, default: true)
 
   attr(:position, :string,
     default: "relative",
     values: ~w(relative fixed absolute sticky),
-    doc:
-      "the root's CSS position; set it here, not via class, since the ripple's own relative would beat a class=\"fixed\""
+    doc: "the root's CSS position; set it here, not via class"
   )
 
   attr(:disabled, :boolean, default: false)
   attr(:type, :string, default: "button", values: ~w(button submit reset))
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form name value phx-click))
+  attr(:rest, :global, include: ~w(form name value))
 
-  slot(:inner_block, required: true)
+  slot(:inner_block, doc: "custom icon markup, instead of the icon attr")
 
   @doc "Renders a floating action button. See the module doc."
   def pp_fab(assigns) do
@@ -50,49 +78,58 @@ defmodule PhoenixPaper.Fab do
     <button
       type={@type}
       disabled={@disabled}
+      aria-label={!@extended && @label}
       data-pp-component="fab"
-      class={Helpers.classes(@paperize, paper_classes(@color, @size, @extended, @ripple?, @position), @class)}
+      data-pp-size={@size}
+      class={Helpers.classes(@paperize, paper_classes(assigns), @class)}
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
+      <Icon.pp_icon :if={@icon} name={@icon} size="none" class="size-[1em] shrink-0" />
       {render_slot(@inner_block)}
+      <span :if={@extended} class={label_classes(@size)}>{@label}</span>
     </button>
     """
   end
 
-  defp paper_classes(color, size, extended, ripple, position) do
+  defp paper_classes(assigns) do
     [
-      base_classes(extended),
-      size_classes(size, extended),
-      color_classes(color),
-      Elevation.class(6),
-      Ripple.container_classes(ripple, position)
+      "inline-flex shrink-0 items-center justify-center cursor-pointer select-none pp-state-layer pp-focus-ring pp-motion-spatial-fast disabled:cursor-default disabled:pointer-events-none disabled:bg-pp-on-surface/10 disabled:text-pp-on-surface/38 disabled:shadow-none",
+      size_classes(assigns.size, assigns.extended),
+      color_classes(assigns.color),
+      elevation_classes(assigns.lowered),
+      Ripple.container_classes(true, assigns.position)
     ]
   end
 
-  defp base_classes(true) do
-    "inline-flex items-center gap-2 rounded-full font-medium uppercase tracking-wide cursor-pointer transition-shadow hover:pp-elevation-8 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-  end
+  defp size_classes("default", false), do: "size-14 rounded-pp-lg text-[24px]"
+  defp size_classes("medium", false), do: "size-20 rounded-pp-lg-increased text-[28px]"
+  defp size_classes("large", false), do: "size-24 rounded-pp-xl text-[36px]"
+  defp size_classes("default", true), do: "h-14 min-w-20 gap-3 px-4 rounded-pp-lg text-[24px]"
 
-  defp base_classes(false) do
-    "inline-flex items-center justify-center rounded-full cursor-pointer transition-shadow hover:pp-elevation-8 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-  end
+  defp size_classes("medium", true),
+    do: "h-20 min-w-20 gap-3 px-6 rounded-pp-lg-increased text-[28px]"
 
-  defp size_classes("sm", false), do: "size-10"
-  defp size_classes("md", false), do: "size-14"
-  defp size_classes("lg", false), do: "size-16"
-  defp size_classes("sm", true), do: "h-10 px-4 text-xs"
-  defp size_classes("md", true), do: "h-14 px-6 text-sm"
-  defp size_classes("lg", true), do: "h-16 px-8 text-base"
+  defp size_classes("large", true), do: "h-24 min-w-24 gap-4 px-7 rounded-pp-xl text-[36px]"
 
-  defp color_classes("primary"),
-    do: "bg-pp-primary text-pp-on-primary focus-visible:outline-pp-primary"
+  defp label_classes("default"), do: "pp-title-medium whitespace-nowrap"
+  defp label_classes("medium"), do: "pp-title-large whitespace-nowrap"
+  defp label_classes("large"), do: "pp-headline-small whitespace-nowrap"
 
-  defp color_classes("secondary"),
-    do: "bg-pp-secondary text-pp-on-secondary focus-visible:outline-pp-secondary"
+  defp color_classes("primary-container"),
+    do: "bg-pp-primary-container text-pp-on-primary-container"
 
-  defp color_classes("accent"),
-    do: "bg-pp-accent text-pp-on-accent focus-visible:outline-pp-accent"
+  defp color_classes("secondary-container"),
+    do: "bg-pp-secondary-container text-pp-on-secondary-container"
 
-  defp color_classes("error"), do: "bg-pp-error text-pp-on-error focus-visible:outline-pp-error"
+  defp color_classes("tertiary-container"),
+    do: "bg-pp-tertiary-container text-pp-on-tertiary-container"
+
+  defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
+  defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
+  defp color_classes("tertiary"), do: "bg-pp-tertiary text-pp-on-tertiary"
+  defp color_classes("surface"), do: "bg-pp-surface-container-high text-pp-primary"
+
+  defp elevation_classes(false), do: [Elevation.class(3), Elevation.hover_class(4)]
+  defp elevation_classes(true), do: [Elevation.class(1), Elevation.hover_class(2)]
 end

@@ -9,7 +9,7 @@ defmodule PhoenixPaper.TableFooterTest do
     html = render_component(&footer/1)
 
     assert html =~ "<tfoot"
-    assert html =~ "td]:border-t-2"
+    assert html =~ "td]:border-t"
     assert html =~ "content"
   end
 

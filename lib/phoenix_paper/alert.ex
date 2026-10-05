@@ -12,12 +12,15 @@ defmodule PhoenixPaper.Alert do
       </.pp_alert>
 
   `severity` (`success`/`info`/`warning`/`error`) picks both the color and
-  the leading icon — a distinct axis from every other component's `color`
-  attr (`primary`/`secondary`/`accent`/`error`), since these are status
-  colors (see `priv/static/phoenix_paper.css`'s `--color-pp-success`/
-  `-warning`/`-info`), not brand/action colors. `error` happens to be the
-  one name shared with the rest of the library's `color` scale, and does
-  mean the same red in both places.
+  the leading icon. MD3 has no alert component, so this one is built from
+  MD3 roles: `error` is the MD3 error role, and `success`/`warning`/`info`
+  are PhoenixPaper's extension roles shaped the same way (each with a
+  `-container` pair, see `phoenix_paper.css`).
+
+  `variant`: `standard` (default) is the `<severity>-container` surface
+  with its `on-*-container` text — MD3's tonal look; `filled` is the
+  strong `<severity>` color; `outlined` is a `<severity>` border on the
+  page background. 12dp corners, `body-medium` text, `title-small` title.
   """
   use Phoenix.Component
 
@@ -47,8 +50,8 @@ defmodule PhoenixPaper.Alert do
     >
       <.pp_icon name={icon_name(@severity)} class={icon_classes(@severity, @variant)} />
       <div class="min-w-0 flex-1">
-        <div :if={@title != []} class="mb-0.5 font-medium">{render_slot(@title)}</div>
-        <div class="text-sm">{render_slot(@inner_block)}</div>
+        <div :if={@title != []} class="mb-0.5 pp-title-small">{render_slot(@title)}</div>
+        <div>{render_slot(@inner_block)}</div>
       </div>
       <div :if={@action != []} class="flex shrink-0 items-center">{render_slot(@action)}</div>
     </div>
@@ -61,19 +64,30 @@ defmodule PhoenixPaper.Alert do
   defp icon_name("error"), do: "hero-x-circle"
 
   defp icon_classes(_severity, "filled"), do: "shrink-0"
+  defp icon_classes(_severity, "standard"), do: "shrink-0"
   defp icon_classes("success", _variant), do: "shrink-0 text-pp-success"
   defp icon_classes("info", _variant), do: "shrink-0 text-pp-info"
   defp icon_classes("warning", _variant), do: "shrink-0 text-pp-warning"
   defp icon_classes("error", _variant), do: "shrink-0 text-pp-error"
 
   defp paper_classes(severity, variant) do
-    ["flex items-start gap-3 rounded-lg px-4 py-3 text-sm", variant_classes(severity, variant)]
+    [
+      "flex items-start gap-3 rounded-pp-md px-4 py-3 pp-body-medium",
+      variant_classes(severity, variant)
+    ]
   end
 
-  defp variant_classes("success", "standard"), do: "bg-pp-success/10 text-pp-on-surface"
-  defp variant_classes("info", "standard"), do: "bg-pp-info/10 text-pp-on-surface"
-  defp variant_classes("warning", "standard"), do: "bg-pp-warning/10 text-pp-on-surface"
-  defp variant_classes("error", "standard"), do: "bg-pp-error/10 text-pp-on-surface"
+  defp variant_classes("success", "standard"),
+    do: "bg-pp-success-container text-pp-on-success-container"
+
+  defp variant_classes("info", "standard"),
+    do: "bg-pp-info-container text-pp-on-info-container"
+
+  defp variant_classes("warning", "standard"),
+    do: "bg-pp-warning-container text-pp-on-warning-container"
+
+  defp variant_classes("error", "standard"),
+    do: "bg-pp-error-container text-pp-on-error-container"
 
   defp variant_classes("success", "outlined"),
     do: "border border-pp-success bg-transparent text-pp-on-surface"

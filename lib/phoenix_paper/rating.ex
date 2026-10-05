@@ -77,11 +77,11 @@ defmodule PhoenixPaper.Rating do
   end
 
   defp star_classes do
-    "peer-checked:text-pp-secondary peer-hover:text-pp-secondary hover:text-pp-secondary cursor-pointer text-xl text-pp-outline transition-colors"
+    "peer-checked:text-pp-primary peer-hover:text-pp-primary hover:text-pp-primary cursor-pointer text-2xl text-pp-outline-variant pp-motion-effects-fast"
   end
 
-  defp readonly_star_classes(true), do: "text-xl text-pp-secondary"
-  defp readonly_star_classes(false), do: "text-xl text-pp-outline"
+  defp readonly_star_classes(true), do: "text-2xl text-pp-primary"
+  defp readonly_star_classes(false), do: "text-2xl text-pp-outline-variant"
 
   defp normalize_value(v) when is_integer(v), do: v
   defp normalize_value(v) when is_binary(v), do: String.to_integer(v)

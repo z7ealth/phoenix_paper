@@ -8,11 +8,11 @@ defmodule PhoenixPaper.Collapse do
 
       <.pp_collapse id="advanced">
         <:trigger>Advanced options</:trigger>
-        <.pp_input name="timeout" label="Timeout" />
+        <.pp_text_field name="timeout" label="Timeout" />
       </.pp_collapse>
 
   Pure CSS, the same hidden-checkbox-plus-`peer-checked:` trick as
-  `Accordion`/`Drawer` (see AGENTS.md, "CSS-only interactive state"): the
+  `Accordion`/`NavigationRail` (see AGENTS.md, "CSS-only interactive state"): the
   visually hidden checkbox, the trigger `<label for>` and the content are
   flat siblings. `default_open` sets the checkbox's initial state; it's
   uncontrolled after that, so a later LiveView re-render doesn't fight
@@ -75,9 +75,9 @@ defmodule PhoenixPaper.Collapse do
         <span
           :if={@icon && @paperize}
           data-pp-collapse-icon
-          class="inline-flex shrink-0 transition-transform duration-200"
+          class="inline-flex shrink-0 text-pp-on-surface-variant pp-motion-spatial-fast"
         >
-          <.pp_icon name="hero-chevron-down-mini" />
+          <.pp_icon name="hero-chevron-down" size="sm" />
         </span>
       </label>
       <div
@@ -103,13 +103,13 @@ defmodule PhoenixPaper.Collapse do
   # checkbox/label/content structure with a list-item-shaped trigger.
   @doc false
   def content_classes do
-    "invisible grid grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-200 ease-out peer-checked:visible peer-checked:grid-rows-[1fr]"
+    "invisible grid grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-300 ease-pp-emphasized peer-checked:visible peer-checked:grid-rows-[1fr]"
   end
 
   # The chevron is a child of the label, not a sibling of the checkbox, so
   # it's rotated from the label with a compound selector keyed off the
   # label's own `peer-checked:` state.
   defp trigger_classes do
-    "flex select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors hover:bg-pp-on-surface/5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-pp-primary peer-checked:[&>[data-pp-collapse-icon]]:rotate-180"
+    "relative flex select-none items-center gap-2 overflow-hidden rounded-pp-sm px-3 py-2 pp-label-large pp-state-layer peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-solid peer-focus-visible:outline-pp-secondary peer-checked:[&>[data-pp-collapse-icon]]:rotate-180"
   end
 end

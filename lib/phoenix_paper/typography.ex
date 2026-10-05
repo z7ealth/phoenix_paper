@@ -1,65 +1,87 @@
 defmodule PhoenixPaper.Typography do
   @moduledoc """
-  Material's type scale (`pp_typography/1`) — `variant` picks both the
-  rendered tag and the text classes, in the spirit of MUI's
-  [`Typography`](https://mui.com/material-ui/react-typography/).
+  The MD3 type scale (`pp_typography/1`): 15 roles — display, headline,
+  title, body and label, each large/medium/small — plus `code`.
 
-      <.pp_typography variant="h4">Account settings</.pp_typography>
-      <.pp_typography variant="body1">Regular paragraph text.</.pp_typography>
-      <.pp_typography variant="caption">Last updated 2 minutes ago</.pp_typography>
-      <.pp_typography variant="code">mix phx.new my_app</.pp_typography>
+      <.pp_typography variant="headline-medium">Account settings</.pp_typography>
+      <.pp_typography variant="body-large">Regular paragraph text.</.pp_typography>
+      <.pp_typography variant="label-small" color="on-surface-variant">
+        Last updated 2 minutes ago
+      </.pp_typography>
 
-  Unlike MUI's `Typography`, there's no `component` prop to override the
-  tag independently of `variant` — HEEx can't parameterize a tag name (see
-  AGENTS.md, "Conditional root tag"), and one attr driving both together
-  keeps this to a single set of `:if` branches instead of the cross product
-  of every variant with every possible tag. If you need a specific
-  variant's styling on a different element, apply its classes yourself, or
-  ask for the override to be added.
+  Each role sets family, size, line height, tracking and weight together
+  (the `pp-<role>` utilities in `phoenix_paper.css`). Display, headline and
+  title-large use the *brand* typeface (`--font-pp-brand`), the rest the
+  *plain* one (`--font-pp-plain`); both default to Roboto Flex, which
+  PhoenixPaper doesn't load for you.
 
-  | `variant`                          | tag      |
-  |-------------------------------------|----------|
-  | `h1` .. `h6`                        | `h1`..`h6` |
-  | `subtitle1`, `subtitle2`, `body1`, `body2` | `p` |
-  | `caption`, `overline`, `button`     | `span`   |
-  | `code`                              | `code`   |
+  `emphasized` turns on the M3 Expressive emphasized style: same metrics,
+  heavier weight (medium for display/headline/title-large/body, bold for
+  title-medium/small and labels).
 
-  `caption` and `overline` render a `<span>` (so they stay valid inside a
-  `<p>` or a heading) but are **block-level** (`block`), so an eyebrow
-  above a heading or a caption under an image sits on its own line without
-  a wrapper. Use `class="!inline"` to put one back inline. `button` stays
-  an inline span.
+  ## Tags
 
-  ## `color`
+  `variant` picks a sensible default tag, and `tag` overrides it, so the
+  visual role and the document outline stay independent (an `h2` that
+  looks like `title-large` is common):
 
-  Leave `color` unset to inherit the surrounding text color (`caption`
-  keeps its own muted default). Otherwise pick one of the theme colors,
-  MUI's `color="primary"`/`"text.secondary"`:
+  | `variant`                         | default tag |
+  |-----------------------------------|-------------|
+  | `display-*`                       | `h1` |
+  | `headline-large` / `-medium` / `-small` | `h2` / `h3` / `h4` |
+  | `title-large`                     | `h5` |
+  | `title-medium`, `title-small`     | `h6` |
+  | `body-*`                          | `p` |
+  | `label-*`                         | `span` |
+  | `code`                            | `code` |
 
-      <.pp_typography variant="overline" color="primary">New</.pp_typography>
-      <.pp_typography variant="body2" color="muted">Secondary text.</.pp_typography>
+  ## Color
 
-  | `color`     | class                    |
-  |-------------|--------------------------|
-  | `primary`   | `text-pp-primary`        |
-  | `secondary` | `text-pp-secondary`      |
-  | `accent`    | `text-pp-accent`         |
-  | `error`     | `text-pp-error`          |
-  | `muted`     | `text-pp-on-surface/70`  |
+  Leave `color` unset to inherit. Otherwise pick a role: `primary`,
+  `secondary`, `tertiary`, `error`, `on-surface` or `on-surface-variant`
+  (MD3's de-emphasized text color, what MUI calls `text.secondary`).
+
+  ## Migrating from 0.3
+
+  | 0.3 variant  | 0.4 variant       |
+  |--------------|-------------------|
+  | `h1`         | `display-large`   |
+  | `h2`         | `display-medium`  |
+  | `h3`         | `display-small`   |
+  | `h4`         | `headline-medium` |
+  | `h5`         | `headline-small`  |
+  | `h6`         | `title-large`     |
+  | `subtitle1`  | `title-medium`    |
+  | `subtitle2`  | `title-small`     |
+  | `body1`      | `body-large`      |
+  | `body2`      | `body-medium`     |
+  | `caption`    | `body-small`      |
+  | `overline`   | `label-small`     |
+  | `button`     | `label-large`     |
+
+  MD3 has no uppercase "overline" role; add `class="uppercase"` to a
+  `label-small` if you want one.
   """
   use Phoenix.Component
 
   alias PhoenixPaper.Helpers
 
-  attr(:variant, :string,
-    default: "body1",
-    values: ~w(h1 h2 h3 h4 h5 h6 subtitle1 subtitle2 body1 body2 caption overline button code)
+  @variants ~w(display-large display-medium display-small headline-large headline-medium headline-small title-large title-medium title-small body-large body-medium body-small label-large label-medium label-small code)
+
+  attr(:variant, :string, default: "body-large", values: @variants)
+
+  attr(:tag, :string,
+    default: nil,
+    values: [nil | ~w(h1 h2 h3 h4 h5 h6 p span div label legend figcaption code strong em small)],
+    doc: "overrides the tag the variant picks"
   )
+
+  attr(:emphasized, :boolean, default: false, doc: "M3 Expressive emphasized (heavier) style")
 
   attr(:color, :string,
     default: nil,
-    values: [nil, "primary", "secondary", "accent", "error", "muted"],
-    doc: "text color; unset inherits (caption stays muted)"
+    values: [nil, "primary", "secondary", "tertiary", "error", "on-surface", "on-surface-variant"],
+    doc: "text color role; unset inherits"
   )
 
   attr(:paperize, :boolean, default: true)
@@ -68,44 +90,74 @@ defmodule PhoenixPaper.Typography do
 
   slot(:inner_block, required: true)
 
-  @doc "Renders text styled by the type scale. See the module doc."
+  @doc "Renders text styled by the MD3 type scale. See the module doc."
   def pp_typography(assigns) do
+    assigns = assign(assigns, :tag_name, assigns.tag || default_tag(assigns.variant))
+
     ~H"""
-    <h1 :if={@variant == "h1"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h1>
-    <h2 :if={@variant == "h2"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h2>
-    <h3 :if={@variant == "h3"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h3>
-    <h4 :if={@variant == "h4"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h4>
-    <h5 :if={@variant == "h5"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h5>
-    <h6 :if={@variant == "h6"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</h6>
-    <p :if={@variant in ~w(subtitle1 subtitle2 body1 body2)} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</p>
-    <span :if={@variant in ~w(caption overline button)} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</span>
-    <code :if={@variant == "code"} class={Helpers.classes(@paperize, paper_classes(@variant, @color), @class)} {@rest}>{render_slot(@inner_block)}</code>
+    <.dynamic_tag
+      tag_name={@tag_name}
+      data-pp-component="typography"
+      class={Helpers.classes(@paperize, paper_classes(@variant, @emphasized, @color), @class)}
+      {@rest}
+    >{render_slot(@inner_block)}</.dynamic_tag>
     """
   end
 
-  defp paper_classes(variant, color),
-    do: [variant_classes(variant), color_classes(color, variant)]
+  defp default_tag("display-" <> _), do: "h1"
+  defp default_tag("headline-large"), do: "h2"
+  defp default_tag("headline-medium"), do: "h3"
+  defp default_tag("headline-small"), do: "h4"
+  defp default_tag("title-large"), do: "h5"
+  defp default_tag("title-" <> _), do: "h6"
+  defp default_tag("body-" <> _), do: "p"
+  defp default_tag("label-" <> _), do: "span"
+  defp default_tag("code"), do: "code"
 
-  defp color_classes(nil, "caption"), do: "text-pp-on-surface/70"
-  defp color_classes(nil, _variant), do: ""
-  defp color_classes("primary", _variant), do: "text-pp-primary"
-  defp color_classes("secondary", _variant), do: "text-pp-secondary"
-  defp color_classes("accent", _variant), do: "text-pp-accent"
-  defp color_classes("error", _variant), do: "text-pp-error"
-  defp color_classes("muted", _variant), do: "text-pp-on-surface/70"
+  defp paper_classes(variant, emphasized, color),
+    do: [variant_classes(variant, emphasized), color_classes(color)]
 
-  defp variant_classes("h1"), do: "text-5xl font-normal tracking-tight"
-  defp variant_classes("h2"), do: "text-4xl font-normal tracking-tight"
-  defp variant_classes("h3"), do: "text-3xl font-normal"
-  defp variant_classes("h4"), do: "text-2xl font-medium"
-  defp variant_classes("h5"), do: "text-xl font-medium"
-  defp variant_classes("h6"), do: "text-lg font-medium"
-  defp variant_classes("subtitle1"), do: "text-base font-medium"
-  defp variant_classes("subtitle2"), do: "text-sm font-medium"
-  defp variant_classes("body1"), do: "text-base font-normal"
-  defp variant_classes("body2"), do: "text-sm font-normal"
-  defp variant_classes("caption"), do: "block text-xs font-normal"
-  defp variant_classes("overline"), do: "block text-xs font-medium uppercase tracking-wide"
-  defp variant_classes("button"), do: "text-sm font-medium uppercase tracking-wide"
-  defp variant_classes("code"), do: "font-mono text-xs"
+  @doc false
+  # Public so other components can reuse a role's utility by name.
+  def variant_classes("display-large", false), do: "pp-display-large"
+  def variant_classes("display-medium", false), do: "pp-display-medium"
+  def variant_classes("display-small", false), do: "pp-display-small"
+  def variant_classes("headline-large", false), do: "pp-headline-large"
+  def variant_classes("headline-medium", false), do: "pp-headline-medium"
+  def variant_classes("headline-small", false), do: "pp-headline-small"
+  def variant_classes("title-large", false), do: "pp-title-large"
+  def variant_classes("title-medium", false), do: "pp-title-medium"
+  def variant_classes("title-small", false), do: "pp-title-small"
+  def variant_classes("body-large", false), do: "pp-body-large"
+  def variant_classes("body-medium", false), do: "pp-body-medium"
+  def variant_classes("body-small", false), do: "pp-body-small"
+  def variant_classes("label-large", false), do: "pp-label-large"
+  def variant_classes("label-medium", false), do: "pp-label-medium"
+  def variant_classes("label-small", false), do: "pp-label-small"
+  def variant_classes("code", false), do: "font-mono text-[0.8125rem] leading-5"
+
+  def variant_classes("display-large", true), do: "pp-display-large-emphasized"
+  def variant_classes("display-medium", true), do: "pp-display-medium-emphasized"
+  def variant_classes("display-small", true), do: "pp-display-small-emphasized"
+  def variant_classes("headline-large", true), do: "pp-headline-large-emphasized"
+  def variant_classes("headline-medium", true), do: "pp-headline-medium-emphasized"
+  def variant_classes("headline-small", true), do: "pp-headline-small-emphasized"
+  def variant_classes("title-large", true), do: "pp-title-large-emphasized"
+  def variant_classes("title-medium", true), do: "pp-title-medium-emphasized"
+  def variant_classes("title-small", true), do: "pp-title-small-emphasized"
+  def variant_classes("body-large", true), do: "pp-body-large-emphasized"
+  def variant_classes("body-medium", true), do: "pp-body-medium-emphasized"
+  def variant_classes("body-small", true), do: "pp-body-small-emphasized"
+  def variant_classes("label-large", true), do: "pp-label-large-emphasized"
+  def variant_classes("label-medium", true), do: "pp-label-medium-emphasized"
+  def variant_classes("label-small", true), do: "pp-label-small-emphasized"
+  def variant_classes("code", true), do: "font-mono font-semibold text-[0.8125rem] leading-5"
+
+  defp color_classes(nil), do: nil
+  defp color_classes("primary"), do: "text-pp-primary"
+  defp color_classes("secondary"), do: "text-pp-secondary"
+  defp color_classes("tertiary"), do: "text-pp-tertiary"
+  defp color_classes("error"), do: "text-pp-error"
+  defp color_classes("on-surface"), do: "text-pp-on-surface"
+  defp color_classes("on-surface-variant"), do: "text-pp-on-surface-variant"
 end

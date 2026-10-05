@@ -75,7 +75,7 @@ defmodule PhoenixPaper.SelectTest do
       label="Status"
       name="status"
       prompt="Any"
-      helper_text="helper goes here"
+      supporting_text="helper goes here"
       options={[{"Active", "active"}, {"Archived", "archived"}]}
     />
     """

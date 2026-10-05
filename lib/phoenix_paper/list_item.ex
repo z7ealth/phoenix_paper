@@ -1,8 +1,13 @@
 defmodule PhoenixPaper.ListItem do
   @moduledoc """
-  A Material Design list item (`pp_list_item/1`) — for inside
-  `PhoenixPaper.List`, but also usable on its own (e.g. inside a
-  `PhoenixPaper.Card`).
+  An MD3 list item (`pp_list_item/1`) — for inside `PhoenixPaper.List`,
+  but also usable on its own (e.g. inside a `PhoenixPaper.Card`).
+
+  MD3 look: a 56dp row (72dp with a `:secondary` line) with 16dp side
+  padding; the headline is `body-large`, the supporting line `body-medium`
+  in `on-surface-variant`, the `:leading` icon `on-surface-variant` (an
+  avatar keeps its own colors), the `:trailing` content `label-small`.
+  Linked items get the state layer and focus ring.
 
   Renders as a `Phoenix.Component.link/1` (so `href`/`navigate`/`patch` all
   work) when any of those are set, or a plain `<div>` otherwise — a static
@@ -11,11 +16,10 @@ defmodule PhoenixPaper.ListItem do
   knowledge of the current request) — the caller passes `active` based on
   its own route, e.g. `active={@current_path == "/settings"}`.
 
-  `active` also sets `aria-current="page"` — besides being the correct
-  ARIA for "this is the current page in a navigation list" on its own,
-  `PhoenixPaper.Drawer`'s colored variants key off this exact attribute to
-  restyle the active item's highlight for contrast against a colored
-  drawer background (see its moduledoc).
+  `active` gives the row MD3's selected look (`secondary-container`) and
+  sets `aria-current="page"`, the correct ARIA for "the current page in a
+  navigation list". For app navigation itself, see
+  `PhoenixPaper.NavigationRail`/`NavigationBar`.
 
   Ripples on click/tap by default when it's a link (see
   `PhoenixPaper.Ripple`) — `ripple` has no effect on a non-link item, since
@@ -29,8 +33,7 @@ defmodule PhoenixPaper.ListItem do
         Docs
       </.pp_list_item>
 
-  `dense` shrinks the row's vertical padding (MUI's `dense`) for long
-  navigation lists; `PhoenixPaper.List`'s own `dense` does the same for
+  `dense` shrinks the row to 48dp for long lists; `PhoenixPaper.List`'s own `dense` does the same for
   every item inside it at once.
   """
   use Phoenix.Component
@@ -106,43 +109,49 @@ defmodule PhoenixPaper.ListItem do
 
   defp item_content(assigns) do
     ~H"""
-    <span :if={@leading != []} data-pp-list-item-leading class="flex shrink-0 items-center justify-center [&>*]:size-6">
+    <span
+      :if={@leading != []}
+      data-pp-list-item-leading
+      class={Helpers.classes(@paperize, "flex shrink-0 items-center justify-center text-pp-on-surface-variant [[aria-current]>&]:text-inherit", nil)}
+    >
       {render_slot(@leading)}
     </span>
     <span class="min-w-0 flex-1">
-      <span class="block truncate text-sm">{render_slot(@inner_block)}</span>
-      <span :if={@secondary != []} class="block truncate text-xs text-pp-outline">
+      <span class={Helpers.classes(@paperize, "block truncate pp-body-large", nil)}>
+        {render_slot(@inner_block)}
+      </span>
+      <span
+        :if={@secondary != []}
+        class={Helpers.classes(@paperize, "block truncate pp-body-medium text-pp-on-surface-variant [[aria-current]_&]:text-inherit", nil)}
+      >
         {render_slot(@secondary)}
       </span>
     </span>
-    <span :if={@trailing != []} class="flex shrink-0 items-center">{render_slot(@trailing)}</span>
+    <span
+      :if={@trailing != []}
+      class={Helpers.classes(@paperize, "flex shrink-0 items-center pp-label-small text-pp-on-surface-variant", nil)}
+    >
+      {render_slot(@trailing)}
+    </span>
     """
   end
 
   defp item_classes(active, disabled, ripple, linked, dense) do
     [
-      base_classes(),
+      "relative flex items-center gap-4 overflow-hidden px-4 pp-motion-effects-fast",
       density_classes(dense),
-      cursor_classes(linked),
+      linked && "cursor-pointer pp-state-layer pp-focus-ring",
       state_classes(active),
-      disabled_classes(disabled),
+      disabled && "pointer-events-none opacity-38",
       Ripple.container_classes(ripple)
     ]
   end
 
-  defp base_classes do
-    "flex items-center gap-3 rounded-full px-4 transition-colors"
-  end
+  # MD3 one-line items are 56dp, two-line 72dp (the secondary line makes
+  # the content taller; min-h covers the one-line case).
+  defp density_classes(true), do: "min-h-12 py-1"
+  defp density_classes(false), do: "min-h-14 py-2"
 
-  defp density_classes(true), do: "py-1"
-  defp density_classes(false), do: "py-2"
-
-  defp cursor_classes(true), do: "cursor-pointer"
-  defp cursor_classes(false), do: ""
-
-  defp state_classes(true), do: "bg-pp-primary/10 text-pp-primary"
-  defp state_classes(false), do: "text-pp-on-surface hover:bg-pp-on-surface/10"
-
-  defp disabled_classes(true), do: "pointer-events-none opacity-40"
-  defp disabled_classes(false), do: ""
+  defp state_classes(true), do: "bg-pp-secondary-container text-pp-on-secondary-container"
+  defp state_classes(false), do: "text-pp-on-surface"
 end

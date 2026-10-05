@@ -15,7 +15,7 @@ defmodule PhoenixPaper.ImageListItem do
 
   attr(:shape, :atom,
     default: :lg,
-    values: ~w(none xs sm md lg xl full)a,
+    values: PhoenixPaper.Shape.tokens(),
     doc: "corner radius token, see PhoenixPaper.Shape"
   )
 
@@ -34,10 +34,10 @@ defmodule PhoenixPaper.ImageListItem do
       <img src={@src} alt={@alt} class="aspect-square h-full w-full object-cover" />
       <div
         :if={@title}
-        class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-white"
+        class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-pp-scrim/70 to-transparent px-4 py-3 text-white"
       >
-        <p class="truncate text-sm font-medium">{@title}</p>
-        <p :if={@subtitle} class="truncate text-xs opacity-80">{@subtitle}</p>
+        <p class="truncate pp-title-small">{@title}</p>
+        <p :if={@subtitle} class="truncate pp-body-small opacity-80">{@subtitle}</p>
       </div>
     </div>
     """

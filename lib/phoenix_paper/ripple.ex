@@ -13,7 +13,7 @@ defmodule PhoenixPaper.Ripple do
   that also fires reliably for touch — `onpointerdown`/`onmousedown` either
   aren't recognized at all or behave inconsistently on touch devices.
 
-  Every component that supports it (`Button`, `Fab`, `ToggleButton`,
+  Every component that supports it (`Button`, `IconButton`, `Fab`,
   `ListItem`) exposes a `ripple` boolean attr, **default `true`**, and wires
   it the same way:
 
@@ -69,16 +69,16 @@ defmodule PhoenixPaper.Ripple do
     `scale(1)` write is seen as a genuine change and animates.
   """
 
-  @ripple_js "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var x=e.clientX-rect.left;var y=e.clientY-rect.top;var radius=Math.sqrt(Math.pow(Math.max(x,rect.width-x),2)+Math.pow(Math.max(y,rect.height-y),2));var size=radius*2;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(x-radius)+'px;top:'+(y-radius)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.25;pointer-events:none;transform:scale(0);transition:transform .5s cubic-bezier(0,0,.2,1),opacity .7s ease-out;';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
+  @ripple_js "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var x=e.clientX-rect.left;var y=e.clientY-rect.top;var radius=Math.sqrt(Math.pow(Math.max(x,rect.width-x),2)+Math.pow(Math.max(y,rect.height-y),2));var size=radius*2;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(x-radius)+'px;top:'+(y-radius)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.12;pointer-events:none;transform:scale(0);transition:transform .45s cubic-bezier(.2,0,0,1),opacity .6s cubic-bezier(.2,0,0,1);';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
 
-  @ripple_js_centered "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var size=Math.min(rect.width,rect.height)*1.6;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(rect.width/2-size/2)+'px;top:'+(rect.height/2-size/2)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.25;pointer-events:none;transform:scale(0);transition:transform .5s cubic-bezier(0,0,.2,1),opacity .7s ease-out;';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
+  @ripple_js_centered "(function(e){var el=e.currentTarget;var rect=el.getBoundingClientRect();var size=Math.min(rect.width,rect.height)*1.6;var span=document.createElement('span');span.style.cssText='position:absolute;left:'+(rect.width/2-size/2)+'px;top:'+(rect.height/2-size/2)+'px;width:'+size+'px;height:'+size+'px;border-radius:9999px;background:currentColor;opacity:.12;pointer-events:none;transform:scale(0);transition:transform .45s cubic-bezier(.2,0,0,1),opacity .6s cubic-bezier(.2,0,0,1);';el.appendChild(span);void span.offsetWidth;span.style.transform='scale(1)';setTimeout(function(){span.style.opacity='0';},250);setTimeout(function(){span.remove();},700);})(event)"
 
   @doc """
   The `onclick` attribute value that spawns a ripple expanding from the
   click/tap position, or `nil` when `enabled?` is `false` — HEEx drops an
   attribute entirely when its value is `nil`, so
   `onclick={Ripple.on_click(@ripple)}` just renders no attribute at all
-  rather than an empty one. Used by `Button`, `Fab`, `ToggleButton`, and
+  rather than an empty one. Used by `Button`, `IconButton`, `Fab`, and
   `ListItem`; see `on_click_centered/1` for the small-toggle-control
   variant.
   """

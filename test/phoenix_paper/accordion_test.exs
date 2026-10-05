@@ -139,32 +139,33 @@ defmodule PhoenixPaper.AccordionTest do
       root
     end
 
-    test "defaults are unchanged: raised, neutral surface, elevation 1" do
-      root = root("raised", "default")
-      assert root =~ "bg-pp-surface text-pp-on-surface"
+    test "defaults: elevated, surface-container-low, elevation 1" do
+      root = root("elevated", "default")
+      assert root =~ "bg-pp-surface-container-low text-pp-on-surface"
       assert root =~ "pp-elevation-1"
-      assert root =~ ~s(data-pp-variant="raised")
+      assert root =~ ~s(data-pp-variant="elevated")
       refute root =~ "border"
     end
 
-    test "raised/flat with a brand color fill the panel and tint the dividers" do
-      for color <- ~w(primary secondary accent error) do
-        raised = root("raised", color)
-        assert raised =~ "bg-pp-#{color} text-pp-on-#{color}"
-        assert raised =~ "pp-elevation-1"
-        refute raised =~ "bg-pp-surface"
-        assert raised =~ "accordion-details]]:border-pp-on-#{color}/20"
+    test "elevated/filled with a color fill the panel with the container role and tint the dividers" do
+      for color <- ~w(primary secondary tertiary error) do
+        elevated = root("elevated", color)
+        assert elevated =~ "bg-pp-#{color}-container text-pp-on-#{color}-container"
+        assert elevated =~ "pp-elevation-1"
+        assert elevated =~ "accordion-details]]:border-pp-on-#{color}-container/20"
 
-        flat = root("flat", color)
-        assert flat =~ "bg-pp-#{color}"
-        assert flat =~ "pp-elevation-0"
+        filled = root("filled", color)
+        assert filled =~ "bg-pp-#{color}-container"
+        assert filled =~ "pp-elevation-0"
       end
+
+      assert root("filled", "default") =~ "bg-pp-surface-container-highest"
     end
 
     test "outlined keeps the surface, borders it and colors the summary" do
-      assert root("outlined", "default") =~ "border border-pp-outline"
+      assert root("outlined", "default") =~ "border border-pp-outline-variant"
 
-      for color <- ~w(primary secondary accent error) do
+      for color <- ~w(primary secondary tertiary error) do
         root = root("outlined", color)
         assert root =~ "bg-pp-surface"
         assert root =~ "pp-elevation-0"

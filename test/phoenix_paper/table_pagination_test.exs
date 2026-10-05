@@ -112,4 +112,22 @@ defmodule PhoenixPaper.TablePaginationTest do
     assert html =~ "my-bar"
     refute html =~ "justify-end gap-x-6"
   end
+
+  test "the id lands on the root, like pp_pagination's" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <PhoenixPaper.TablePagination.pp_table_pagination
+        id="users-pagination"
+        page={1}
+        count={47}
+        rows_per_page={10}
+        on_page_change="page"
+      />
+      """)
+
+    assert html =~ ~r/<div[^>]*id="users-pagination"[^>]*data-pp-component="table-pagination"/
+    assert html =~ ~s(id="users-pagination-rows-per-page-trigger")
+  end
 end

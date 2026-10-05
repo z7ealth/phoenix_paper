@@ -9,7 +9,7 @@ defmodule PhoenixPaper.TableRowTest do
     html = render_component(&row/1)
 
     assert html =~ "<tr"
-    assert html =~ "hover:bg-pp-on-surface/5"
+    assert html =~ "hover:bg-pp-on-surface/8"
     assert html =~ "content"
   end
 
@@ -22,7 +22,7 @@ defmodule PhoenixPaper.TableRowTest do
   test "selected renders a stronger, persistent highlight instead" do
     html = render_component(&selected/1)
 
-    assert html =~ "bg-pp-primary/10"
+    assert html =~ "bg-pp-secondary-container"
     refute html =~ "hover:bg-pp-on-surface/5"
   end
 

@@ -5,145 +5,105 @@ defmodule PhoenixPaper.ChipTest do
   import Phoenix.LiveViewTest
   import PhoenixPaper.Chip
 
-  test "renders as a <div> by default, with the default neutral color" do
-    html = render_component(&basic/1)
+  test "assist (default): a 32dp outlined button with a primary icon" do
+    assigns = %{}
 
-    assert html =~ "<div"
-    refute html =~ "<button"
-    assert html =~ "bg-pp-surface-variant"
-    assert html =~ "Basic"
-  end
-
-  defp basic(assigns) do
-    ~H"""
-    <.pp_chip>Basic</.pp_chip>
-    """
-  end
-
-  test "variant=outlined uses a border instead of a filled background" do
-    html = render_component(&outlined/1)
-
-    assert html =~ "border-pp-primary"
-    assert html =~ "bg-transparent"
-  end
-
-  defp outlined(assigns) do
-    ~H"""
-    <.pp_chip variant="outlined" color="primary">Outlined</.pp_chip>
-    """
-  end
-
-  test "size=small uses the smaller height scale" do
-    html = render_component(&small/1)
-    assert html =~ "h-6"
-  end
-
-  defp small(assigns) do
-    ~H"""
-    <.pp_chip size="small">Small</.pp_chip>
-    """
-  end
-
-  test "clickable renders a real <button> with a ripple onclick" do
-    html = render_component(&clickable/1)
+    html =
+      rendered_to_string(~H"""
+      <.pp_chip><:icon><span class="hero-calendar" /></:icon>Add to calendar</.pp_chip>
+      """)
 
     assert html =~ "<button"
-    refute html =~ "<div"
+    assert html =~ "h-8"
+    assert html =~ "rounded-pp-sm"
+    assert html =~ "border border-pp-outline-variant text-pp-on-surface"
+    assert html =~ "text-pp-primary"
+    assert html =~ "pp-label-large"
+    assert html =~ "pp-state-layer"
     assert html =~ "onclick="
   end
 
-  defp clickable(assigns) do
-    ~H"""
-    <.pp_chip clickable>Filter</.pp_chip>
-    """
+  test "elevated swaps the outline for a fill and shadow" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_chip elevated>A</.pp_chip>")
+    assert html =~ "bg-pp-surface-container-low"
+    assert html =~ "pp-elevation-1"
   end
 
-  test "clickable={false} (default) renders no onclick ripple" do
-    html = render_component(&basic/1)
-    refute html =~ "onclick="
-  end
+  test "filter: a toggle with a check shown when pressed" do
+    assigns = %{}
 
-  test "icon slot renders leading content" do
-    html = render_component(&with_icon/1)
+    html =
+      rendered_to_string(~H"""
+      <.pp_chip variant="filter" toggle selected={false}>Unread</.pp_chip>
+      <.pp_chip variant="filter" group="sort" selected>Newest</.pp_chip>
+      """)
+
+    assert html =~ ~s(aria-pressed="false")
+    assert html =~ ~s(aria-pressed="true")
     assert html =~ "hero-check"
+    assert html =~ "[[aria-pressed=false]&gt;&amp;]:hidden"
+    assert html =~ "aria-pressed:bg-pp-secondary-container"
+    assert html =~ ~s(data-pp-toggle-group="sort")
+    assert html =~ "toggle_attr"
   end
 
-  defp with_icon(assigns) do
-    ~H"""
-    <.pp_chip>
-      Tagged
-      <:icon><span class="hero-check" /></:icon>
-    </.pp_chip>
-    """
-  end
+  test "input: a static div unless clickable, with a non-nested delete control" do
+    assigns = %{}
 
-  test "deletable renders a delete control wired to on_delete, and it isn't a nested <button>" do
-    html = render_component(&deletable/1)
+    html =
+      rendered_to_string(~H"""
+      <.pp_chip variant="input" deletable on_delete={Phoenix.LiveView.JS.push("remove")}>elixir</.pp_chip>
+      """)
 
-    assert html =~ "chip-delete"
+    assert html =~ "<div"
+    refute html =~ "<button"
     assert html =~ ~s(role="button")
-    assert html =~ "remove_tag"
-
-    # No event.stopPropagation() here -- LiveView's phx-click binding is one
-    # delegated window-level listener bound during the bubble phase, so
-    # stopPropagation() on this element would prevent the click from ever
-    # reaching it and on_delete would silently never fire (confirmed with a
-    # real click in a real browser). It's also unnecessary: LiveView already
-    # resolves a click to the nearest phx-click-bearing ancestor-or-self via
-    # closestPhxBinding, so a click here never falls through to a
-    # `clickable` chip's own phx-click on the outer <button>.
-    refute html =~ "stopPropagation"
+    assert html =~ ~s(data-pp-component="chip-delete")
+    assert html =~ "remove"
+    assert html =~ "onkeydown="
+    assert html =~ "pe-2"
   end
 
-  defp deletable(assigns) do
-    ~H"""
-    <.pp_chip deletable on_delete={Phoenix.LiveView.JS.push("remove_tag")}>
-      React
-    </.pp_chip>
-    """
+  test "clickable input chips with delete keep the delete as a span, not a nested button" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_chip variant='input' clickable deletable>a</.pp_chip>")
+
+    assert length(String.split(html, "<button")) == 2
   end
 
-  test "deletable={false} (default) renders no delete control" do
-    html = render_component(&basic/1)
-    refute html =~ "chip-delete"
+  test "selected input chip" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_chip variant='input' selected>a</.pp_chip>")
+    assert html =~ "bg-pp-secondary-container"
   end
 
-  test "disabled dims the chip and, when clickable, disables the real button" do
-    html = render_component(&disabled_clickable/1)
+  test "suggestion" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_chip variant='suggestion'>Sounds good</.pp_chip>")
+    assert html =~ "text-pp-on-surface-variant"
+    assert html =~ ~s(data-pp-variant="suggestion")
+  end
 
-    assert html =~ "opacity-40"
+  test "disabled disables the button and takes the delete out of the tab order" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_chip disabled>A</.pp_chip>
+      <.pp_chip variant="input" deletable disabled>B</.pp_chip>
+      """)
+
     assert html =~ "disabled"
-  end
-
-  defp disabled_clickable(assigns) do
-    ~H"""
-    <.pp_chip clickable disabled>Filter</.pp_chip>
-    """
-  end
-
-  test "disabled also removes the delete control from the tab order" do
-    html = render_component(&disabled_deletable/1)
     assert html =~ ~s(tabindex="-1")
+    assert html =~ "disabled:text-pp-on-surface/38"
   end
 
-  defp disabled_deletable(assigns) do
-    ~H"""
-    <.pp_chip deletable disabled on_delete={Phoenix.LiveView.JS.push("remove_tag")}>
-      React
-    </.pp_chip>
-    """
-  end
-
-  test "paperize={false}: no built-in classes, only the caller's" do
-    html = render_component(&bare/1)
-
-    refute html =~ "bg-pp-surface-variant"
-    assert html =~ "my-class"
-  end
-
-  defp bare(assigns) do
-    ~H"""
-    <.pp_chip paperize={false} class="my-class">Bare</.pp_chip>
-    """
+  test "paperize={false}: no built-in classes" do
+    assigns = %{}
+    html = rendered_to_string(~H"<.pp_chip paperize={false} class='mine'>A</.pp_chip>")
+    refute html =~ "rounded-pp-sm"
+    refute html =~ "onclick"
+    assert html =~ "mine"
   end
 end

@@ -1,11 +1,11 @@
 defmodule PhoenixPaper.Backdrop do
   @moduledoc """
-  A full-screen dimming overlay (`pp_backdrop/1`), in the spirit of MUI's
+  A full-screen MD3 scrim (`pp_backdrop/1`, 32% `scrim`), in the spirit of MUI's
   `Backdrop` — most often used behind a full-page loading spinner, or as the
   piece `PhoenixPaper.Dialog` composes for its own overlay.
 
       <.pp_backdrop open={@loading}>
-        <span class="inline-block size-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+        <.pp_loading_indicator contained />
       </.pp_backdrop>
 
   Stateless: `open` just toggles rendering the overlay at all (`:if`, not a
@@ -28,7 +28,7 @@ defmodule PhoenixPaper.Backdrop do
     <div
       :if={@open}
       data-pp-component="backdrop"
-      class={Helpers.classes(@paperize, "fixed inset-0 z-40 flex items-center justify-center bg-black/50", @class)}
+      class={Helpers.classes(@paperize, "fixed inset-0 z-40 flex items-center justify-center bg-pp-scrim/32", @class)}
       {@rest}
     >
       {render_slot(@inner_block)}

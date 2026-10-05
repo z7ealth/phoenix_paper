@@ -26,7 +26,7 @@ defmodule PhoenixPaper.TableFooter do
       class={
         Helpers.classes(
           @paperize,
-          "[&_td]:border-t-2 [&_td]:border-pp-outline [&_td]:font-medium",
+          "[&_td]:border-t [&_td]:border-pp-outline-variant [&_td]:pp-title-small",
           @class
         )
       }

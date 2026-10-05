@@ -25,7 +25,7 @@ defmodule PhoenixPaper.TableHead do
     ~H"""
     <thead
       data-pp-component="table-head"
-      class={Helpers.classes(@paperize, "[&_th]:border-b-2 [&_th]:border-pp-outline", @class)}
+      class={Helpers.classes(@paperize, "[&_th]:border-b [&_th]:border-pp-outline-variant", @class)}
       {@rest}
     >
       {render_slot(@inner_block)}

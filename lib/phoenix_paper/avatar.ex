@@ -20,11 +20,12 @@ defmodule PhoenixPaper.Avatar do
   further still, to a generic person icon — MUI's own default `Avatar`
   fallback.
 
-  `color` (`"default"`/`"primary"`/`"secondary"`/`"accent"`/`"error"`,
-  default `"default"`, the neutral grey) paints the fallback background
-  and its initials/icon with a theme color pair, e.g. `bg-pp-primary
-  text-pp-on-primary`. It has no effect on a loaded image, which covers
-  the background completely.
+  `color` (`"primary"` default, `"secondary"`, `"tertiary"`, `"error"`,
+  `"surface"`) paints the fallback with an MD3 container pair — the way
+  MD3 lists show monogram avatars: `primary` is `primary-container` with
+  `on-primary-container` initials, `surface` is
+  `surface-container-highest`. It has no effect on a loaded image, which
+  covers the background completely.
 
   `size` (`"small"`/`"medium"`/`"large"`, default `"medium"`) is a
   convenience this library adds — MUI's own `Avatar` has no `size` prop at
@@ -57,9 +58,10 @@ defmodule PhoenixPaper.Avatar do
   attr(:size, :string, default: "medium", values: ~w(small medium large))
 
   attr(:color, :string,
-    default: "default",
-    values: ~w(default primary secondary accent error),
-    doc: "background/foreground of the fallback; default is neutral grey"
+    default: "primary",
+    values: ~w(primary secondary tertiary error surface),
+    doc:
+      "the fallback's container role: primary = primary-container, ..., surface = surface-container-highest"
   )
 
   attr(:paperize, :boolean, default: true)
@@ -103,21 +105,26 @@ defmodule PhoenixPaper.Avatar do
     ]
   end
 
-  defp color_classes("default"), do: "bg-pp-surface-variant text-pp-on-surface"
-  defp color_classes("primary"), do: "bg-pp-primary text-pp-on-primary"
-  defp color_classes("secondary"), do: "bg-pp-secondary text-pp-on-secondary"
-  defp color_classes("accent"), do: "bg-pp-accent text-pp-on-accent"
-  defp color_classes("error"), do: "bg-pp-error text-pp-on-error"
+  defp color_classes("primary"), do: "bg-pp-primary-container text-pp-on-primary-container"
 
-  defp size_classes("small"), do: "size-8 text-xs"
-  defp size_classes("medium"), do: "size-10 text-base"
-  defp size_classes("large"), do: "size-14 text-xl"
+  defp color_classes("secondary"),
+    do: "bg-pp-secondary-container text-pp-on-secondary-container"
 
-  defp variant_classes("circular"), do: "rounded-full"
-  defp variant_classes("rounded"), do: "rounded-md"
-  defp variant_classes("square"), do: "rounded-none"
+  defp color_classes("tertiary"), do: "bg-pp-tertiary-container text-pp-on-tertiary-container"
+  defp color_classes("error"), do: "bg-pp-error-container text-pp-on-error-container"
 
-  defp icon_classes("small"), do: "size-4"
-  defp icon_classes("medium"), do: "size-5"
-  defp icon_classes("large"), do: "size-7"
+  defp color_classes("surface"),
+    do: "bg-pp-surface-container-highest text-pp-on-surface-variant"
+
+  defp size_classes("small"), do: "size-8 pp-label-medium"
+  defp size_classes("medium"), do: "size-10 pp-title-medium"
+  defp size_classes("large"), do: "size-14 pp-title-large"
+
+  defp variant_classes("circular"), do: "rounded-pp-full"
+  defp variant_classes("rounded"), do: "rounded-pp-md"
+  defp variant_classes("square"), do: "rounded-pp-none"
+
+  defp icon_classes("small"), do: "size-5"
+  defp icon_classes("medium"), do: "size-6"
+  defp icon_classes("large"), do: "size-8"
 end

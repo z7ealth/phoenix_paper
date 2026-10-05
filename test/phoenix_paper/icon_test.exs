@@ -10,7 +10,7 @@ defmodule PhoenixPaper.IconTest do
 
     assert html =~ "hero-check"
     assert html =~ "inline-block"
-    assert html =~ "size-5"
+    assert html =~ "size-6"
   end
 
   defp default(assigns) do
@@ -22,8 +22,8 @@ defmodule PhoenixPaper.IconTest do
   test "size picks exactly one size class" do
     html = render_component(&small/1)
 
-    assert html =~ "size-4"
-    refute html =~ "size-5"
+    assert html =~ "size-5"
+    refute html =~ "size-6"
   end
 
   defp small(assigns) do

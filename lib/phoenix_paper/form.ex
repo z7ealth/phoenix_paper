@@ -6,8 +6,8 @@ defmodule PhoenixPaper.Form do
   cancel buttons.
 
       <.pp_form for={@form} phx-change="validate" phx-submit="save">
-        <.pp_input field={@form[:email]} type="email" label="Email" />
-        <.pp_input field={@form[:name]} label="Name" />
+        <.pp_text_field field={@form[:email]} type="email" label="Email" />
+        <.pp_text_field field={@form[:name]} label="Name" />
         <:actions>
           <.pp_button variant="text" patch={~p"/users"}>Cancel</.pp_button>
           <.pp_button type="submit">Save</.pp_button>
@@ -29,7 +29,7 @@ defmodule PhoenixPaper.Form do
   `:actions` renders last, right-aligned, Material's placement for form and
   dialog actions. `paperize={false}` drops the column and gap; the actions
   row keeps its `flex` layout since it has no `class` of its own to rebuild
-  it with (the same exception `AppBar`'s toolbar row makes).
+  it with (the same exception `TopAppBar`'s row makes).
   """
   use Phoenix.Component
 

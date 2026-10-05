@@ -1,5 +1,5 @@
 /*
- * PhoenixPaper — Tailwind v4 theme.
+ * PhoenixPaper — Material Design 3 (incl. M3 Expressive) for Tailwind v4.
  *
  * Import this file from your app's `app.css`, after `@import "tailwindcss"`:
  *
@@ -8,388 +8,870 @@
  *
  * No separate `@source` is needed: the one below points Tailwind's source
  * scanner at this package's own `lib/` (resolved relative to this file, so
- * it holds whether PhoenixPaper lives in deps/ or is a `path:` dependency),
- * so the utility classes its `.ex` files emit (bg-pp-primary,
- * pp-elevation-4, ...) are always generated.
+ * it holds whether PhoenixPaper lives in deps/ or is a `path:` dependency).
  *
- * All tokens below are namespaced `pp-` so they never collide with daisyUI's
- * own `primary`/`secondary`/`base-100`/... theme colors when both are
- * installed in the same app. See AGENTS.md, "Theming", for the full picture.
+ * Every token is namespaced `pp-` so it never collides with daisyUI's own
+ * `primary`/`secondary`/`base-100`/... theme colors. See AGENTS.md,
+ * "Theming", for the full picture.
  *
- * Only one palette ships: the default below (light, dark, and the
- * system-preference fallback). To theme your app, don't fork this file —
- * override the `--color-pp-*` variables from your own app.css, after this
- * import (in `:root`, `[data-theme="dark"]`, or any scoping selector of
- * your own).
+ * Only one scheme ships: the MD3 baseline (seed #6750A4), light and dark.
+ * To theme your app, export a scheme from Material Theme Builder and paste
+ * its roles as `--color-pp-*` overrides in your own app.css, after this
+ * import — `:root` for light, `[data-theme="dark"]` (and the
+ * `prefers-color-scheme: dark` block, if you rely on the system default)
+ * for dark. Role names map one to one: `primary-container` →
+ * `--color-pp-primary-container`, `surface-container-high` →
+ * `--color-pp-surface-container-high`, ...
  */
 
 @source "../../lib";
 
-@theme {
-  /* Default palette: classic Material indigo / pink, light scheme. */
-  --color-pp-primary: #3f51b5;
-  --color-pp-on-primary: #ffffff;
-  --color-pp-secondary: #ff4081;
-  --color-pp-on-secondary: #000000;
-  --color-pp-accent: #009688;
-  --color-pp-on-accent: #ffffff;
-  --color-pp-error: #d32f2f;
-  --color-pp-on-error: #ffffff;
-  --color-pp-surface: #ffffff;
-  --color-pp-on-surface: #1f1f1f;
-  --color-pp-surface-variant: #f5f5f5;
-  --color-pp-outline: #79747e;
+/* ------------------------------------------------------------------------
+ * Tokens
+ * --------------------------------------------------------------------- */
 
-  /* Semantic feedback colors (Alert/Snackbar severities) — distinct from
-     primary/secondary/accent/error above, which are brand/action colors,
-     not status colors. `error` already exists and doubles as the "error"
-     severity; success/warning/info are new. */
-  --color-pp-success: #2e7d32;
+@theme static {
+  /* Color roles — MD3 baseline, light scheme. */
+  --color-pp-primary: #6750a4;
+  --color-pp-on-primary: #ffffff;
+  --color-pp-primary-container: #eaddff;
+  --color-pp-on-primary-container: #4f378b;
+  --color-pp-secondary: #625b71;
+  --color-pp-on-secondary: #ffffff;
+  --color-pp-secondary-container: #e8def8;
+  --color-pp-on-secondary-container: #4a4458;
+  --color-pp-tertiary: #7d5260;
+  --color-pp-on-tertiary: #ffffff;
+  --color-pp-tertiary-container: #ffd8e4;
+  --color-pp-on-tertiary-container: #633b48;
+  --color-pp-error: #b3261e;
+  --color-pp-on-error: #ffffff;
+  --color-pp-error-container: #f9dedc;
+  --color-pp-on-error-container: #8c1d18;
+
+  --color-pp-primary-fixed: #eaddff;
+  --color-pp-primary-fixed-dim: #d0bcff;
+  --color-pp-on-primary-fixed: #21005d;
+  --color-pp-on-primary-fixed-variant: #4f378b;
+  --color-pp-secondary-fixed: #e8def8;
+  --color-pp-secondary-fixed-dim: #ccc2dc;
+  --color-pp-on-secondary-fixed: #1d192b;
+  --color-pp-on-secondary-fixed-variant: #4a4458;
+  --color-pp-tertiary-fixed: #ffd8e4;
+  --color-pp-tertiary-fixed-dim: #efb8c8;
+  --color-pp-on-tertiary-fixed: #31111d;
+  --color-pp-on-tertiary-fixed-variant: #633b48;
+
+  --color-pp-surface: #fef7ff;
+  --color-pp-surface-dim: #ded8e1;
+  --color-pp-surface-bright: #fef7ff;
+  --color-pp-surface-container-lowest: #ffffff;
+  --color-pp-surface-container-low: #f7f2fa;
+  --color-pp-surface-container: #f3edf7;
+  --color-pp-surface-container-high: #ece6f0;
+  --color-pp-surface-container-highest: #e6e0e9;
+  --color-pp-surface-variant: #e7e0ec;
+  --color-pp-on-surface: #1d1b20;
+  --color-pp-on-surface-variant: #49454f;
+  --color-pp-outline: #79747e;
+  --color-pp-outline-variant: #cac4d0;
+  --color-pp-inverse-surface: #322f35;
+  --color-pp-inverse-on-surface: #f5eff7;
+  --color-pp-inverse-primary: #d0bcff;
+  --color-pp-shadow: #000000;
+  --color-pp-scrim: #000000;
+
+  /* Status colors — a PhoenixPaper extension (MD3 has no success/warning/
+     info roles), used by Alert, Flash and Badge. Same role shape as
+     `error`, so they read like native MD3 colors. */
+  --color-pp-success: #386a20;
   --color-pp-on-success: #ffffff;
-  --color-pp-warning: #ed6c02;
+  --color-pp-success-container: #b8f397;
+  --color-pp-on-success-container: #042100;
+  --color-pp-warning: #7c5800;
   --color-pp-on-warning: #ffffff;
-  --color-pp-info: #0288d1;
+  --color-pp-warning-container: #ffdea6;
+  --color-pp-on-warning-container: #271900;
+  --color-pp-info: #00639a;
   --color-pp-on-info: #ffffff;
+  --color-pp-info-container: #cee5ff;
+  --color-pp-on-info-container: #001d32;
+
+  /* Shape — MD3 corner scale, incl. the Expressive additions. */
+  --radius-pp-none: 0px;
+  --radius-pp-xs: 4px;
+  --radius-pp-sm: 8px;
+  --radius-pp-md: 12px;
+  --radius-pp-lg: 16px;
+  --radius-pp-lg-increased: 20px;
+  --radius-pp-xl: 28px;
+  --radius-pp-xl-increased: 32px;
+  --radius-pp-xxl: 48px;
+  --radius-pp-full: 9999px;
+
+  /* Typefaces — MD3's brand (display/headline/title-large) and plain
+     (everything else) faces. PhoenixPaper doesn't load a font: add Roboto
+     Flex (or your own) to your layout, or override these. */
+  --font-pp-brand: "Roboto Flex", Roboto, ui-sans-serif, system-ui, sans-serif;
+  --font-pp-plain: "Roboto Flex", Roboto, ui-sans-serif, system-ui, sans-serif;
+
+  /* Easing — MD3 duration-based curves (used where a spring can't apply:
+     keyframe animations, enter/exit with `display` changes). */
+  --ease-pp-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-pp-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-pp-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-pp-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-pp-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-pp-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
 }
 
 /*
  * Dark scheme. Keyed off `[data-theme="dark"]` — the same attribute daisyUI
- * (and Phoenix 1.8's default generated app.css) already toggles for its own
- * dark mode, so PhoenixPaper flips with the app's existing switch instead of
- * needing a second one.
+ * and Phoenix 1.8's generated app.css already toggle — so PhoenixPaper
+ * flips with the app's existing switch. MD3 dark surfaces are their own
+ * tonal colors: there's no white elevation overlay any more.
  */
 [data-theme="dark"] {
-  --color-pp-primary: #7986cb;
-  --color-pp-on-primary: #0a0e1f;
-  --color-pp-secondary: #ff80ab;
-  --color-pp-on-secondary: #1a0511;
-  --color-pp-accent: #4db6ac;
-  --color-pp-on-accent: #04211d;
-  --color-pp-error: #ef9a9a;
-  --color-pp-on-error: #370505;
-  --color-pp-surface: #121212;
-  --color-pp-on-surface: #e6e6e6;
-  --color-pp-surface-variant: #1e1e1e;
+  --color-pp-primary: #d0bcff;
+  --color-pp-on-primary: #381e72;
+  --color-pp-primary-container: #4f378b;
+  --color-pp-on-primary-container: #eaddff;
+  --color-pp-secondary: #ccc2dc;
+  --color-pp-on-secondary: #332d41;
+  --color-pp-secondary-container: #4a4458;
+  --color-pp-on-secondary-container: #e8def8;
+  --color-pp-tertiary: #efb8c8;
+  --color-pp-on-tertiary: #492532;
+  --color-pp-tertiary-container: #633b48;
+  --color-pp-on-tertiary-container: #ffd8e4;
+  --color-pp-error: #f2b8b5;
+  --color-pp-on-error: #601410;
+  --color-pp-error-container: #8c1d18;
+  --color-pp-on-error-container: #f9dedc;
+
+  --color-pp-surface: #141218;
+  --color-pp-surface-dim: #141218;
+  --color-pp-surface-bright: #3b383e;
+  --color-pp-surface-container-lowest: #0f0d13;
+  --color-pp-surface-container-low: #1d1b20;
+  --color-pp-surface-container: #211f26;
+  --color-pp-surface-container-high: #2b2930;
+  --color-pp-surface-container-highest: #36343b;
+  --color-pp-surface-variant: #49454f;
+  --color-pp-on-surface: #e6e0e9;
+  --color-pp-on-surface-variant: #cac4d0;
   --color-pp-outline: #938f99;
+  --color-pp-outline-variant: #49454f;
+  --color-pp-inverse-surface: #e6e0e9;
+  --color-pp-inverse-on-surface: #322f35;
+  --color-pp-inverse-primary: #6750a4;
 
-  --color-pp-success: #81c995;
-  --color-pp-on-success: #0a2e0f;
-  --color-pp-warning: #ffb74d;
-  --color-pp-on-warning: #2b1500;
-  --color-pp-info: #81d4fa;
-  --color-pp-on-info: #01324a;
+  --color-pp-success: #9dd67d;
+  --color-pp-on-success: #0c3900;
+  --color-pp-success-container: #205107;
+  --color-pp-on-success-container: #b8f397;
+  --color-pp-warning: #f5bd48;
+  --color-pp-on-warning: #422c00;
+  --color-pp-warning-container: #5e4200;
+  --color-pp-on-warning-container: #ffdea6;
+  --color-pp-info: #96ccff;
+  --color-pp-on-info: #003353;
+  --color-pp-info-container: #004a75;
+  --color-pp-on-info-container: #cee5ff;
 
-  --pp-surface-tint: 255 255 255;
+  color-scheme: dark;
 }
 
 /*
- * "System" default: follow the OS/browser's own `prefers-color-scheme`
- * when the app hasn't set `data-theme` at all (no explicit choice made
- * yet, e.g. before `PhoenixPaper.ThemeToggle`'s first click, or for an app
- * that never wires up a toggle at all) — the same values as
- * `[data-theme="dark"]` above, just gated by the media query instead of
- * the attribute, and only while there's no *explicit* `data-theme="light"`
- * override (an explicit choice always wins over the system preference, in
- * either direction — `[data-theme="dark"]` above already wins unconditionally
- * regardless of the system preference for the opposite case). This is the
- * same "media query is the fallback, an explicit attribute overrides it"
- * pattern daisyUI/Phoenix 1.8's own generated `app.css` uses for its own
- * dark mode, so a real app adding this library on top of that existing
- * toggle gets the same layered behavior for free, not a second competing
- * system.
+ * "System" default: when `data-theme` isn't set at all, follow the OS
+ * preference. Same values as `[data-theme="dark"]` above; an explicit
+ * `data-theme="light"` always wins.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-pp-primary: #7986cb;
-    --color-pp-on-primary: #0a0e1f;
-    --color-pp-secondary: #ff80ab;
-    --color-pp-on-secondary: #1a0511;
-    --color-pp-accent: #4db6ac;
-    --color-pp-on-accent: #04211d;
-    --color-pp-error: #ef9a9a;
-    --color-pp-on-error: #370505;
-    --color-pp-surface: #121212;
-    --color-pp-on-surface: #e6e6e6;
-    --color-pp-surface-variant: #1e1e1e;
+    --color-pp-primary: #d0bcff;
+    --color-pp-on-primary: #381e72;
+    --color-pp-primary-container: #4f378b;
+    --color-pp-on-primary-container: #eaddff;
+    --color-pp-secondary: #ccc2dc;
+    --color-pp-on-secondary: #332d41;
+    --color-pp-secondary-container: #4a4458;
+    --color-pp-on-secondary-container: #e8def8;
+    --color-pp-tertiary: #efb8c8;
+    --color-pp-on-tertiary: #492532;
+    --color-pp-tertiary-container: #633b48;
+    --color-pp-on-tertiary-container: #ffd8e4;
+    --color-pp-error: #f2b8b5;
+    --color-pp-on-error: #601410;
+    --color-pp-error-container: #8c1d18;
+    --color-pp-on-error-container: #f9dedc;
+
+    --color-pp-surface: #141218;
+    --color-pp-surface-dim: #141218;
+    --color-pp-surface-bright: #3b383e;
+    --color-pp-surface-container-lowest: #0f0d13;
+    --color-pp-surface-container-low: #1d1b20;
+    --color-pp-surface-container: #211f26;
+    --color-pp-surface-container-high: #2b2930;
+    --color-pp-surface-container-highest: #36343b;
+    --color-pp-surface-variant: #49454f;
+    --color-pp-on-surface: #e6e0e9;
+    --color-pp-on-surface-variant: #cac4d0;
     --color-pp-outline: #938f99;
+    --color-pp-outline-variant: #49454f;
+    --color-pp-inverse-surface: #e6e0e9;
+    --color-pp-inverse-on-surface: #322f35;
+    --color-pp-inverse-primary: #6750a4;
 
-    --color-pp-success: #81c995;
-    --color-pp-on-success: #0a2e0f;
-    --color-pp-warning: #ffb74d;
-    --color-pp-on-warning: #2b1500;
-    --color-pp-info: #81d4fa;
-    --color-pp-on-info: #01324a;
+    --color-pp-success: #9dd67d;
+    --color-pp-on-success: #0c3900;
+    --color-pp-success-container: #205107;
+    --color-pp-on-success-container: #b8f397;
+    --color-pp-warning: #f5bd48;
+    --color-pp-on-warning: #422c00;
+    --color-pp-warning-container: #5e4200;
+    --color-pp-on-warning-container: #ffdea6;
+    --color-pp-info: #96ccff;
+    --color-pp-on-info: #003353;
+    --color-pp-info-container: #004a75;
+    --color-pp-on-info-container: #cee5ff;
 
-    --pp-surface-tint: 255 255 255;
+    color-scheme: dark;
   }
 }
 
 /*
- * `PhoenixPaper.ThemeToggle`'s own first-paint sync to the system
- * preference — purely cosmetic (it fakes the "checked" look without the
- * underlying checkbox actually being checked), needed because a plain
- * inline `<script>` doing this via the `checked` *property* turned out to
- * be unreliable: Phoenix LiveView's connected-mount hydration can
- * re-render and morphdom-patch the page shortly after the dead-rendered
- * first paint, replacing the checkbox element with a fresh one built from
- * the server's own render (which has no way to know the client's OS
- * preference) and silently discarding the script's mutation — see
- * `PhoenixPaper.ThemeToggle`'s moduledoc for the full story, including why
- * the actual click-driven light/dark decision *doesn't* depend on this
- * (it recomputes the effective theme itself every time, so this block only
- * ever affects the very first, pre-click paint). Scoped to
- * `html:not([data-theme])` — absence only, not `:not([data-theme="light"])`
- * like the color tokens above — because the moment there's *any* explicit
- * `data-theme`, the component's own `[[data-theme=dark]_&]:!...` /
- * `[[data-theme=light]_&]:!...` classes take over (keyed off the
- * attribute, not the checkbox, which the server always renders at
- * `default_checked` and so is wrong after a reload with a saved theme),
- * and this block should get out of the way entirely rather than overlap
- * with it.
- */
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme]) [data-pp-component="theme-toggle"] span:has(> input[type="checkbox"]) {
-    background-color: color-mix(in srgb, #6b7280 70%, transparent);
-  }
-
-  html:not([data-theme]) [data-pp-component="theme-toggle"] span:has(> input[type="checkbox"]) > span {
-    transform: translateX(1rem);
-  }
-
-  html:not([data-theme])
-    [data-pp-component="theme-toggle"]
-    span:has(> input[type="checkbox"])
-    > span
-    > span:first-child {
-    opacity: 0;
-  }
-
-  html:not([data-theme])
-    [data-pp-component="theme-toggle"]
-    span:has(> input[type="checkbox"])
-    > span
-    > span:last-child {
-    opacity: 1;
-  }
-}
-
-/*
- * Elevation — approximates Material Design's 0-24dp shadow scale with a
- * two-layer shadow. See `PhoenixPaper.Elevation` for the Elixir-side class
- * helper. These are static utilities (not a wildcard `pp-elevation-*`
- * matcher) because the shadow values aren't derivable from the number alone.
+ * Motion — M3 Expressive springs, approximated as CSS `linear()` easings
+ * sampled from the real damped-spring curves (mass 1; damping ratio and
+ * stiffness from the M3 motion tokens). Each spring is a curve plus the
+ * time the spring takes to settle, which is what makes it a spring rather
+ * than a fixed-duration curve. Spatial springs (position, size, shape)
+ * overshoot in the expressive scheme; effects springs (color, opacity)
+ * never do.
  *
- * Each level also sets `--pp-elevation-overlay`, the opacity of the
- * dark-mode surface tint below — MUI's own formula,
- * `(4.5 * ln(elevation + 1) + 2)%`, rounded to one decimal.
+ * `data-pp-motion="standard"` on any ancestor switches to the calmer
+ * standard scheme (no overshoot). The optional JS hook (see
+ * `priv/static/phoenix_paper.js`) reads these same tokens for the motion
+ * it drives (sliding tab indicator, sheet drag release).
  */
-@property --pp-elevation-overlay {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
+:root,
+[data-pp-motion="expressive"] {
+  --pp-spring-spatial-fast: linear(0, 0.072, 0.238, 0.44, 0.638, 0.806, 0.934, 1.021, 1.071, 1.092, 1.093, 1.081, 1.063, 1.044, 1.026, 1.012, 1.002, 0.995, 0.992, 0.991, 0.992, 0.993, 0.995, 0.997, 1);
+  --pp-spring-spatial-fast-duration: 350ms;
+  --pp-spring-spatial-default: linear(0, 0.048, 0.161, 0.301, 0.444, 0.576, 0.69, 0.784, 0.858, 0.913, 0.953, 0.98, 0.997, 1.008, 1.013, 1.015, 1.015, 1.013, 1.011, 1.009, 1.007, 1.005, 1.004, 1.003, 1);
+  --pp-spring-spatial-default-duration: 420ms;
+  --pp-spring-spatial-slow: linear(0, 0.047, 0.157, 0.294, 0.435, 0.567, 0.681, 0.775, 0.85, 0.906, 0.947, 0.976, 0.995, 1.006, 1.012, 1.015, 1.015, 1.014, 1.012, 1.01, 1.008, 1.006, 1.004, 1.003, 1);
+  --pp-spring-spatial-slow-duration: 570ms;
+  --pp-spring-effects-fast: linear(0, 0.051, 0.162, 0.293, 0.421, 0.537, 0.635, 0.716, 0.782, 0.833, 0.874, 0.905, 0.929, 0.947, 0.961, 0.971, 0.979, 0.984, 0.988, 0.992, 0.994, 0.996, 0.997, 0.998, 1);
+  --pp-spring-effects-fast-duration: 140ms;
+  --pp-spring-effects-default: linear(0, 0.053, 0.167, 0.301, 0.431, 0.547, 0.645, 0.726, 0.791, 0.841, 0.881, 0.911, 0.934, 0.951, 0.964, 0.973, 0.981, 0.986, 0.99, 0.992, 0.995, 0.996, 0.997, 0.998, 1);
+  --pp-spring-effects-default-duration: 220ms;
+  --pp-spring-effects-slow: linear(0, 0.05, 0.158, 0.287, 0.413, 0.528, 0.626, 0.708, 0.774, 0.826, 0.868, 0.9, 0.925, 0.944, 0.958, 0.969, 0.977, 0.983, 0.987, 0.991, 0.993, 0.995, 0.996, 0.997, 1);
+  --pp-spring-effects-slow-duration: 300ms;
 }
+
+[data-pp-motion="standard"] {
+  --pp-spring-spatial-fast: linear(0, 0.027, 0.092, 0.18, 0.276, 0.374, 0.467, 0.554, 0.631, 0.699, 0.757, 0.806, 0.848, 0.881, 0.909, 0.931, 0.949, 0.962, 0.973, 0.981, 0.987, 0.992, 0.995, 0.998, 1);
+  --pp-spring-spatial-fast-duration: 160ms;
+  --pp-spring-spatial-default: linear(0, 0.025, 0.088, 0.172, 0.265, 0.36, 0.452, 0.538, 0.615, 0.683, 0.742, 0.792, 0.835, 0.87, 0.899, 0.922, 0.941, 0.956, 0.968, 0.977, 0.984, 0.989, 0.993, 0.996, 1);
+  --pp-spring-spatial-default-duration: 220ms;
+  --pp-spring-spatial-slow: linear(0, 0.026, 0.09, 0.175, 0.27, 0.366, 0.459, 0.544, 0.622, 0.689, 0.748, 0.798, 0.84, 0.875, 0.903, 0.926, 0.944, 0.959, 0.97, 0.979, 0.985, 0.99, 0.994, 0.997, 1);
+  --pp-spring-spatial-slow-duration: 340ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pp-spring-spatial-fast-duration: 1ms;
+    --pp-spring-spatial-default-duration: 1ms;
+    --pp-spring-spatial-slow-duration: 1ms;
+    --pp-spring-effects-fast-duration: 1ms;
+    --pp-spring-effects-default-duration: 1ms;
+    --pp-spring-effects-slow-duration: 1ms;
+  }
+}
+
+/*
+ * One transition per spring. The property list covers what PhoenixPaper
+ * components animate (shape morphs, size, color, state layers); combine a
+ * spatial and an effects spring on one element with
+ * `pp-motion-spatial-*` alone — it transitions colors too, on the same
+ * curve, which reads fine because colors don't visibly overshoot.
+ */
+@utility pp-motion-spatial-fast {
+  transition-property: border-radius, width, height, min-width, padding, margin, gap, transform, translate, scale, rotate, box-shadow, background-color, color, border-color, opacity;
+  transition-timing-function: var(--pp-spring-spatial-fast);
+  transition-duration: var(--pp-spring-spatial-fast-duration);
+}
+
+@utility pp-motion-spatial-default {
+  transition-property: border-radius, width, height, min-width, padding, margin, gap, transform, translate, scale, rotate, box-shadow, background-color, color, border-color, opacity;
+  transition-timing-function: var(--pp-spring-spatial-default);
+  transition-duration: var(--pp-spring-spatial-default-duration);
+}
+
+@utility pp-motion-spatial-slow {
+  transition-property: border-radius, width, height, min-width, padding, margin, gap, transform, translate, scale, rotate, box-shadow, background-color, color, border-color, opacity;
+  transition-timing-function: var(--pp-spring-spatial-slow);
+  transition-duration: var(--pp-spring-spatial-slow-duration);
+}
+
+@utility pp-motion-effects-fast {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, opacity, box-shadow;
+  transition-timing-function: var(--pp-spring-effects-fast);
+  transition-duration: var(--pp-spring-effects-fast-duration);
+}
+
+@utility pp-motion-effects-default {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, opacity, box-shadow;
+  transition-timing-function: var(--pp-spring-effects-default);
+  transition-duration: var(--pp-spring-effects-default-duration);
+}
+
+@utility pp-motion-effects-slow {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, opacity, box-shadow;
+  transition-timing-function: var(--pp-spring-effects-slow);
+  transition-duration: var(--pp-spring-effects-slow-duration);
+}
+
+/* ------------------------------------------------------------------------
+ * Typography — the MD3 type scale, 15 roles plus the Expressive
+ * "emphasized" variant of each (same size, heavier weight). One utility
+ * per role sets family, size, line height, tracking and weight together,
+ * since a role is all five at once. `PhoenixPaper.Typography` maps its
+ * `variant` attr to these.
+ * --------------------------------------------------------------------- */
+
+@utility pp-display-large {
+  font-family: var(--font-pp-brand);
+  font-size: 3.5625rem;
+  line-height: 4rem;
+  letter-spacing: -0.015625rem;
+  font-weight: 400;
+}
+
+@utility pp-display-medium {
+  font-family: var(--font-pp-brand);
+  font-size: 2.8125rem;
+  line-height: 3.25rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-display-small {
+  font-family: var(--font-pp-brand);
+  font-size: 2.25rem;
+  line-height: 2.75rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-headline-large {
+  font-family: var(--font-pp-brand);
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-headline-medium {
+  font-family: var(--font-pp-brand);
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-headline-small {
+  font-family: var(--font-pp-brand);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-title-large {
+  font-family: var(--font-pp-brand);
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility pp-title-medium {
+  font-family: var(--font-pp-plain);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.009375rem;
+  font-weight: 500;
+}
+
+@utility pp-title-small {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.00625rem;
+  font-weight: 500;
+}
+
+@utility pp-body-large {
+  font-family: var(--font-pp-plain);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 400;
+}
+
+@utility pp-body-medium {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.015625rem;
+  font-weight: 400;
+}
+
+@utility pp-body-small {
+  font-family: var(--font-pp-plain);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.025rem;
+  font-weight: 400;
+}
+
+@utility pp-label-large {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.00625rem;
+  font-weight: 500;
+}
+
+@utility pp-label-medium {
+  font-family: var(--font-pp-plain);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 500;
+}
+
+@utility pp-label-small {
+  font-family: var(--font-pp-plain);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 500;
+}
+
+/* Expressive emphasized variants: each role's own metrics, one weight
+   step up (medium, or bold for title-medium/small and labels). Complete
+   utilities rather than a weight modifier, so two classes never compete
+   for `font-weight`. */
+
+@utility pp-display-large-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 3.5625rem;
+  line-height: 4rem;
+  letter-spacing: -0.015625rem;
+  font-weight: 500;
+}
+
+@utility pp-display-medium-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 2.8125rem;
+  line-height: 3.25rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-display-small-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 2.25rem;
+  line-height: 2.75rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-headline-large-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-headline-medium-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-headline-small-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-title-large-emphasized {
+  font-family: var(--font-pp-brand);
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility pp-title-medium-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.009375rem;
+  font-weight: 700;
+}
+
+@utility pp-title-small-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.00625rem;
+  font-weight: 700;
+}
+
+@utility pp-body-large-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 500;
+}
+
+@utility pp-body-medium-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.015625rem;
+  font-weight: 500;
+}
+
+@utility pp-body-small-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.025rem;
+  font-weight: 500;
+}
+
+@utility pp-label-large-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.00625rem;
+  font-weight: 700;
+}
+
+@utility pp-label-medium-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 700;
+}
+
+@utility pp-label-small-emphasized {
+  font-family: var(--font-pp-plain);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.03125rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------
+ * Elevation — MD3's six levels (0, 1, 3, 6, 8, 12dp). In MD3 height is
+ * shown mostly by surface-container color, not shadow; only a few
+ * components (elevated button/card, FAB, menus, navigation) keep one.
+ * `PhoenixPaper.Elevation.class/1` maps a level to these.
+ * --------------------------------------------------------------------- */
 
 @utility pp-elevation-0 {
   box-shadow: none;
-  --pp-elevation-overlay: 0%;
 }
 
 @utility pp-elevation-1 {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.16), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 5.1%;
+  box-shadow:
+    0 1px 2px 0 color-mix(in srgb, var(--color-pp-shadow) 30%, transparent),
+    0 1px 3px 1px color-mix(in srgb, var(--color-pp-shadow) 15%, transparent);
 }
 
 @utility pp-elevation-2 {
-  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.16), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 6.9%;
+  box-shadow:
+    0 1px 2px 0 color-mix(in srgb, var(--color-pp-shadow) 30%, transparent),
+    0 2px 6px 2px color-mix(in srgb, var(--color-pp-shadow) 15%, transparent);
 }
 
 @utility pp-elevation-3 {
-  box-shadow: 0 3px 9px 0 rgba(0, 0, 0, 0.16), 0 2px 4px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 8.2%;
+  box-shadow:
+    0 1px 3px 0 color-mix(in srgb, var(--color-pp-shadow) 30%, transparent),
+    0 4px 8px 3px color-mix(in srgb, var(--color-pp-shadow) 15%, transparent);
 }
 
 @utility pp-elevation-4 {
-  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.16), 0 2px 6px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 9.2%;
+  box-shadow:
+    0 2px 3px 0 color-mix(in srgb, var(--color-pp-shadow) 30%, transparent),
+    0 6px 10px 4px color-mix(in srgb, var(--color-pp-shadow) 15%, transparent);
 }
 
 @utility pp-elevation-5 {
-  box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.16), 0 2px 8px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 10.1%;
+  box-shadow:
+    0 4px 4px 0 color-mix(in srgb, var(--color-pp-shadow) 30%, transparent),
+    0 8px 12px 6px color-mix(in srgb, var(--color-pp-shadow) 15%, transparent);
 }
 
-@utility pp-elevation-6 {
-  box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.16), 0 3px 9px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 10.8%;
-}
+/* ------------------------------------------------------------------------
+ * Interaction states.
+ *
+ * `pp-state-layer` paints MD3's state layer: a `::before` overlay in the
+ * element's own content color (`currentColor`) at 8% on hover, 10% on
+ * focus and press. It needs a positioned element (every component that
+ * uses it already is — see `PhoenixPaper.Ripple.container_classes/2`),
+ * and inherits the element's corner radius so it follows shape morphs.
+ * Painting the overlay over the element's text is harmless: it's the
+ * text's own color at 8–10%, so text over it is unchanged.
+ *
+ * `pp-state-layer-selected` adds a resting layer for toggled/selected
+ * items that use a state layer instead of a container color.
+ *
+ * `pp-focus-ring` is MD3's focus indicator: a 3px `secondary` outline,
+ * 2px offset, on `:focus-visible` only.
+ * --------------------------------------------------------------------- */
 
-@utility pp-elevation-7 {
-  box-shadow: 0 7px 21px 0 rgba(0, 0, 0, 0.16), 0 4px 10px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 11.4%;
-}
-
-@utility pp-elevation-8 {
-  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.16), 0 4px 12px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 11.9%;
-}
-
-@utility pp-elevation-9 {
-  box-shadow: 0 9px 27px 0 rgba(0, 0, 0, 0.16), 0 4px 14px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 12.4%;
-}
-
-@utility pp-elevation-10 {
-  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.16), 0 5px 15px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 12.8%;
-}
-
-@utility pp-elevation-11 {
-  box-shadow: 0 11px 33px 0 rgba(0, 0, 0, 0.16), 0 6px 16px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 13.2%;
-}
-
-@utility pp-elevation-12 {
-  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.16), 0 6px 18px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 13.5%;
-}
-
-@utility pp-elevation-13 {
-  box-shadow: 0 13px 39px 0 rgba(0, 0, 0, 0.16), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 13.9%;
-}
-
-@utility pp-elevation-14 {
-  box-shadow: 0 14px 42px 0 rgba(0, 0, 0, 0.16), 0 7px 21px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 14.2%;
-}
-
-@utility pp-elevation-15 {
-  box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.16), 0 8px 22px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 14.5%;
-}
-
-@utility pp-elevation-16 {
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.16), 0 8px 24px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 14.7%;
-}
-
-@utility pp-elevation-17 {
-  box-shadow: 0 17px 51px 0 rgba(0, 0, 0, 0.16), 0 8px 26px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 15.0%;
-}
-
-@utility pp-elevation-18 {
-  box-shadow: 0 18px 54px 0 rgba(0, 0, 0, 0.16), 0 9px 27px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 15.2%;
-}
-
-@utility pp-elevation-19 {
-  box-shadow: 0 19px 57px 0 rgba(0, 0, 0, 0.16), 0 10px 28px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 15.5%;
-}
-
-@utility pp-elevation-20 {
-  box-shadow: 0 20px 60px 0 rgba(0, 0, 0, 0.16), 0 10px 30px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 15.7%;
-}
-
-@utility pp-elevation-21 {
-  box-shadow: 0 21px 63px 0 rgba(0, 0, 0, 0.16), 0 10px 32px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 15.9%;
-}
-
-@utility pp-elevation-22 {
-  box-shadow: 0 22px 66px 0 rgba(0, 0, 0, 0.16), 0 11px 33px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 16.1%;
-}
-
-@utility pp-elevation-23 {
-  box-shadow: 0 23px 69px 0 rgba(0, 0, 0, 0.16), 0 12px 34px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 16.3%;
-}
-
-@utility pp-elevation-24 {
-  box-shadow: 0 24px 72px 0 rgba(0, 0, 0, 0.16), 0 12px 36px 0 rgba(0, 0, 0, 0.12);
-  --pp-elevation-overlay: 16.5%;
-}
-
-/*
- * Dark-mode elevation overlay. A dark shadow on a dark page is invisible,
- * so in dark mode a raised surface is told apart by being *lighter*
- * instead: MUI's approach, a translucent white layer whose opacity grows
- * with elevation (`--pp-elevation-overlay`, set by `pp-elevation-N`
- * above). `--pp-surface-tint` is white (`255 255 255`, rgb channels) in
- * the dark blocks and unset in light mode, where the unset variable makes
- * the whole declaration invalid, so no background image at all. Plain
- * `rgb(channels / alpha)` rather than `color-mix()` on purpose: Tailwind's
- * build adds a no-`color-mix()` fallback that would paint the tint solid. `PhoenixPaper.Paper` applies
- * this, so Card, Accordion, Dialog, Menu and TableContainer get it too.
- */
-@utility pp-surface-overlay {
-  background-image: linear-gradient(
-    rgb(var(--pp-surface-tint) / var(--pp-elevation-overlay)),
-    rgb(var(--pp-surface-tint) / var(--pp-elevation-overlay))
-  );
-}
-
-/*
- * Indeterminate linear progress — the sliding bar `PhoenixPaper.Progress`
- * uses when `value` is nil. Not a built-in Tailwind animation (unlike
- * `animate-spin`/`animate-pulse`, which cover the circular-indeterminate
- * and Skeleton cases), so it needs its own `@keyframes`.
- */
-@utility pp-progress-indeterminate {
-  animation: pp-progress-indeterminate 1.5s ease-in-out infinite;
-}
-
-@keyframes pp-progress-indeterminate {
-  0% {
-    transform: translateX(-100%);
-  }
-  60% {
-    transform: translateX(400%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
-
-/*
- * `PhoenixPaper.Skeleton`'s animation="wave" — a semi-transparent highlight
- * sweeping across the block. `animation="pulse"` needs no equivalent block
- * here since it's just Tailwind's own built-in `animate-pulse`.
- */
-@utility pp-skeleton-wave {
-  position: relative;
-  overflow: hidden;
-
-  &::after {
+@utility pp-state-layer {
+  &::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: pp-skeleton-wave 1.6s linear infinite;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--pp-spring-effects-fast-duration) var(--pp-spring-effects-fast);
+  }
+
+  &:hover::before {
+    opacity: 0.08;
+  }
+
+  &:focus-visible::before,
+  &:active::before {
+    opacity: 0.1;
+  }
+
+  &:disabled::before,
+  &[aria-disabled="true"]::before {
+    opacity: 0;
   }
 }
 
-@keyframes pp-skeleton-wave {
-  from {
-    transform: translateX(-100%);
+@utility pp-state-layer-selected {
+  &::before {
+    opacity: 0.1;
   }
+}
+
+/* For a control whose state layer is a separate element (the 40dp circle
+   behind a checkbox/radio/switch handle): the layer reacts to the hover/
+   keyboard focus/press of the control's `pp-state-group` ancestor (its
+   label). A dedicated marker class rather than Tailwind's `group`, so an
+   unrelated `group` higher up the page can't light every state layer. */
+@utility pp-state-layer-target {
+  background-color: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--pp-spring-effects-fast-duration) var(--pp-spring-effects-fast);
+
+  :where(.pp-state-group):hover & {
+    opacity: 0.08;
+  }
+
+  :where(.pp-state-group):has(:focus-visible) &,
+  :where(.pp-state-group):active & {
+    opacity: 0.1;
+  }
+}
+
+@utility pp-focus-ring {
+  &:focus-visible {
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
+  }
+}
+
+/* The same ring, drawn when a descendant (a visually hidden input) has
+   keyboard focus — for controls built around an `sr-only` input. */
+@utility pp-focus-ring-within {
+  &:has(:focus-visible) {
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Button groups (M3 Expressive) — `PhoenixPaper.ButtonGroup`.
+ *
+ * Specificity is the whole game here: each child button carries its own
+ * `rounded-*`, `active:rounded-*` and `aria-pressed:rounded-*` classes
+ * (0,1,0 / 0,2,0 / 0,2,0). The group's rules target
+ * `> [data-pp-component]` (0,2,0 and up) and set the corner *longhands*,
+ * ordered inside one utility so the cascade is deterministic:
+ *
+ *   - connected: every corner gets the small inner radius; the first
+ *     child's start corners and the last child's end corners get the outer
+ *     (fully round) radius (0,3,0); pressing squeezes the inner corners
+ *     further (0,4,0); a selected (`aria-pressed`) child goes fully round
+ *     on all four corners (0,3,0, after the edges).
+ *   - standard: the pressed child widens into the gap around it (negative
+ *     margin + matching extra padding, so neighbors don't move), the
+ *     Expressive "press expands, neighbors compress" interaction without
+ *     JS. Icon buttons have a fixed width, so they only morph corners.
+ *
+ * The per-size radii/padding come from the `--pp-group-*` variables the
+ * component sets with literal classes.
+ * --------------------------------------------------------------------- */
+
+@utility pp-button-group-standard {
+  display: inline-flex;
+  align-items: center;
+
+  & > [data-pp-component="button"]:active {
+    margin-inline: -4px;
+    padding-inline: calc(var(--pp-group-pad, 16px) + 4px);
+  }
+}
+
+@utility pp-button-group-connected {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+
+  & > [data-pp-component] {
+    border-start-start-radius: var(--pp-group-inner, 8px);
+    border-end-start-radius: var(--pp-group-inner, 8px);
+    border-start-end-radius: var(--pp-group-inner, 8px);
+    border-end-end-radius: var(--pp-group-inner, 8px);
+  }
+
+  & > [data-pp-component]:first-child {
+    border-start-start-radius: var(--pp-group-outer, 20px);
+    border-end-start-radius: var(--pp-group-outer, 20px);
+  }
+
+  & > [data-pp-component]:last-child {
+    border-start-end-radius: var(--pp-group-outer, 20px);
+    border-end-end-radius: var(--pp-group-outer, 20px);
+  }
+
+  & > [data-pp-component]:not(:first-child):active {
+    border-start-start-radius: var(--pp-group-pressed, 4px);
+    border-end-start-radius: var(--pp-group-pressed, 4px);
+  }
+
+  & > [data-pp-component]:not(:last-child):active {
+    border-start-end-radius: var(--pp-group-pressed, 4px);
+    border-end-end-radius: var(--pp-group-pressed, 4px);
+  }
+
+  & > [data-pp-component][aria-pressed="true"] {
+    border-radius: var(--pp-group-outer, 20px);
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Top app bar — the MD3 "scrolled under" color change, CSS only where the
+ * browser supports scroll-driven animations: the background animates from
+ * `surface` to `surface-container` over the first 8px of the nearest
+ * scroll container's scroll. Elsewhere (Firefox), the optional JS hook
+ * sets `data-pp-scrolled` instead, which `PhoenixPaper.TopAppBar` styles.
+ * --------------------------------------------------------------------- */
+
+@utility pp-top-app-bar-scroll {
+  @supports (animation-timeline: scroll()) {
+    animation: pp-top-app-bar-scroll linear both;
+    animation-timeline: scroll(nearest);
+    animation-range: 0 8px;
+  }
+}
+
+@keyframes pp-top-app-bar-scroll {
   to {
-    transform: translateX(100%);
+    background-color: var(--color-pp-surface-container);
   }
 }
 
-/*
- * `PhoenixPaper.Snackbar`'s `transition` — a one-shot animation that plays
- * when the element mounts (there's no exit transition; see the module doc
- * for why). `slide`'s direction depends on which edge `anchor_origin`
- * anchors to, hence two utilities instead of one.
- */
+/* ------------------------------------------------------------------------
+ * Navigation rail (M3 Expressive) — `PhoenixPaper.NavigationRail`.
+ *
+ * The rail is collapsed (96dp, icons over labels) or expanded (icons
+ * beside labels, replacing the navigation drawer), and which one depends
+ * on the variant, the viewport and a hidden checkbox:
+ *
+ *   - `data-pp-rail="expanded"`: always expanded.
+ *   - `data-pp-rail="collapsed"`: always collapsed.
+ *   - `data-pp-rail="responsive"`: below `md` the rail is a modal
+ *     (always in its expanded layout, slid in by the checkbox); from `md`
+ *     up it's collapsed, and the checkbox expands it.
+ *
+ * These two variants name that condition once, so every rail element can
+ * say `pp-rail-expanded:flex-row` instead of repeating three selectors.
+ * Each matches the rail itself (`&:where(...)`) and anything inside it
+ * (`:where(...) &`). `:where()` keeps the condition at zero specificity,
+ * so a variant class wins over its base class only by Tailwind's normal
+ * variants-after-utilities order — no specificity surprises.
+ * --------------------------------------------------------------------- */
+
+@custom-variant pp-rail-expanded {
+  &:where([data-pp-rail="expanded"]),
+  :where([data-pp-rail="expanded"]) & {
+    @slot;
+  }
+
+  @media (width < 48rem) {
+    &:where([data-pp-rail="responsive"]),
+    :where([data-pp-rail="responsive"]) & {
+      @slot;
+    }
+  }
+
+  @media (width >= 48rem) {
+    &:where([data-pp-rail-toggle]:checked ~ [data-pp-rail="responsive"]),
+    :where([data-pp-rail-toggle]:checked ~ [data-pp-rail="responsive"]) & {
+      @slot;
+    }
+  }
+}
+
+@custom-variant pp-rail-collapsed {
+  &:where([data-pp-rail="collapsed"]),
+  :where([data-pp-rail="collapsed"]) & {
+    @slot;
+  }
+
+  @media (width >= 48rem) {
+    &:where([data-pp-rail-toggle]:not(:checked) ~ [data-pp-rail="responsive"]),
+    :where([data-pp-rail-toggle]:not(:checked) ~ [data-pp-rail="responsive"]) & {
+      @slot;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Snackbar — `PhoenixPaper.Snackbar`'s `transition`: a one-shot animation
+ * that plays when the element mounts (there's no exit transition; see the
+ * module doc). `slide`'s direction depends on which edge `anchor_origin`
+ * anchors to, hence two utilities. MD3 emphasized-decelerate easing.
+ * --------------------------------------------------------------------- */
+
 @utility pp-snackbar-fade {
-  animation: pp-snackbar-fade 200ms ease-out;
+  animation: pp-snackbar-fade 250ms var(--ease-pp-emphasized-decelerate);
 }
 
 @keyframes pp-snackbar-fade {
@@ -399,18 +881,18 @@
 }
 
 @utility pp-snackbar-grow {
-  animation: pp-snackbar-grow 200ms ease-out;
+  animation: pp-snackbar-grow 300ms var(--ease-pp-emphasized-decelerate);
 }
 
 @keyframes pp-snackbar-grow {
   from {
     opacity: 0;
-    transform: scale(0.75);
+    transform: scale(0.8);
   }
 }
 
 @utility pp-snackbar-slide-up {
-  animation: pp-snackbar-slide-up 200ms ease-out;
+  animation: pp-snackbar-slide-up 300ms var(--ease-pp-emphasized-decelerate);
 }
 
 @keyframes pp-snackbar-slide-up {
@@ -421,7 +903,7 @@
 }
 
 @utility pp-snackbar-slide-down {
-  animation: pp-snackbar-slide-down 200ms ease-out;
+  animation: pp-snackbar-slide-down 300ms var(--ease-pp-emphasized-decelerate);
 }
 
 @keyframes pp-snackbar-slide-down {
@@ -432,18 +914,11 @@
 }
 
 /*
- * `PhoenixPaper.Snackbar`'s `auto_hide_duration` — doubles as the timer
- * *and* a visible countdown bar. This runs on a tiny standalone `<span>`
- * inside the snackbar (never the root, so it can't clash with the root's
- * own entrance `transition` animation), and its `animationend` — fired
- * once, `--pp-snackbar-timeout` after mount — is what clicks the close
- * button. The animated property (`transform: scaleX`) is also what the
- * user sees: a bar shrinking from full width to nothing over exactly the
- * duration that drives the real dismissal, so there's only one timer, not
- * a visual one that could drift out of sync with the functional one. Under
- * `paperize={false}` the span still animates (this class stays
- * unconditional — see `PhoenixPaper.Snackbar`), it's just sized to
- * nothing, so the effect goes back to invisible-but-functional.
+ * `auto_hide_duration` — doubles as the timer *and* a visible countdown
+ * bar. It runs on a tiny standalone `<span>` inside the snackbar (never
+ * the root, so it can't clash with the root's entrance animation), and its
+ * `animationend` clicks the close button. The animated property is what
+ * the user sees, so there's only one timer.
  */
 @utility pp-snackbar-timeout {
   transform-origin: left;
@@ -459,356 +934,613 @@
   }
 }
 
-/*
- * `PhoenixPaper.Slider` — a native `<input type="range">` fully re-skinned
- * via `::-webkit-slider-runnable-track`/`::-webkit-slider-thumb` and
- * `::-moz-range-track`/`::-moz-range-progress`/`::-moz-range-thumb`, not
- * just `accent-color` (an earlier version used `accent-color` alone — it
- * looks fine for the *filled* portion, but leaves the *unfilled* remainder
- * of the track at the browser's own default color, which renders as a
- * glaring near-white line on a dark background; found from an actual
- * screenshot, not by reasoning about it in the abstract). Once you take
- * over `::-webkit-slider-runnable-track`'s own background, Chromium stops
- * drawing `accent-color`'s automatic "filled" segment for you — there's no
- * way to keep both the automatic fill *and* full control over track
- * thickness/color/rounding at the same time (verified empirically, not
- * assumed). The fill segment here is therefore drawn manually as a
- * `linear-gradient` positioned by `--pp-slider-percent`, a custom property
- * `PhoenixPaper.Slider` sets inline for the initial paint and updates live
- * via a tiny vanilla `oninput` snippet — the same "small inline script, no
- * hook, no bundler" approach `PhoenixPaper.Ripple`/`NumberField`'s stepper
- * buttons already use (see AGENTS.md). Firefox needs none of that:
- * `::-moz-range-progress` is a real pseudo-element Firefox sizes to the
- * current value on its own, no JS involved — the custom property only
- * matters for Chromium/WebKit-family browsers.
+/* ------------------------------------------------------------------------
+ * Skeleton — `animation="wave"`'s shimmer (pulse is Tailwind's own).
+ * --------------------------------------------------------------------- */
+
+@utility pp-skeleton-wave {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-pp-surface) 50%, transparent), transparent);
+    animation: pp-skeleton-wave 1.6s linear infinite;
+  }
+}
+
+@keyframes pp-skeleton-wave {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Progress indicators — `PhoenixPaper.Progress`.
  *
- * Four *complete*, mutually-exclusive "shape" utilities
- * (`pp-slider`/`pp-slider-small` × horizontal, `pp-slider-vertical`/
- * `pp-slider-vertical-small`) rather than one base utility plus small
- * per-axis/per-size overrides: two utilities both trying to set the same
- * pseudo-element's `background`/sizing from two different classes on the
- * same element is a same-specificity, source-order-dependent conflict —
- * the same class of bug documented above for `Drawer`'s colored variants.
- * Keeping every axis+size combination as one standalone utility sidesteps
- * that entirely. `PhoenixPaper.Slider` applies exactly one of these four,
- * alongside a color utility (`pp-slider-primary`, ...) and, optionally, a
- * track-mode utility (`pp-slider-track-none`/`pp-slider-track-inverted`) —
- * those only ever set custom properties (`--pp-slider-color`/
- * `--pp-slider-fill-color`/`--pp-slider-fill-start`/`--pp-slider-fill-end`),
- * never a property the shape utilities also set, so combining them is
- * always safe regardless of class order.
- */
-@utility pp-slider {
-  --pp-slider-fill-color: var(--pp-slider-color, var(--color-pp-primary));
-  --pp-slider-track-color: color-mix(in srgb, var(--color-pp-outline) 40%, transparent);
-  --pp-slider-fill-start: 0%;
-  --pp-slider-fill-end: var(--pp-slider-percent, 50%);
+ * Wavy (M3 Expressive): the active indicator is a plain `bg-*` box masked
+ * by a repeating sine-wave tile (one 40px wavelength, 3px amplitude, round
+ * caps), and the mask slides one wavelength per second so the wave
+ * travels. Two tiles, for the 4dp and 8dp thicknesses — the box's height
+ * is the wave's full excursion (2 × amplitude + thickness).
+ *
+ * Indeterminate linear: two segments chasing each other across the track
+ * (the classic Material timing). Indeterminate circular: a rotating arc
+ * that grows and shrinks.
+ * --------------------------------------------------------------------- */
+
+@utility pp-progress-wave {
+  height: 10px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 -1 20 5 T40 5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: 40px 10px;
+  mask-repeat: repeat-x;
+  animation: pp-progress-wave 1s linear infinite;
+}
+
+@utility pp-progress-wave-thick {
+  height: 14px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 7 Q10 1 20 7 T40 7' fill='none' stroke='black' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: 40px 14px;
+  mask-repeat: repeat-x;
+  animation: pp-progress-wave 1s linear infinite;
+}
+
+@keyframes pp-progress-wave {
+  from {
+    mask-position: 0 0;
+  }
+  to {
+    mask-position: 40px 0;
+  }
+}
+
+@utility pp-progress-indeterminate-1 {
+  animation: pp-progress-indeterminate-1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
+
+@keyframes pp-progress-indeterminate-1 {
+  0% {
+    left: -35%;
+    right: 100%;
+  }
+  60%,
+  100% {
+    left: 100%;
+    right: -90%;
+  }
+}
+
+@utility pp-progress-indeterminate-2 {
+  animation: pp-progress-indeterminate-2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite;
+}
+
+@keyframes pp-progress-indeterminate-2 {
+  0% {
+    left: -200%;
+    right: 100%;
+  }
+  60%,
+  100% {
+    left: 107%;
+    right: -8%;
+  }
+}
+
+/* Wavy segments also slide their wave; both animations at once. */
+@utility pp-progress-wave-indeterminate-1 {
+  animation:
+    pp-progress-indeterminate-1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite,
+    pp-progress-wave 1s linear infinite;
+}
+
+@utility pp-progress-wave-indeterminate-2 {
+  animation:
+    pp-progress-indeterminate-2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite,
+    pp-progress-wave 1s linear infinite;
+}
+
+@utility pp-circular-rotate {
+  animation: pp-circular-rotate 1.4s linear infinite;
+}
+
+@keyframes pp-circular-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility pp-circular-dash {
+  stroke-dasharray: 1px, 200px;
+  stroke-dashoffset: 0;
+  animation: pp-circular-dash 1.4s ease-in-out infinite;
+}
+
+@keyframes pp-circular-dash {
+  0% {
+    stroke-dasharray: 1px, 200px;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 100px, 200px;
+    stroke-dashoffset: -15px;
+  }
+  100% {
+    stroke-dasharray: 100px, 200px;
+    stroke-dashoffset: -125px;
+  }
+}
+
+/* The wave tile alone, no animation — for the wavy indeterminate
+   segments, whose `pp-progress-wave-indeterminate-*` animation already
+   includes the wave travel. */
+@utility pp-progress-wave-mask {
+  height: 10px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q10 -1 20 5 T40 5' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: 40px 10px;
+  mask-repeat: repeat-x;
+}
+
+@utility pp-progress-wave-mask-thick {
+  height: 14px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 7 Q10 1 20 7 T40 7' fill='none' stroke='black' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: 40px 14px;
+  mask-repeat: repeat-x;
+}
+
+/* ------------------------------------------------------------------------
+ * Loading indicator (M3 Expressive) — `PhoenixPaper.LoadingIndicator`.
+ *
+ * A shape morphing through seven MD3 shapes (soft burst, 9-sided cookie,
+ * pentagon, pill, sunny, 4-sided cookie, oval) while it rotates. Each shape
+ * is the same 72-point polygon sampled from a polar function, so CSS can
+ * interpolate `d` between them; every morph step runs on the Expressive
+ * fast spatial spring. Browsers without CSS `d` animation (Safari) keep
+ * the first shape and still rotate; the optional JS hook morphs there too.
+ * --------------------------------------------------------------------- */
+
+@utility pp-loading-morph {
+  animation: pp-loading-morph 4.55s var(--pp-spring-spatial-fast) infinite;
+}
+
+@utility pp-loading-rotate {
+  transform-origin: center;
+  animation: pp-loading-rotate 4.55s linear infinite;
+}
+
+@keyframes pp-loading-rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes pp-loading-morph {
+  0.0% {
+    d: path("M24.00 5.00 L25.60 5.69 L26.95 7.29 L28.08 8.76 L29.35 9.29 L31.05 8.88 L33.07 8.29 L34.88 8.46 L35.95 9.75 L36.21 11.79 L36.22 13.75 L36.76 15.07 L38.21 15.80 L40.19 16.45 L41.76 17.54 L42.13 19.14 L41.31 20.95 L40.10 22.59 L39.55 24.00 L40.10 25.41 L41.31 27.05 L42.13 28.86 L41.76 30.46 L40.19 31.55 L38.21 32.20 L36.76 32.93 L36.22 34.25 L36.21 36.21 L35.95 38.25 L34.88 39.54 L33.07 39.71 L31.05 39.12 L29.35 38.71 L28.08 39.24 L26.95 40.71 L25.60 42.31 L24.00 43.00 L22.40 42.31 L21.05 40.71 L19.92 39.24 L18.65 38.71 L16.95 39.12 L14.93 39.71 L13.12 39.54 L12.05 38.25 L11.79 36.21 L11.78 34.25 L11.24 32.93 L9.79 32.20 L7.81 31.55 L6.24 30.46 L5.87 28.86 L6.69 27.05 L7.90 25.41 L8.45 24.00 L7.90 22.59 L6.69 20.95 L5.87 19.14 L6.24 17.54 L7.81 16.45 L9.79 15.80 L11.24 15.07 L11.78 13.75 L11.79 11.79 L12.05 9.75 L13.12 8.46 L14.93 8.29 L16.95 8.88 L18.65 9.29 L19.92 8.76 L21.05 7.29 L22.40 5.69 Z");
+  }
+  14.286% {
+    d: path("M24.00 5.00 L25.62 5.43 L27.08 6.51 L28.37 7.70 L29.65 8.48 L31.13 8.70 L32.88 8.62 L34.69 8.73 L36.21 9.45 L37.18 10.82 L37.60 12.59 L37.83 14.32 L38.30 15.74 L39.30 16.87 L40.69 17.93 L42.00 19.18 L42.71 20.70 L42.57 22.38 L41.76 24.00 L40.81 25.47 L40.26 26.87 L40.30 28.37 L40.69 30.07 L40.89 31.88 L40.45 33.50 L39.27 34.69 L37.60 35.41 L35.93 35.93 L34.62 36.65 L33.68 37.83 L32.88 39.38 L31.88 40.89 L30.50 41.85 L28.82 42.00 L27.08 41.49 L25.47 40.81 L24.00 40.51 L22.53 40.81 L20.92 41.49 L19.18 42.00 L17.50 41.85 L16.12 40.89 L15.12 39.38 L14.32 37.83 L13.38 36.65 L12.07 35.93 L10.40 35.41 L8.73 34.69 L7.55 33.50 L7.11 31.88 L7.31 30.07 L7.70 28.37 L7.74 26.87 L7.19 25.47 L6.24 24.00 L5.43 22.38 L5.29 20.70 L6.00 19.18 L7.31 17.93 L8.70 16.87 L9.70 15.74 L10.17 14.32 L10.40 12.59 L10.82 10.82 L11.79 9.45 L13.31 8.73 L15.12 8.62 L16.87 8.70 L18.35 8.48 L19.63 7.70 L20.92 6.51 L22.38 5.43 Z");
+  }
+  28.571% {
+    d: path("M24.00 5.00 L25.64 5.23 L27.19 5.90 L28.59 6.88 L29.81 8.05 L30.88 9.24 L31.89 10.34 L32.92 11.26 L34.06 12.01 L35.35 12.65 L36.78 13.28 L38.27 14.01 L39.71 14.93 L40.94 16.10 L41.83 17.51 L42.30 19.10 L42.31 20.77 L41.93 22.43 L41.27 24.00 L40.48 25.44 L39.71 26.77 L39.07 28.04 L38.63 29.33 L38.37 30.70 L38.21 32.20 L38.03 33.82 L37.68 35.48 L37.08 37.08 L36.15 38.48 L34.89 39.56 L33.38 40.25 L31.72 40.55 L30.01 40.51 L28.35 40.25 L26.81 39.92 L25.37 39.65 L24.00 39.55 L22.63 39.65 L21.19 39.92 L19.65 40.25 L17.99 40.51 L16.28 40.55 L14.62 40.25 L13.11 39.56 L11.85 38.48 L10.92 37.08 L10.32 35.48 L9.97 33.82 L9.79 32.20 L9.63 30.70 L9.37 29.33 L8.93 28.04 L8.29 26.77 L7.52 25.44 L6.73 24.00 L6.07 22.43 L5.69 20.77 L5.70 19.10 L6.17 17.51 L7.06 16.10 L8.29 14.93 L9.73 14.01 L11.22 13.28 L12.65 12.65 L13.94 12.01 L15.08 11.26 L16.11 10.34 L17.12 9.24 L18.19 8.05 L19.41 6.88 L20.81 5.90 L22.36 5.23 Z");
+  }
+  42.857% {
+    d: path("M24.00 9.89 L25.31 9.08 L26.76 8.32 L28.36 7.71 L30.06 7.34 L31.78 7.31 L33.42 7.68 L34.91 8.41 L36.24 9.42 L37.44 10.56 L38.58 11.76 L39.59 13.09 L40.32 14.58 L40.69 16.22 L40.66 17.94 L40.29 19.64 L39.68 21.24 L38.92 22.69 L38.11 24.00 L37.28 25.16 L36.48 26.20 L35.69 27.13 L34.94 27.98 L34.22 28.77 L33.52 29.50 L32.85 30.19 L32.18 30.86 L31.52 31.52 L30.86 32.18 L30.19 32.85 L29.50 33.52 L28.77 34.22 L27.98 34.94 L27.13 35.69 L26.20 36.48 L25.16 37.28 L24.00 38.11 L22.69 38.92 L21.24 39.68 L19.64 40.29 L17.94 40.66 L16.22 40.69 L14.58 40.32 L13.09 39.59 L11.76 38.58 L10.56 37.44 L9.42 36.24 L8.41 34.91 L7.68 33.42 L7.31 31.78 L7.34 30.06 L7.71 28.36 L8.32 26.76 L9.08 25.31 L9.89 24.00 L10.72 22.84 L11.52 21.80 L12.31 20.87 L13.06 20.02 L13.78 19.23 L14.48 18.50 L15.15 17.81 L15.82 17.14 L16.48 16.48 L17.14 15.82 L17.81 15.15 L18.50 14.48 L19.23 13.78 L20.02 13.06 L20.87 12.31 L21.80 11.52 L22.84 10.72 Z");
+  }
+  57.143% {
+    d: path("M24.00 5.00 L25.63 5.32 L27.14 6.16 L28.50 7.21 L29.78 8.11 L31.15 8.67 L32.69 8.94 L34.39 9.16 L36.05 9.64 L37.44 10.56 L38.36 11.95 L38.84 13.61 L39.06 15.31 L39.33 16.85 L39.89 18.22 L40.79 19.50 L41.84 20.86 L42.68 22.37 L43.00 24.00 L42.68 25.63 L41.84 27.14 L40.79 28.50 L39.89 29.78 L39.33 31.15 L39.06 32.69 L38.84 34.39 L38.36 36.05 L37.44 37.44 L36.05 38.36 L34.39 38.84 L32.69 39.06 L31.15 39.33 L29.78 39.89 L28.50 40.79 L27.14 41.84 L25.63 42.68 L24.00 43.00 L22.37 42.68 L20.86 41.84 L19.50 40.79 L18.22 39.89 L16.85 39.33 L15.31 39.06 L13.61 38.84 L11.95 38.36 L10.56 37.44 L9.64 36.05 L9.16 34.39 L8.94 32.69 L8.67 31.15 L8.11 29.78 L7.21 28.50 L6.16 27.14 L5.32 25.63 L5.00 24.00 L5.32 22.37 L6.16 20.86 L7.21 19.50 L8.11 18.22 L8.67 16.85 L8.94 15.31 L9.16 13.61 L9.64 11.95 L10.56 10.56 L11.95 9.64 L13.61 9.16 L15.31 8.94 L16.85 8.67 L18.22 8.11 L19.50 7.21 L20.86 6.16 L22.37 5.32 Z");
+  }
+  71.429% {
+    d: path("M24.00 5.00 L25.65 5.19 L27.22 5.76 L28.65 6.63 L29.92 7.73 L31.02 8.95 L31.97 10.19 L32.84 11.38 L33.67 12.47 L34.56 13.44 L35.53 14.33 L36.62 15.16 L37.81 16.03 L39.05 16.98 L40.27 18.08 L41.37 19.35 L42.24 20.78 L42.81 22.35 L43.00 24.00 L42.81 25.65 L42.24 27.22 L41.37 28.65 L40.27 29.92 L39.05 31.02 L37.81 31.97 L36.62 32.84 L35.53 33.67 L34.56 34.56 L33.67 35.53 L32.84 36.62 L31.97 37.81 L31.02 39.05 L29.92 40.27 L28.65 41.37 L27.22 42.24 L25.65 42.81 L24.00 43.00 L22.35 42.81 L20.78 42.24 L19.35 41.37 L18.08 40.27 L16.98 39.05 L16.03 37.81 L15.16 36.62 L14.33 35.53 L13.44 34.56 L12.47 33.67 L11.38 32.84 L10.19 31.97 L8.95 31.02 L7.73 29.92 L6.63 28.65 L5.76 27.22 L5.19 25.65 L5.00 24.00 L5.19 22.35 L5.76 20.78 L6.63 19.35 L7.73 18.08 L8.95 16.98 L10.19 16.03 L11.38 15.16 L12.47 14.33 L13.44 13.44 L14.33 12.47 L15.16 11.38 L16.03 10.19 L16.98 8.95 L18.08 7.73 L19.35 6.63 L20.78 5.76 L22.35 5.19 Z");
+  }
+  85.714% {
+    d: path("M24.00 8.02 L25.36 8.47 L26.65 8.99 L27.86 9.58 L29.02 10.22 L30.11 10.91 L31.14 11.63 L32.12 12.40 L33.05 13.21 L33.94 14.06 L34.79 14.95 L35.60 15.88 L36.37 16.86 L37.09 17.89 L37.78 18.98 L38.42 20.14 L39.01 21.35 L39.53 22.64 L39.98 24.00 L40.34 25.43 L40.59 26.93 L40.71 28.48 L40.67 30.07 L40.44 31.67 L40.02 33.25 L39.37 34.76 L38.51 36.17 L37.44 37.44 L36.17 38.51 L34.76 39.37 L33.25 40.02 L31.67 40.44 L30.07 40.67 L28.48 40.71 L26.93 40.59 L25.43 40.34 L24.00 39.98 L22.64 39.53 L21.35 39.01 L20.14 38.42 L18.98 37.78 L17.89 37.09 L16.86 36.37 L15.88 35.60 L14.95 34.79 L14.06 33.94 L13.21 33.05 L12.40 32.12 L11.63 31.14 L10.91 30.11 L10.22 29.02 L9.58 27.86 L8.99 26.65 L8.47 25.36 L8.02 24.00 L7.66 22.57 L7.41 21.07 L7.29 19.52 L7.33 17.93 L7.56 16.33 L7.98 14.75 L8.63 13.24 L9.49 11.83 L10.56 10.56 L11.83 9.49 L13.24 8.63 L14.75 7.98 L16.33 7.56 L17.93 7.33 L19.52 7.29 L21.07 7.41 L22.57 7.66 Z");
+  }
+  100.0% {
+    d: path("M24.00 5.00 L25.60 5.69 L26.95 7.29 L28.08 8.76 L29.35 9.29 L31.05 8.88 L33.07 8.29 L34.88 8.46 L35.95 9.75 L36.21 11.79 L36.22 13.75 L36.76 15.07 L38.21 15.80 L40.19 16.45 L41.76 17.54 L42.13 19.14 L41.31 20.95 L40.10 22.59 L39.55 24.00 L40.10 25.41 L41.31 27.05 L42.13 28.86 L41.76 30.46 L40.19 31.55 L38.21 32.20 L36.76 32.93 L36.22 34.25 L36.21 36.21 L35.95 38.25 L34.88 39.54 L33.07 39.71 L31.05 39.12 L29.35 38.71 L28.08 39.24 L26.95 40.71 L25.60 42.31 L24.00 43.00 L22.40 42.31 L21.05 40.71 L19.92 39.24 L18.65 38.71 L16.95 39.12 L14.93 39.71 L13.12 39.54 L12.05 38.25 L11.79 36.21 L11.78 34.25 L11.24 32.93 L9.79 32.20 L7.81 31.55 L6.24 30.46 L5.87 28.86 L6.69 27.05 L7.90 25.41 L8.45 24.00 L7.90 22.59 L6.69 20.95 L5.87 19.14 L6.24 17.54 L7.81 16.45 L9.79 15.80 L11.24 15.07 L11.78 13.75 L11.79 11.79 L12.05 9.75 L13.12 8.46 L14.93 8.29 L16.95 8.88 L18.65 9.29 L19.92 8.76 L21.05 7.29 L22.40 5.69 Z");
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Slider (MD3, incl. M3 Expressive sizes) — `PhoenixPaper.Slider`.
+ *
+ * The native range input draws only the handle: its own track is
+ * transparent, and its thumb is MD3's 4dp-wide bar (2dp while pressed).
+ * The visible track is a separate element behind it, painted with one
+ * gradient driven by custom properties on the slider's wrapper, which the
+ * component's inline `oninput` snippet keeps in sync:
+ *
+ *   --pp-slider-f           handle position, 0..1 (single sliders)
+ *   --pp-slider-lo / -hi    both handles (range sliders)
+ *
+ * A handle's center along the track is `2px + (100% - 4px) * f` (the
+ * native thumb travels the width minus its own 4px); the track leaves a
+ * 6dp gap on each side of each handle (±8px from its center). A small dot
+ * layer on top is MD3's stop indicator at the track's end(s).
+ *
+ * Sizes and colors are plain custom properties set by literal classes:
+ * --pp-slider-track-size, --pp-slider-handle, --pp-slider-radius,
+ * --pp-slider-active, --pp-slider-inactive.
+ * --------------------------------------------------------------------- */
+
+@utility pp-slider-input {
   -webkit-appearance: none;
   appearance: none;
-  background: transparent;
   width: 100%;
-  height: 20px;
-
-  &::-webkit-slider-runnable-track {
-    height: 4px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      to right,
-      var(--pp-slider-track-color) 0%,
-      var(--pp-slider-track-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) 100%
-    );
-  }
-
-  &::-moz-range-track {
-    height: 4px;
-    border-radius: 9999px;
-    background: var(--pp-slider-track-color);
-  }
-
-  &::-moz-range-progress {
-    height: 4px;
-    border-radius: 9999px;
-    background: var(--pp-slider-fill-color);
-  }
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    margin-top: -8px;
-    width: 20px;
-    height: 20px;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    transition: box-shadow 0.15s;
-  }
-
-  &::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border: none;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  }
-
-  &:hover::-webkit-slider-thumb,
-  &:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
-  }
-
-  &:hover::-moz-range-thumb,
-  &:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
-  }
-}
-
-@utility pp-slider-small {
-  --pp-slider-fill-color: var(--pp-slider-color, var(--color-pp-primary));
-  --pp-slider-track-color: color-mix(in srgb, var(--color-pp-outline) 40%, transparent);
-  --pp-slider-fill-start: 0%;
-  --pp-slider-fill-end: var(--pp-slider-percent, 50%);
-  -webkit-appearance: none;
-  appearance: none;
+  height: var(--pp-slider-handle, 44px);
+  margin: 0;
   background: transparent;
-  width: 100%;
-  height: 16px;
+  cursor: pointer;
 
   &::-webkit-slider-runnable-track {
-    height: 2px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      to right,
-      var(--pp-slider-track-color) 0%,
-      var(--pp-slider-track-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) 100%
-    );
+    height: var(--pp-slider-handle, 44px);
+    background: transparent;
   }
 
   &::-moz-range-track {
-    height: 2px;
-    border-radius: 9999px;
-    background: var(--pp-slider-track-color);
+    height: var(--pp-slider-handle, 44px);
+    background: transparent;
   }
 
   &::-moz-range-progress {
-    height: 2px;
-    border-radius: 9999px;
-    background: var(--pp-slider-fill-color);
+    background: transparent;
   }
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
-    margin-top: -5px;
-    width: 12px;
-    height: 12px;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    transition: box-shadow 0.15s;
+    width: 4px;
+    height: var(--pp-slider-handle, 44px);
+    border-radius: 2px;
+    background: var(--pp-slider-active, var(--color-pp-primary));
+    transition: width var(--pp-spring-spatial-fast-duration) var(--pp-spring-spatial-fast);
   }
 
   &::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
+    width: 4px;
+    height: var(--pp-slider-handle, 44px);
     border: none;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+    background: var(--pp-slider-active, var(--color-pp-primary));
   }
 
-  &:hover::-webkit-slider-thumb,
+  &:active::-webkit-slider-thumb {
+    width: 2px;
+  }
+
+  &:active::-moz-range-thumb {
+    width: 2px;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
   &:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
   }
 
-  &:hover::-moz-range-thumb,
   &:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
   }
 }
 
-@utility pp-slider-vertical {
-  --pp-slider-fill-color: var(--pp-slider-color, var(--color-pp-primary));
-  --pp-slider-track-color: color-mix(in srgb, var(--color-pp-outline) 40%, transparent);
-  --pp-slider-fill-start: 0%;
-  --pp-slider-fill-end: var(--pp-slider-percent, 50%);
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  -moz-orient: vertical;
-  width: 20px;
-  height: 200px;
-
-  &::-webkit-slider-runnable-track {
-    width: 4px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      to top,
-      var(--pp-slider-track-color) 0%,
-      var(--pp-slider-track-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) 100%
-    );
-  }
-
-  &::-moz-range-track {
-    width: 4px;
-    border-radius: 9999px;
-    background: var(--pp-slider-track-color);
-  }
-
-  &::-moz-range-progress {
-    width: 4px;
-    border-radius: 9999px;
-    background: var(--pp-slider-fill-color);
-  }
+/* Range sliders stack two inputs (positioned by the component); only
+   their thumbs take the pointer. */
+@utility pp-slider-input-range {
+  pointer-events: none;
 
   &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    margin-left: -8px;
-    width: 20px;
-    height: 20px;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    transition: box-shadow 0.15s;
+    pointer-events: auto;
   }
 
   &::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border: none;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  }
-
-  &:hover::-webkit-slider-thumb,
-  &:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
-  }
-
-  &:hover::-moz-range-thumb,
-  &:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
+    pointer-events: auto;
   }
 }
 
-@utility pp-slider-vertical-small {
-  --pp-slider-fill-color: var(--pp-slider-color, var(--color-pp-primary));
-  --pp-slider-track-color: color-mix(in srgb, var(--color-pp-outline) 40%, transparent);
-  --pp-slider-fill-start: 0%;
-  --pp-slider-fill-end: var(--pp-slider-percent, 50%);
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  -moz-orient: vertical;
-  width: 16px;
-  height: 200px;
-
-  &::-webkit-slider-runnable-track {
-    width: 2px;
-    border-radius: 9999px;
-    background: linear-gradient(
-      to top,
-      var(--pp-slider-track-color) 0%,
-      var(--pp-slider-track-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-start),
-      var(--pp-slider-fill-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) var(--pp-slider-fill-end),
-      var(--pp-slider-track-color) 100%
-    );
-  }
-
-  &::-moz-range-track {
-    width: 2px;
-    border-radius: 9999px;
-    background: var(--pp-slider-track-color);
-  }
-
-  &::-moz-range-progress {
-    width: 2px;
-    border-radius: 9999px;
-    background: var(--pp-slider-fill-color);
-  }
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    margin-left: -5px;
-    width: 12px;
-    height: 12px;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    transition: box-shadow 0.15s;
-  }
-
-  &::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    border: none;
-    border-radius: 9999px;
-    background: var(--pp-slider-color, var(--color-pp-primary));
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  }
-
-  &:hover::-webkit-slider-thumb,
-  &:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
-  }
-
-  &:hover::-moz-range-thumb,
-  &:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--pp-slider-color, var(--color-pp-primary)) 16%, transparent);
-  }
+/* Geometry only — every track also takes exactly one background mode
+   below, so no two classes on the track ever set the same property. */
+@utility pp-slider-track-shape {
+  --pp-h: calc(2px + (100% - 4px) * var(--pp-slider-f, 0.5));
+  --pp-lo: calc(2px + (100% - 4px) * var(--pp-slider-lo, 0.25));
+  --pp-hi: calc(2px + (100% - 4px) * var(--pp-slider-hi, 0.75));
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  translate: 0 -50%;
+  height: var(--pp-slider-track-size, 16px);
+  border-radius: var(--pp-slider-radius, 8px);
+  pointer-events: none;
 }
 
-@utility pp-slider-primary {
-  --pp-slider-color: var(--color-pp-primary);
+/* Normal: active from the start to the handle. The stop-dot layers are
+   `var()` fallbacks, so `pp-slider-no-stop` can blank them without
+   competing with the mode's own `background`. */
+@utility pp-slider-track-normal {
+  background:
+    var(--pp-slider-stop-end, radial-gradient(circle at calc(100% - var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    linear-gradient(to right,
+      var(--pp-slider-active) 0,
+      var(--pp-slider-active) calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) + 8px),
+      var(--pp-slider-inactive) calc(var(--pp-h) + 8px),
+      var(--pp-slider-inactive) 100%);
 }
 
-@utility pp-slider-secondary {
-  --pp-slider-color: var(--color-pp-secondary);
-}
-
-@utility pp-slider-accent {
-  --pp-slider-color: var(--color-pp-accent);
-}
-
-@utility pp-slider-error {
-  --pp-slider-color: var(--color-pp-error);
-}
-
-@utility pp-slider-track-none {
-  --pp-slider-fill-color: var(--pp-slider-track-color);
-}
-
+/* Inverted: active from the handle to the end. */
 @utility pp-slider-track-inverted {
-  --pp-slider-fill-start: var(--pp-slider-percent, 50%);
-  --pp-slider-fill-end: 100%;
+  background:
+    var(--pp-slider-stop-start, radial-gradient(circle at calc(var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    linear-gradient(to right,
+      var(--pp-slider-inactive) 0,
+      var(--pp-slider-inactive) calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) + 8px),
+      var(--pp-slider-active) calc(var(--pp-h) + 8px),
+      var(--pp-slider-active) 100%);
 }
 
-/*
- * One of two overlapping native inputs faking a range slider (see
- * `PhoenixPaper.Slider`'s moduledoc) — makes both the track and the fill
- * fully transparent, since the visible "between the two thumbs" segment
- * is a separate sibling `<div>` instead. The thumb itself is unaffected
- * (it reads `--pp-slider-color` directly, not through either of these).
- */
-@utility pp-slider-range-input {
-  --pp-slider-track-color: transparent;
-  --pp-slider-fill-color: transparent;
+/* Centered (Expressive): active between the center and the handle.
+   min()/max() pick which side of the center the handle is on; a stop
+   that would go backwards is clamped by CSS to the previous one, which is
+   what collapses the unused segment. */
+@utility pp-slider-track-centered {
+  background:
+    var(--pp-slider-stop-start, radial-gradient(circle at calc(var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    var(--pp-slider-stop-end, radial-gradient(circle at calc(100% - var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    linear-gradient(to right,
+      var(--pp-slider-inactive) 0,
+      var(--pp-slider-inactive) min(50%, calc(var(--pp-h) - 8px)),
+      var(--pp-slider-active) min(50%, calc(var(--pp-h) - 8px)),
+      var(--pp-slider-active) calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) + 8px),
+      var(--pp-slider-active) calc(var(--pp-h) + 8px),
+      var(--pp-slider-active) max(50%, calc(var(--pp-h) + 8px)),
+      var(--pp-slider-inactive) max(50%, calc(var(--pp-h) + 8px)),
+      var(--pp-slider-inactive) 100%);
+}
+
+/* None: no active segment, just the gap around the handle. */
+@utility pp-slider-track-none {
+  background:
+    linear-gradient(to right,
+      var(--pp-slider-inactive) 0,
+      var(--pp-slider-inactive) calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) - 8px),
+      transparent calc(var(--pp-h) + 8px),
+      var(--pp-slider-inactive) calc(var(--pp-h) + 8px),
+      var(--pp-slider-inactive) 100%);
+}
+
+/* Range: inactive, gap, active between the handles, gap, inactive. */
+@utility pp-slider-track-range {
+  background:
+    var(--pp-slider-stop-start, radial-gradient(circle at calc(var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    var(--pp-slider-stop-end, radial-gradient(circle at calc(100% - var(--pp-slider-track-size, 16px) / 2) 50%, var(--pp-slider-active) 2px, transparent 2.5px)),
+    linear-gradient(to right,
+      var(--pp-slider-inactive) 0,
+      var(--pp-slider-inactive) calc(var(--pp-lo) - 8px),
+      transparent calc(var(--pp-lo) - 8px),
+      transparent calc(var(--pp-lo) + 8px),
+      var(--pp-slider-active) calc(var(--pp-lo) + 8px),
+      var(--pp-slider-active) calc(var(--pp-hi) - 8px),
+      transparent calc(var(--pp-hi) - 8px),
+      transparent calc(var(--pp-hi) + 8px),
+      var(--pp-slider-inactive) calc(var(--pp-hi) + 8px),
+      var(--pp-slider-inactive) 100%);
+}
+
+@utility pp-slider-no-stop {
+  --pp-slider-stop-end: linear-gradient(transparent, transparent);
+  --pp-slider-stop-start: linear-gradient(transparent, transparent);
+}
+
+/* Vertical (single sliders): the input runs bottom-to-top and the track
+   gradient follows it. A complete utility, used instead of
+   `pp-slider-input`, not alongside it. */
+@utility pp-slider-input-vertical {
+  -webkit-appearance: none;
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -moz-orient: vertical;
+  width: var(--pp-slider-handle, 44px);
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    width: var(--pp-slider-handle, 44px);
+    background: transparent;
+  }
+
+  &::-moz-range-track {
+    width: var(--pp-slider-handle, 44px);
+    background: transparent;
+  }
+
+  &::-moz-range-progress {
+    background: transparent;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--pp-slider-handle, 44px);
+    height: 4px;
+    border-radius: 2px;
+    background: var(--pp-slider-active, var(--color-pp-primary));
+    transition: height var(--pp-spring-spatial-fast-duration) var(--pp-spring-spatial-fast);
+  }
+
+  &::-moz-range-thumb {
+    width: var(--pp-slider-handle, 44px);
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+    background: var(--pp-slider-active, var(--color-pp-primary));
+  }
+
+  &:active::-webkit-slider-thumb {
+    height: 2px;
+  }
+
+  &:active::-moz-range-thumb {
+    height: 2px;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::-webkit-slider-thumb {
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
+  }
+
+  &:focus-visible::-moz-range-thumb {
+    outline: 3px solid var(--color-pp-secondary);
+    outline-offset: 2px;
+  }
+}
+
+@utility pp-slider-track-vertical {
+  --pp-v: calc(2px + (100% - 4px) * var(--pp-slider-f, 0.5));
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: var(--pp-slider-track-size, 16px);
+  border-radius: var(--pp-slider-radius, 8px);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% calc(var(--pp-slider-track-size, 16px) / 2), var(--pp-slider-active) 2px, transparent 2.5px),
+    linear-gradient(to top,
+      var(--pp-slider-active) 0,
+      var(--pp-slider-active) calc(var(--pp-v) - 8px),
+      transparent calc(var(--pp-v) - 8px),
+      transparent calc(var(--pp-v) + 8px),
+      var(--pp-slider-inactive) calc(var(--pp-v) + 8px),
+      var(--pp-slider-inactive) 100%);
+}
+
+/* ------------------------------------------------------------------------
+ * Carousel (M3 Expressive) — `PhoenixPaper.Carousel`.
+ *
+ * Items keep their layout size; what changes is their *mask*: an item
+ * entering the scroller's edge is clipped narrow and opens to its full
+ * width as it moves in, then narrows again on the way out — the
+ * Expressive "items change size as they scroll" look, without the layout
+ * thrash of animating real widths. Driven by a view() scroll timeline
+ * where supported (Chromium, Safari 26); elsewhere items are simply
+ * unmasked, and the optional JS hook applies the same clip on scroll.
+ * --------------------------------------------------------------------- */
+
+@utility pp-carousel-mask {
+  @supports (animation-timeline: view()) {
+    animation: pp-carousel-mask linear both;
+    animation-timeline: view(inline);
+  }
+}
+
+@keyframes pp-carousel-mask {
+  0% {
+    clip-path: inset(0 0 0 72% round var(--radius-pp-xl));
+  }
+  28%,
+  72% {
+    clip-path: inset(0 0 0 0 round var(--radius-pp-xl));
+  }
+  100% {
+    clip-path: inset(0 72% 0 0 round var(--radius-pp-xl));
+  }
+}
+
+/* ------------------------------------------------------------------------
+ * Edge flipping — set by the optional JS hook (`data-pp-flip="y"`, `"x"`
+ * or `"y x"`) on menus, submenus and tooltips that would overflow the
+ * viewport. Deliberately *unlayered* CSS: Tailwind's utilities live in
+ * `@layer utilities`, and unlayered rules beat layered ones whatever
+ * their specificity, so these override the placement utilities
+ * (`top-full`, `start-0`, `bottom-full`, ...) without `!important`. Each
+ * rule keys off the placement class it reverses.
+ * --------------------------------------------------------------------- */
+
+[data-pp-component="menu-panel"][data-pp-flip~="y"].top-full {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="y"].bottom-full {
+  bottom: auto;
+  top: 100%;
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="y"].-top-1 {
+  top: auto;
+  bottom: -0.25rem;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="x"].start-0 {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="x"].end-0 {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="x"].start-full {
+  inset-inline-start: auto;
+  inset-inline-end: 100%;
+}
+
+[data-pp-component="menu-panel"][data-pp-flip~="x"].end-full {
+  inset-inline-end: auto;
+  inset-inline-start: 100%;
+}
+
+[data-pp-component="tooltip-bubble"][data-pp-flip~="y"].bottom-full {
+  bottom: auto;
+  top: 100%;
+  padding-bottom: 0;
+  padding-top: 0.25rem;
+}
+
+[data-pp-component="tooltip-bubble"][data-pp-flip~="y"].top-full {
+  top: auto;
+  bottom: 100%;
+  padding-top: 0;
+  padding-bottom: 0.25rem;
+}
+
+[data-pp-component="tooltip-bubble"][data-pp-flip~="x"].right-full {
+  right: auto;
+  left: 100%;
+  padding-inline-end: 0;
+  padding-inline-start: 0.25rem;
+}
+
+[data-pp-component="tooltip-bubble"][data-pp-flip~="x"].left-full {
+  left: auto;
+  right: 100%;
+  padding-inline-start: 0;
+  padding-inline-end: 0.25rem;
 }

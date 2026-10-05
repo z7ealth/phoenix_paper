@@ -9,8 +9,9 @@ defmodule PhoenixPaper.ThemeToggle do
 
   ## `variant="segmented"` (default): System / Light / Dark
 
-  Three icon buttons (monitor, sun, moon) with a sliding white indicator
-  under the selected one — the same control Phoenix 1.8's generated root
+  Three icon buttons (monitor, sun, moon) in an `outline-variant` pill,
+  with a sliding `secondary-container` indicator under the selected one
+  (MD3's selected-segment color, moving on the Expressive spatial spring) — the same control Phoenix 1.8's generated root
   layout ships. **System is the default**: it *removes* `data-theme`, so
   `phoenix_paper.css`'s `prefers-color-scheme` fallback follows the OS
   (and follows it live when the OS switches). Light and Dark set
@@ -139,7 +140,7 @@ defmodule PhoenixPaper.ThemeToggle do
 
   ## Multiple instances stay in sync — scoped by `target`
 
-  A page can have more than one `pp_theme_toggle` (e.g. one in an `AppBar`
+  A page can have more than one `pp_theme_toggle` (e.g. one in an `TopAppBar`
   and another in a dedicated settings section) and clicking either one keeps
   them all visually in sync: alongside setting `data-theme`, the `onclick`
   also runs `document.querySelectorAll` for every
@@ -167,20 +168,12 @@ defmodule PhoenixPaper.ThemeToggle do
   thumb's own children (`Switch` has no attr for that, and doesn't need
   one for its own use cases).
 
-  Deliberately **not** colored with any `pp-*` brand token (`Switch`'s own
-  thumb/track go `pp-primary` when checked) — a theme toggle's single most
-  common home is an `AppBar`/header, which is itself very often colored
-  `pp-primary` by default. A `bg-pp-primary` thumb sitting on a
-  `bg-pp-primary` app bar is the exact "same color layered on itself"
-  invisibility bug already documented for `Drawer`'s colored variants and
-  for buttons dropped into a colored `AppBar` (see AGENTS.md) — rather than
-  fix that per-placement with a `class` override (`Switch`'s architecture
-  doesn't expose its internal track/thumb for one anyway), this component
-  just never uses a background color that could plausibly match its own
-  container: the thumb is fixed white, the track a neutral translucent
-  gray, and the sun/moon icon color is what actually carries the on/off
-  state — all three read clearly against light backgrounds, dark
-  backgrounds, and colored chrome alike.
+  The switch keeps a neutral look (white thumb, translucent gray track,
+  the sun/moon icon carrying the state) so it reads on any surface,
+  including a vibrant `PhoenixPaper.Toolbar`. The segmented variant uses
+  MD3 roles: MD3 top app bars are surface-colored, so a
+  `secondary-container` indicator can't vanish into its container the way
+  0.3's primary app bars allowed.
   """
   use Phoenix.Component
 
@@ -337,27 +330,27 @@ defmodule PhoenixPaper.ThemeToggle do
   defp persist_js(_target, _value_js), do: ""
 
   defp segmented_track_classes do
-    "relative inline-flex shrink-0 items-center rounded-full bg-gray-500/25 p-0.5"
+    "relative inline-flex shrink-0 items-center rounded-pp-full border border-pp-outline-variant p-0.5"
   end
 
   # The indicator's position is keyed off the nearest ancestor's
   # data-theme (no data-theme at all → System, the default position).
   defp indicator_classes do
-    "pointer-events-none absolute left-0.5 top-0.5 size-7 rounded-full bg-white shadow transition-transform duration-200 [[data-theme=light]_&]:translate-x-7 [[data-theme=dark]_&]:translate-x-14"
+    "pointer-events-none absolute start-0.5 top-0.5 size-8 rounded-pp-full bg-pp-secondary-container pp-motion-spatial-default [[data-theme=light]_&]:translate-x-8 [[data-theme=dark]_&]:translate-x-16"
   end
 
-  # The selected icon sits on the white indicator, so it switches to a
-  # fixed dark color; the others keep the surrounding text color, dimmed.
+  # The selected icon sits on the secondary-container indicator, so it
+  # takes on-secondary-container; the others are on-surface-variant.
   defp segment_classes("system") do
-    "relative z-10 flex size-7 cursor-pointer items-center justify-center rounded-full text-slate-700 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-current [[data-theme=light]_&]:text-inherit [[data-theme=light]_&]:opacity-70 [[data-theme=dark]_&]:text-inherit [[data-theme=dark]_&]:opacity-70"
+    "relative z-10 flex size-8 cursor-pointer items-center justify-center rounded-pp-full text-pp-on-secondary-container pp-focus-ring pp-motion-effects-fast [[data-theme=light]_&]:text-pp-on-surface-variant [[data-theme=dark]_&]:text-pp-on-surface-variant"
   end
 
   defp segment_classes("light") do
-    "relative z-10 flex size-7 cursor-pointer items-center justify-center rounded-full opacity-70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-current [[data-theme=light]_&]:text-slate-700 [[data-theme=light]_&]:opacity-100"
+    "relative z-10 flex size-8 cursor-pointer items-center justify-center rounded-pp-full text-pp-on-surface-variant pp-focus-ring pp-motion-effects-fast [[data-theme=light]_&]:text-pp-on-secondary-container"
   end
 
   defp segment_classes("dark") do
-    "relative z-10 flex size-7 cursor-pointer items-center justify-center rounded-full opacity-70 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-current [[data-theme=dark]_&]:text-slate-700 [[data-theme=dark]_&]:opacity-100"
+    "relative z-10 flex size-8 cursor-pointer items-center justify-center rounded-pp-full text-pp-on-surface-variant pp-focus-ring pp-motion-effects-fast [[data-theme=dark]_&]:text-pp-on-secondary-container"
   end
 
   defp onclick_script(ripple?, target) do

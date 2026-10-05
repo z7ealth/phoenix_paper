@@ -55,9 +55,9 @@ defmodule PhoenixPaper.CardTest do
       [link] = Regex.run(~r/<a[^>]*data-pp-card-action-area[^>]*>/, html)
       assert link =~ ~s(href="/components")
       assert link =~ "data-phx-link"
-      assert link =~ "hover:after:bg-pp-on-surface/5"
-      assert link =~ "focus-visible:after:outline-pp-primary"
-      assert link =~ "p-6"
+      assert link =~ "hover:after:bg-current/8"
+      assert link =~ "focus-visible:after:outline-pp-secondary"
+      assert html =~ ~s(class="p-6")
       assert link =~ "onclick="
       assert html =~ "overflow-hidden"
     end

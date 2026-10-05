@@ -87,7 +87,7 @@ defmodule PhoenixPaper.ThemeToggleTest do
 
   test "the thumb icons use Icon's size attr, so only one size class renders" do
     html = render_component(&basic/1)
-    assert html =~ "size-3 hero-sun-mini"
+    assert html =~ "size-4 hero-sun-mini"
     refute html =~ "size-5 hero-sun-mini"
   end
 
@@ -185,8 +185,8 @@ defmodule PhoenixPaper.ThemeToggleTest do
     test "the selected state is pure CSS keyed off the ancestor data-theme, System when none" do
       html = render_component(&segmented/1)
 
-      assert html =~ "[[data-theme=light]_&amp;]:translate-x-7"
-      assert html =~ "[[data-theme=dark]_&amp;]:translate-x-14"
+      assert html =~ "[[data-theme=light]_&amp;]:translate-x-8"
+      assert html =~ "[[data-theme=dark]_&amp;]:translate-x-16"
       refute html =~ "<script>"
     end
 
