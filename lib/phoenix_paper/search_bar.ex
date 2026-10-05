@@ -5,7 +5,7 @@ defmodule PhoenixPaper.SearchBar do
 
       <form phx-change="search" phx-submit="search">
         <.pp_search_bar name="q" value={@q} placeholder="Search mail" phx-debounce="300">
-          <:trailing><.pp_avatar src={@current_user.avatar} size="small" /></:trailing>
+          <:trailing><.pp_icon_button icon="hero-user-circle" label="Account" /></:trailing>
           <:results>
             <.pp_list>
               <.pp_list_item :for={hit <- @hits} navigate={hit.path}>{hit.title}</.pp_list_item>

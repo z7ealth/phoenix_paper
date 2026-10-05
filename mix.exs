@@ -1,7 +1,7 @@
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
-  @version "0.4.0"
+  @version "0.5.0"
   @source_url "https://github.com/z7ealth/phoenix_paper"
   @description "Material Design 3 (including M3 Expressive) components for Phoenix and LiveView, styled with Tailwind CSS."
 
@@ -45,7 +45,7 @@ defmodule PhoenixPaper.MixProject do
       # consuming app that doesn't happen to pull `jason` in some other way.
       {:jason, "~> 1.4"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
-      # `Phoenix.LiveViewTest.live_isolated/3` (PowerSelect's event tests)
+      # `Phoenix.LiveViewTest.live_isolated/3` (the date/time picker event tests)
       # needs it to parse rendered HTML. Test-only: not shipped to consumers.
       {:lazy_html, ">= 0.1.0", only: :test}
     ]

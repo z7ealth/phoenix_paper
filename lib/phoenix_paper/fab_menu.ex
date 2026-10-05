@@ -23,7 +23,7 @@ defmodule PhoenixPaper.FabMenu do
 
   ## How it works
 
-  CSS only, like `NavigationRail`/`Accordion`: a visually hidden checkbox is
+  CSS only, like `NavigationRail`: a visually hidden checkbox is
   the open state, the FAB is its `<label>`, and everything that changes
   when open reacts with `peer-checked:`. Click-away is a transparent
   full-screen `<label>` for the same checkbox, rendered only while open,

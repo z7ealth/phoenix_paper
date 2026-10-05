@@ -49,7 +49,7 @@ defmodule PhoenixPaper.Helpers do
   own doc: colors/elevation/shape/typography); it's the structural
   arrangement of the label itself, and there's no other `class` attr on
   that specific label for a caller to rebuild it with — same reasoning as
-  `TopAppBar`'s inner row `<div>` and `Breadcrumbs`'s `<li>`s (see
+  `TopAppBar`'s inner row `<div>` (see
   AGENTS.md, "The `paperize` contract"). Dropping it doesn't give
   `paperize={false}` a cleaner slate, it just breaks the box-plus-text
   layout with no way back — found from a real screenshot of `Checkbox`'s
@@ -82,31 +82,26 @@ defmodule PhoenixPaper.Helpers do
   end
 
   @doc """
-  The `phx-hook` value for components the optional PhoenixPaper JS hook can
-  enhance (true springs, tab indicator sliding, scroll-aware app bars,
-  slider value labels, sheet dragging, carousel morphing, loading-indicator
-  shape morphing) — `"PhoenixPaper"` when the app opted in with
+  The `phx-hook` value for components the PhoenixPaper JS hook enhances
+  (tab indicator sliding, scroll-aware app bars, sheet dragging, carousel
+  masking, loading-indicator morphing, time-picker dial dragging, edge
+  flipping for menus and tooltips): `"PhoenixPaper"`, or `nil` when there's
+  no DOM `id` (a LiveView hook requirement), in which case the element
+  keeps its CSS-only behavior.
 
-      config :phoenix_paper, hook: true
-
-  and `nil` otherwise, so HEEx drops the attribute and LiveView never logs
-  an "unknown hook" error in apps that don't register it. Read at render
-  time (not `compile_env`), so toggling it needs no dependency recompile.
-
-  Every component that sets it also needs a DOM `id` (a LiveView hook
-  requirement); components pass `nil` when they don't have one, so the
-  element just keeps its CSS-only behavior. See `priv/static/phoenix_paper.js`.
+  The hook is part of PhoenixPaper's setup: register it in your
+  LiveSocket (see the README). Every hooked component still renders and
+  works without it running — on controller-rendered pages, and before
+  LiveView connects — just without those enhancements.
   """
   @spec hook(String.t() | nil) :: String.t() | nil
-  def hook(id \\ "") do
-    if id && Application.get_env(:phoenix_paper, :hook, false), do: "PhoenixPaper"
-  end
+  def hook(id \\ ""), do: if(id, do: "PhoenixPaper")
 
   @doc """
   Interpolates a `Phoenix.HTML.FormField` error tuple's `%{key}` placeholders
   (e.g. `{"must be %{count} characters", [count: 3]}`), without depending on
-  Gettext. Shared by every form component (`Input`, `Select`,
-  `NumberField`, ...) that accepts `field=` and renders `field.errors`.
+  Gettext. Shared by every form component (`TextField`, `Select`,
+  `Checkbox`, ...) that accepts `field=` and renders `field.errors`.
 
   Only the placeholders the message actually contains are filled in; every
   other option is ignored. Ecto puts non-text metadata in the same keyword

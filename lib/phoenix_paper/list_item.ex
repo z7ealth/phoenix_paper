@@ -32,9 +32,6 @@ defmodule PhoenixPaper.ListItem do
       <.pp_list_item href="https://hexdocs.pm" target="_blank" rel="noopener">
         Docs
       </.pp_list_item>
-
-  `dense` shrinks the row to 48dp for long lists; `PhoenixPaper.List`'s own `dense` does the same for
-  every item inside it at once.
   """
   use Phoenix.Component
 
@@ -52,7 +49,6 @@ defmodule PhoenixPaper.ListItem do
   )
 
   attr(:disabled, :boolean, default: false)
-  attr(:dense, :boolean, default: false, doc: "compact row: less vertical padding")
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
 
@@ -87,7 +83,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true, @dense), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true), @class)}
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
@@ -99,7 +95,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false, @dense), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false), @class)}
       {@rest}
     >
       {item_content(assigns)}
@@ -136,21 +132,17 @@ defmodule PhoenixPaper.ListItem do
     """
   end
 
-  defp item_classes(active, disabled, ripple, linked, dense) do
+  # MD3 one-line items are 56dp, two-line 72dp (the secondary line makes
+  # the content taller; min-h covers the one-line case).
+  defp item_classes(active, disabled, ripple, linked) do
     [
-      "relative flex items-center gap-4 overflow-hidden px-4 pp-motion-effects-fast",
-      density_classes(dense),
+      "relative flex min-h-14 items-center gap-4 overflow-hidden px-4 py-2 pp-motion-effects-fast",
       linked && "cursor-pointer pp-state-layer pp-focus-ring",
       state_classes(active),
       disabled && "pointer-events-none opacity-38",
       Ripple.container_classes(ripple)
     ]
   end
-
-  # MD3 one-line items are 56dp, two-line 72dp (the secondary line makes
-  # the content taller; min-h covers the one-line case).
-  defp density_classes(true), do: "min-h-12 py-1"
-  defp density_classes(false), do: "min-h-14 py-2"
 
   defp state_classes(true), do: "bg-pp-secondary-container text-pp-on-secondary-container"
   defp state_classes(false), do: "text-pp-on-surface"

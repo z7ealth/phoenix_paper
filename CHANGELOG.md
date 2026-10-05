@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-05
+
+PhoenixPaper is now **MD3 only**: every component is one the
+[MD3 spec](https://m3.material.io/components) defines, with MD3's own
+options. The components and attrs that came from other libraries (MUI's
+API, ember-paper's heritage) are gone, along with the PhoenixPaper-only
+color roles. What MD3 doesn't define — layout, tables, pagination,
+breadcrumbs, accordions, alerts, skeletons — is left to your own
+Tailwind, using the same `pp-*` tokens.
+
+### Removed
+
+Components MD3 doesn't define:
+
+| Removed | Instead |
+|---------|---------|
+| `Box`, `Container`, `Stack`, `Grid`, `GridItem` | Tailwind layout classes (`flex`, `grid`, `gap-*`, `max-w-*`) |
+| `Paper` | `Card` (MD3's container), or `bg-pp-surface-container-*` + `rounded-pp-*` |
+| `Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`, `TablePagination` | a plain `<table>` styled with the `pp-*` tokens |
+| `Pagination`, `Breadcrumbs` | your own links/buttons (`pp_button`, `pp_icon_button`) |
+| `Accordion`, `AccordionSummary`, `AccordionDetails`, `AccordionActions`, `Collapse`, `List`'s `pp_list_group` | a native `<details>`/`<summary>`, or `pp_list_item`s you show/hide |
+| `Alert` | `pp_snackbar`, `pp_dialog`, or your own banner |
+| `Skeleton` | `pp_progress`/`pp_loading_indicator` |
+| `Avatar` | an `<img class="size-10 rounded-pp-full">` (e.g. in a list item's `:leading`) |
+| `Backdrop` | the scrim built into `pp_dialog` and the sheets |
+| `ImageList`, `ImageListItem` | `pp_carousel`, or a Tailwind grid |
+| `Rating`, `NumberField`, `TransferList` | `pp_radio_group`, `pp_text_field type="number"`, `pp_checkbox` lists |
+| `Autocomplete`, `PowerSelect` | `pp_search_bar` with `:results`, or `pp_select` |
+| `Form` (`pp_form`) | Phoenix's own `<.form>` (every input still takes `field=`) |
+| `ListSubheader` | `pp_typography variant="title-small"` |
+| `Spacing` (helper) | Tailwind's spacing scale |
+
+Attrs and options MD3 doesn't have:
+
+| Component | Removed | Now |
+|-----------|---------|-----|
+| `Badge` | `variant`, `color`, `overlap`, `anchor_origin`, `show_zero` | no `content` = MD3's small badge, `content` = large badge; always `error`; a count of `0` hides it; `max` defaults to `999` |
+| `Card` | `padding`, `shape` | MD3's fixed 12dp corners and 16dp padding |
+| `Dialog` | `max_width` | MD3's 280–560dp |
+| `Snackbar` | `anchor_origin`, `transition`, the countdown bar | bottom center (bottom-start from `sm`), MD3's one entrance animation |
+| `Flash` | `anchor_origin`, `transition`, leading icons | follows `Snackbar`; messages are text-only |
+| `TopAppBar` | `max_width`, `disable_gutters` | — |
+| `TextField` | `size="small"`, `hide_label` | MD3's 56dp field, always labelled |
+| `Select` | `hide_label` | always labelled |
+| `List` | `dense`, `nested`, `inset` | — |
+| `ListItem` | `dense` | — |
+| `ThemeToggle` | `variant="switch"`, `variant`, `default_checked` | the System / Light / Dark segmented control only |
+
+Color roles: `success`, `warning` and `info` (with their `on-*` and
+`*-container` pairs) are gone from `phoenix_paper.css`, and
+`mix phoenix_paper.gen.theme` no longer generates them (`--no-status` is
+gone with them). If you used them, define them in your own CSS.
+
+### Changed
+
+- **The PhoenixPaper LiveView hook is no longer optional.** Hooked
+  components (tabs, top app bars, menus and split-button menus, tooltips,
+  bottom sheets, carousels, loading indicators, the time picker) now
+  render `phx-hook="PhoenixPaper"` whenever they have an `id`, and
+  `config :phoenix_paper, hook: true` is gone (a leftover setting is
+  ignored; delete it). Register the hook in your LiveSocket, or LiveView
+  logs an "unknown hook" error for these components:
+
+  ```js
+  import PhoenixPaperHooks from "phoenix_paper"
+  const liveSocket = new LiveSocket("/live", Socket, {hooks: {...PhoenixPaperHooks}, ...})
+  ```
+
+  The CSS behavior underneath is unchanged, so controller-rendered pages
+  and the first paint before LiveView connects look the same as before.
+
 ## [0.4.0] - 2026-10-05
 
 PhoenixPaper is now a **Material Design 3** library, including **M3

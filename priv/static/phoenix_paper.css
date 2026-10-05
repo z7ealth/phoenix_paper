@@ -81,22 +81,6 @@
   --color-pp-shadow: #000000;
   --color-pp-scrim: #000000;
 
-  /* Status colors — a PhoenixPaper extension (MD3 has no success/warning/
-     info roles), used by Alert, Flash and Badge. Same role shape as
-     `error`, so they read like native MD3 colors. */
-  --color-pp-success: #386a20;
-  --color-pp-on-success: #ffffff;
-  --color-pp-success-container: #b8f397;
-  --color-pp-on-success-container: #042100;
-  --color-pp-warning: #7c5800;
-  --color-pp-on-warning: #ffffff;
-  --color-pp-warning-container: #ffdea6;
-  --color-pp-on-warning-container: #271900;
-  --color-pp-info: #00639a;
-  --color-pp-on-info: #ffffff;
-  --color-pp-info-container: #cee5ff;
-  --color-pp-on-info-container: #001d32;
-
   /* Shape — MD3 corner scale, incl. the Expressive additions. */
   --radius-pp-none: 0px;
   --radius-pp-xs: 4px;
@@ -166,19 +150,6 @@
   --color-pp-inverse-on-surface: #322f35;
   --color-pp-inverse-primary: #6750a4;
 
-  --color-pp-success: #9dd67d;
-  --color-pp-on-success: #0c3900;
-  --color-pp-success-container: #205107;
-  --color-pp-on-success-container: #b8f397;
-  --color-pp-warning: #f5bd48;
-  --color-pp-on-warning: #422c00;
-  --color-pp-warning-container: #5e4200;
-  --color-pp-on-warning-container: #ffdea6;
-  --color-pp-info: #96ccff;
-  --color-pp-on-info: #003353;
-  --color-pp-info-container: #004a75;
-  --color-pp-on-info-container: #cee5ff;
-
   color-scheme: dark;
 }
 
@@ -223,19 +194,6 @@
     --color-pp-inverse-on-surface: #322f35;
     --color-pp-inverse-primary: #6750a4;
 
-    --color-pp-success: #9dd67d;
-    --color-pp-on-success: #0c3900;
-    --color-pp-success-container: #205107;
-    --color-pp-on-success-container: #b8f397;
-    --color-pp-warning: #f5bd48;
-    --color-pp-on-warning: #422c00;
-    --color-pp-warning-container: #5e4200;
-    --color-pp-on-warning-container: #ffdea6;
-    --color-pp-info: #96ccff;
-    --color-pp-on-info: #003353;
-    --color-pp-info-container: #004a75;
-    --color-pp-on-info-container: #cee5ff;
-
     color-scheme: dark;
   }
 }
@@ -250,7 +208,7 @@
  * never do.
  *
  * `data-pp-motion="standard"` on any ancestor switches to the calmer
- * standard scheme (no overshoot). The optional JS hook (see
+ * standard scheme (no overshoot). The PhoenixPaper JS hook (see
  * `priv/static/phoenix_paper.js`) reads these same tokens for the motion
  * it drives (sliding tab indicator, sheet drag release).
  */
@@ -789,7 +747,7 @@
  * Top app bar — the MD3 "scrolled under" color change, CSS only where the
  * browser supports scroll-driven animations: the background animates from
  * `surface` to `surface-container` over the first 8px of the nearest
- * scroll container's scroll. Elsewhere (Firefox), the optional JS hook
+ * scroll container's scroll. Elsewhere (Firefox), the PhoenixPaper JS hook
  * sets `data-pp-scrolled` instead, which `PhoenixPaper.TopAppBar` styles.
  * --------------------------------------------------------------------- */
 
@@ -864,99 +822,38 @@
 }
 
 /* ------------------------------------------------------------------------
- * Snackbar — `PhoenixPaper.Snackbar`'s `transition`: a one-shot animation
- * that plays when the element mounts (there's no exit transition; see the
- * module doc). `slide`'s direction depends on which edge `anchor_origin`
- * anchors to, hence two utilities. MD3 emphasized-decelerate easing.
+ * Snackbar — MD3's entrance (fade in while expanding vertically), a
+ * one-shot animation that plays when the element mounts. There's no exit
+ * animation; see `PhoenixPaper.Snackbar`.
  * --------------------------------------------------------------------- */
 
-@utility pp-snackbar-fade {
-  animation: pp-snackbar-fade 250ms var(--ease-pp-emphasized-decelerate);
+@utility pp-snackbar-enter {
+  transform-origin: bottom;
+  animation: pp-snackbar-enter 300ms var(--ease-pp-emphasized-decelerate);
 }
 
-@keyframes pp-snackbar-fade {
+@keyframes pp-snackbar-enter {
   from {
     opacity: 0;
-  }
-}
-
-@utility pp-snackbar-grow {
-  animation: pp-snackbar-grow 300ms var(--ease-pp-emphasized-decelerate);
-}
-
-@keyframes pp-snackbar-grow {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-}
-
-@utility pp-snackbar-slide-up {
-  animation: pp-snackbar-slide-up 300ms var(--ease-pp-emphasized-decelerate);
-}
-
-@keyframes pp-snackbar-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-}
-
-@utility pp-snackbar-slide-down {
-  animation: pp-snackbar-slide-down 300ms var(--ease-pp-emphasized-decelerate);
-}
-
-@keyframes pp-snackbar-slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
+    transform: scaleY(0.8);
   }
 }
 
 /*
- * `auto_hide_duration` — doubles as the timer *and* a visible countdown
- * bar. It runs on a tiny standalone `<span>` inside the snackbar (never
- * the root, so it can't clash with the root's entrance animation), and its
- * `animationend` clicks the close button. The animated property is what
- * the user sees, so there's only one timer.
+ * `auto_hide_duration`'s timer: a no-op animation on a zero-size `<span>`
+ * inside the snackbar (never the root, so it can't clash with the
+ * entrance), whose `animationend` clicks the close button.
  */
 @utility pp-snackbar-timeout {
-  transform-origin: left;
   animation: pp-snackbar-timeout var(--pp-snackbar-timeout, 5000ms) linear forwards;
 }
 
 @keyframes pp-snackbar-timeout {
   from {
-    transform: scaleX(1);
+    opacity: 1;
   }
   to {
-    transform: scaleX(0);
-  }
-}
-
-/* ------------------------------------------------------------------------
- * Skeleton — `animation="wave"`'s shimmer (pulse is Tailwind's own).
- * --------------------------------------------------------------------- */
-
-@utility pp-skeleton-wave {
-  position: relative;
-  overflow: hidden;
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-pp-surface) 50%, transparent), transparent);
-    animation: pp-skeleton-wave 1.6s linear infinite;
-  }
-}
-
-@keyframes pp-skeleton-wave {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
+    opacity: 1;
   }
 }
 
@@ -1100,7 +997,7 @@
  * is the same 72-point polygon sampled from a polar function, so CSS can
  * interpolate `d` between them; every morph step runs on the Expressive
  * fast spatial spring. Browsers without CSS `d` animation (Safari) keep
- * the first shape and still rotate; the optional JS hook morphs there too.
+ * the first shape and still rotate; the PhoenixPaper JS hook morphs there too.
  * --------------------------------------------------------------------- */
 
 @utility pp-loading-morph {
@@ -1445,7 +1342,7 @@
  * Expressive "items change size as they scroll" look, without the layout
  * thrash of animating real widths. Driven by a view() scroll timeline
  * where supported (Chromium, Safari 26); elsewhere items are simply
- * unmasked, and the optional JS hook applies the same clip on scroll.
+ * unmasked, and the PhoenixPaper JS hook applies the same clip on scroll.
  * --------------------------------------------------------------------- */
 
 @utility pp-carousel-mask {
@@ -1469,7 +1366,7 @@
 }
 
 /* ------------------------------------------------------------------------
- * Edge flipping — set by the optional JS hook (`data-pp-flip="y"`, `"x"`
+ * Edge flipping — set by the PhoenixPaper JS hook (`data-pp-flip="y"`, `"x"`
  * or `"y x"`) on menus, submenus and tooltips that would overflow the
  * viewport. Deliberately *unlayered* CSS: Tailwind's utilities live in
  * `@layer utilities`, and unlayered rules beat layered ones whatever

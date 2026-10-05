@@ -11,11 +11,14 @@
 A [Material Design 3](https://m3.material.io/) component library for
 Phoenix — including **M3 Expressive** (springs, shape morphing, the new
 button sizes, button groups, FAB menu, loading indicator, toolbars,
-navigation rail) — styled with Tailwind CSS. It started in the spirit of
-[ember-paper](https://github.com/miguelcobain/ember-paper); since 0.4.0 it
-follows the MD3 spec, with MUI-style APIs where MD3 doesn't specify a
-component (tables, pagination, autocomplete), adapted to Phoenix's
-server-rendered, stateless-function-component model.
+navigation rail) — styled with Tailwind CSS.
+
+MD3 is the only source: every component is one the
+[MD3 spec](https://m3.material.io/components) defines, built to that
+spec, adapted to Phoenix's server-rendered, stateless-function-component
+model. Things MD3 doesn't define (layout grids, tables, pagination,
+breadcrumbs, ...) are left to your own Tailwind, using the same MD3
+tokens.
 
 See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 `paperize` escape hatch every component supports, the MD3 token layer
@@ -30,7 +33,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.4.0`) and please
+> (e.g. `~> 0.5.0`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -40,7 +43,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.4.0"}
+    {:phoenix_paper, "~> 0.5.0"}
   ]
 end
 ```
@@ -65,6 +68,21 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 ```
 
 The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's no separate `@source` line to add.
+
+Register the PhoenixPaper LiveView hook in `assets/js/app.js` (Phoenix's
+esbuild resolves `deps/` packages by name):
+
+```js
+import PhoenixPaperHooks from "phoenix_paper"
+const liveSocket = new LiveSocket("/live", Socket, {hooks: {...PhoenixPaperHooks}, ...})
+```
+
+It adds what CSS can't do everywhere: the sliding tab indicator,
+drag-to-dismiss bottom sheets, time-picker dial dragging, menus and
+tooltips flipping at the viewport edge, the scrolled top app bar and
+carousel masking in Firefox, and the loading indicator's morph in Safari.
+Components still render and work before LiveView connects and on
+controller-rendered pages, just without those behaviors.
 
 MD3's typeface is Roboto Flex. PhoenixPaper doesn't load fonts; add it to
 your root layout (or override `--font-pp-brand`/`--font-pp-plain`):
@@ -91,24 +109,6 @@ default, `neutral`, `vibrant`, `expressive`, `fidelity`, `monochrome`) and
 exported from
 [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/)
 works too: paste its roles as `--color-pp-*` overrides.
-
-### Optional: the JS hook
-
-Everything works without JavaScript beyond Phoenix's own. One optional
-LiveView hook adds what CSS can't do everywhere: the sliding tab
-indicator, drag-to-dismiss bottom sheets, the scrolled top app bar and
-carousel masking in Firefox, and the loading indicator's morph in Safari.
-
-```js
-// assets/js/app.js
-import PhoenixPaperHooks from "phoenix_paper"
-const liveSocket = new LiveSocket("/live", Socket, {hooks: {...PhoenixPaperHooks}, ...})
-```
-
-```elixir
-# config/config.exs
-config :phoenix_paper, hook: true
-```
 
 ## Usage
 
@@ -190,8 +190,8 @@ config :phoenix_paper, hook: true
   <.pp_tab id="media" value="videos">Videos</.pp_tab>
 </.pp_tabs>
 
-<%!-- Forms --%>
-<.pp_form for={@form} phx-change="validate" phx-submit="save">
+<%!-- Forms: every input takes field= --%>
+<.form for={@form} phx-change="validate" phx-submit="save" class="flex flex-col gap-4">
   <.pp_text_field field={@form[:email]} label="Email" supporting_text="We never share it" />
   <.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />
   <.live_component module={PhoenixPaper.DatePicker} id="due" field={@form[:due_on]} label="Due date" />
@@ -199,14 +199,15 @@ config :phoenix_paper, hook: true
   <.pp_checkbox field={@form[:accept]} label="I agree to the terms" />
   <.pp_switch field={@form[:notifications]} label="Notifications" icons />
   <.pp_slider field={@form[:volume]} label="Volume" value_indicator />
-  <:actions><.pp_button type="submit">Save</.pp_button></:actions>
-</.pp_form>
+  <.pp_button type="submit">Save</.pp_button>
+</.form>
 
 <.pp_search_bar name="q" placeholder="Search mail">
   <:results><.pp_list>...</.pp_list></:results>
 </.pp_search_bar>
 
-<%!-- Feedback --%>
+<%!-- Communication --%>
+<.pp_badge content={3}><.pp_icon name="hero-bell" /></.pp_badge>
 <.pp_progress value={60} />
 <.pp_progress wavy />
 <.pp_loading_indicator />
@@ -236,14 +237,11 @@ config :phoenix_paper, hook: true
 <.pp_toolbar variant="floating" color="vibrant">
   <.pp_icon_button icon="hero-bold" label="Bold" color="inherit" />
 </.pp_toolbar>
-
-<%!-- Tables, pagination, layout and the LiveComponents (Autocomplete,
-      PowerSelect, TransferList) are unchanged in shape; see their docs --%>
-<.pp_pagination page={@page} count={@total_pages} path={&~p"/users?page=#{&1}"} />
 ```
 
-Upgrading from 0.3? The [CHANGELOG](CHANGELOG.md) has the full
-migration table: every renamed component, attr and value.
+Upgrading? The [CHANGELOG](CHANGELOG.md) lists what each release
+removed or renamed: 0.5.0 drops every component MD3 doesn't define, and
+0.4.0 has the full 0.3 → MD3 migration table.
 
 Every component accepts `paperize={false}` to drop PhoenixPaper's classes
 entirely and render with only your own `class`; see `AGENTS.md` for the

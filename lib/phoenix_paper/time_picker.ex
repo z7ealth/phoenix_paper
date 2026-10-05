@@ -28,7 +28,7 @@ defmodule PhoenixPaper.TimePicker do
   inline numeric styles computed from the angle (not dynamic class names,
   see AGENTS.md "Tailwind class safety"), with MD3's selector circle at the
   hand's tip. Clicking a number picks it (minutes in steps of 5). With the
-  optional JS hook (see `PhoenixPaper.Helpers.hook/1`) you can also
+  PhoenixPaper JS hook (see `PhoenixPaper.Helpers.hook/1`) you can also
   **drag the hand**: the hook turns the pointer's angle (and, on a 24-hour
   dial, its distance from the center for the inner ring) into an hour or
   an exact minute and sends it to the component as you move; releasing on
@@ -40,7 +40,7 @@ defmodule PhoenixPaper.TimePicker do
   `value` (or `field=`) is a `Time`, an `"HH:MM"` string or `nil`. The
   time is submitted from a hidden input under `name` as 24-hour `HH:MM`,
   and each change dispatches an `input` event from it so the surrounding
-  form's `phx-change` runs (the `PhoenixPaper.PowerSelect` mechanism).
+  form's `phx-change` runs (the same mechanism as `PhoenixPaper.DatePicker`).
   `on_change` (a `Time | nil -> any` function) is called on every change.
 
   ## Attributes
@@ -182,7 +182,7 @@ defmodule PhoenixPaper.TimePicker do
      assign(socket, pending: %{socket.assigns.pending | hour: hour}, selecting: :minute)}
   end
 
-  # From the optional hook dragging the hand: any hour or any minute, and
+  # From the JS hook dragging the hand: any hour or any minute, and
   # on release (`done`) after an hour, move on to the minutes like a click.
   def handle_event("dial", %{"part" => "hour", "value" => hour} = params, socket) do
     hour = if is_binary(hour), do: String.to_integer(hour), else: hour

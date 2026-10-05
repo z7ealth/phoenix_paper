@@ -47,65 +47,18 @@ defmodule PhoenixPaper.SnackbarTest do
     """
   end
 
-  test "anchor_origin (default bottom-left) positions bottom-left" do
+  test "sits at the bottom: centered on compact screens, bottom-start from sm" do
     html = render_component(&snackbar/1)
 
-    assert html =~ "fixed"
-    assert html =~ "bottom-4"
-    assert html =~ "left-4"
+    assert html =~ "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:start-6 sm:bottom-6"
+    refute html =~ "top-4"
   end
 
-  test "anchor_origin=\"top-right\" positions top-right instead" do
-    html = render_component(&top_right/1)
-
-    assert html =~ "top-4"
-    assert html =~ "right-4"
-    refute html =~ "bottom-4"
+  test "enters with MD3's single entrance animation" do
+    assert render_component(&snackbar/1) =~ "pp-snackbar-enter"
   end
 
-  defp top_right(assigns) do
-    ~H"""
-    <.pp_snackbar anchor_origin="top-right">Changes saved</.pp_snackbar>
-    """
-  end
-
-  test "anchor_origin=\"bottom-center\" centers via a transform" do
-    html = render_component(&bottom_center/1)
-    assert html =~ "-translate-x-1/2"
-  end
-
-  defp bottom_center(assigns) do
-    ~H"""
-    <.pp_snackbar anchor_origin="bottom-center">Changes saved</.pp_snackbar>
-    """
-  end
-
-  test "transition (default: grow)" do
-    html = render_component(&snackbar/1)
-    assert html =~ "pp-snackbar-grow"
-  end
-
-  test "transition=\"slide\" picks the direction from anchor_origin's vertical edge" do
-    html = render_component(&slide_top/1)
-    assert html =~ "pp-snackbar-slide-down"
-
-    html = render_component(&slide_bottom/1)
-    assert html =~ "pp-snackbar-slide-up"
-  end
-
-  defp slide_top(assigns) do
-    ~H"""
-    <.pp_snackbar anchor_origin="top-left" transition="slide">Changes saved</.pp_snackbar>
-    """
-  end
-
-  defp slide_bottom(assigns) do
-    ~H"""
-    <.pp_snackbar anchor_origin="bottom-left" transition="slide">Changes saved</.pp_snackbar>
-    """
-  end
-
-  test "on_close renders a trailing ✕ button wired to the given JS" do
+  test "on_close renders the trailing close button wired to the given JS" do
     html = render_component(&closable/1)
 
     assert html =~ "data-pp-snackbar-close"
@@ -152,20 +105,6 @@ defmodule PhoenixPaper.SnackbarTest do
   defp unpositioned(assigns) do
     ~H"""
     <.pp_snackbar positioned={false}>Saved</.pp_snackbar>
-    """
-  end
-
-  test "transition=\"none\" has no animation class" do
-    html = render_component(&no_transition/1)
-
-    refute html =~ "pp-snackbar-fade"
-    refute html =~ "pp-snackbar-grow"
-    refute html =~ "pp-snackbar-slide"
-  end
-
-  defp no_transition(assigns) do
-    ~H"""
-    <.pp_snackbar transition="none">Changes saved</.pp_snackbar>
     """
   end
 

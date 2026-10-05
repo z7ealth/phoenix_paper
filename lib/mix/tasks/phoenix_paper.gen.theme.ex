@@ -18,7 +18,6 @@ defmodule Mix.Tasks.PhoenixPaper.Gen.Theme do
       `expressive`, `fidelity` or `monochrome`. See `PhoenixPaper.Theme`.
     * `--secondary`, `--tertiary`, `--neutral`, `--error` — pin a core
       color: its hue and chroma replace that palette's.
-    * `--no-status` — leave out the success/warning/info roles.
     * `--output` — the file to write (default
       `assets/css/phoenix_paper_theme.css`).
     * `--stdout` — print the CSS instead of writing a file.
@@ -33,7 +32,6 @@ defmodule Mix.Tasks.PhoenixPaper.Gen.Theme do
     tertiary: :string,
     neutral: :string,
     error: :string,
-    status: :boolean,
     output: :string,
     stdout: :boolean,
     force: :boolean
@@ -62,8 +60,7 @@ defmodule Mix.Tasks.PhoenixPaper.Gen.Theme do
         secondary: opts[:secondary],
         tertiary: opts[:tertiary],
         neutral: opts[:neutral],
-        error: opts[:error],
-        status: Keyword.get(opts, :status, true)
+        error: opts[:error]
       )
 
     if opts[:stdout] do

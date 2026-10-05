@@ -31,7 +31,7 @@ defmodule PhoenixPaper.Carousel do
 
   CSS: each item runs a `view()` scroll timeline animation of its
   `clip-path` (see `phoenix_paper.css`). Without scroll timelines
-  (Firefox today) items aren't masked; with the optional JS hook and an
+  (Firefox today) items aren't masked; with the PhoenixPaper JS hook and an
   `id`, the hook applies the same clip from a scroll listener.
   """
   use Phoenix.Component

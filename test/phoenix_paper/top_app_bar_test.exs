@@ -70,22 +70,13 @@ defmodule PhoenixPaper.TopAppBarTest do
     assert html =~ "sticky top-0 z-20"
   end
 
-  test "max_width caps the content; disable_gutters drops padding" do
+  test "phx-hook only when an id is given" do
     assigns = %{}
 
-    html =
-      rendered_to_string(~H"""
-      <.pp_top_app_bar max_width="lg" disable_gutters>A</.pp_top_app_bar>
-      """)
+    assert rendered_to_string(~H"<.pp_top_app_bar id='bar'>A</.pp_top_app_bar>") =~
+             ~s(phx-hook="PhoenixPaper")
 
-    assert html =~ "max-w-screen-lg"
-    assert html =~ "px-0"
-  end
-
-  test "no phx-hook unless the app opted in and an id is given" do
-    assigns = %{}
-    html = rendered_to_string(~H"<.pp_top_app_bar id='bar'>A</.pp_top_app_bar>")
-    refute html =~ "phx-hook"
+    refute rendered_to_string(~H"<.pp_top_app_bar>A</.pp_top_app_bar>") =~ "phx-hook"
   end
 
   test "paperize={false} keeps the row layout but drops the skin" do

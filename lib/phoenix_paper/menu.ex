@@ -69,7 +69,7 @@ defmodule PhoenixPaper.Menu do
 
   Positioning is plain CSS (`absolute` against the menu's `relative`
   wrapper): `anchor` (`bottom-start`/`bottom-end`/`top-start`/`top-end`)
-  is where it opens. With the optional JS hook (see
+  is where it opens. With the PhoenixPaper JS hook (see
   `PhoenixPaper.Helpers.hook/1`) the menu and its submenus **flip** to the
   other side when they'd overflow the viewport — the hook measures the
   panel as it opens and sets `data-pp-flip`, which `phoenix_paper.css`

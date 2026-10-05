@@ -26,8 +26,7 @@ defmodule PhoenixPaper.TextField do
     doesn't shift the layout). Hover adds the 8% state layer.
 
   Both are 56dp tall with `body-large` input text, the label resting in
-  `body-large` and floating up in `body-small`. `size="small"` is a
-  40dp, `body-medium` field for dense layouts (not an MD3 size).
+  `body-large` and floating up in `body-small`.
 
   `color` (`primary` default, `secondary`, `tertiary`, `error`) is the
   focused border/indicator and label color. Errors (from `field=` once
@@ -40,13 +39,6 @@ defmodule PhoenixPaper.TextField do
   / `:end_adornment` hold leading/trailing icons, prefix/suffix text or an
   icon button; they're flex siblings of the input, outside its
   positioning box, so they never touch the input's padding.
-
-  ## `hide_label` — the dense inline variant
-
-  `hide_label` drops the floating label, the notch, the column wrapper and
-  the supporting text: just the box, with `label` as the `placeholder`,
-  for a field inline in a toolbar (errors still show as the error
-  outline). Pair it with `size="small"`.
 
   ## How the outlined notch works
 
@@ -71,6 +63,12 @@ defmodule PhoenixPaper.TextField do
   `:placeholder-shown` tracks emptiness; a real `placeholder` attr would
   defeat the floating label, so use `supporting_text` for hints.
 
+  ## Migrating from 0.4
+
+  `size="small"` and `hide_label` are gone: MD3 text fields are 56dp and
+  always have a label. For a compact search field, use
+  `PhoenixPaper.SearchBar`.
+
   ## Migrating from 0.3
 
   `pp_input` → `pp_text_field`, `variant="standard"` is gone (MD3 has only
@@ -88,15 +86,9 @@ defmodule PhoenixPaper.TextField do
   attr(:value, :any, default: nil)
   attr(:type, :string, default: "text")
   attr(:variant, :string, default: "outlined", values: ~w(outlined filled))
-  attr(:size, :string, default: "medium", values: ~w(medium small))
   attr(:color, :string, default: "primary", values: ~w(primary secondary tertiary error))
   attr(:multiline, :boolean, default: false, doc: "renders a <textarea rows={@rows}>")
   attr(:rows, :integer, default: 3, doc: "multiline only")
-
-  attr(:hide_label, :boolean,
-    default: false,
-    doc: "dense inline variant: no floating label (used as placeholder), no supporting text"
-  )
 
   attr(:field, Phoenix.HTML.FormField, default: nil)
   attr(:errors, :list, default: [])
@@ -126,46 +118,6 @@ defmodule PhoenixPaper.TextField do
     |> pp_text_field()
   end
 
-  def pp_text_field(%{hide_label: true} = assigns) do
-    ~H"""
-    <div
-      data-pp-component="text-field"
-      data-pp-dense="true"
-      class={Helpers.classes(@paperize, dense_wrapper_classes(@variant, @color, @errors), @class)}
-    >
-      <span :if={@start_adornment != []} data-pp-adornment="start" class={adornment_classes(:start)}>
-        {render_slot(@start_adornment)}
-      </span>
-      <textarea
-        :if={@multiline}
-        id={@id}
-        name={@name}
-        rows={@rows}
-        disabled={@disabled}
-        placeholder={@label}
-        aria-invalid={@errors != [] && "true"}
-        class={Helpers.classes(@paperize, [dense_field_classes(@size), "resize-y"], nil)}
-        {@rest}
-      >{@value}</textarea>
-      <input
-        :if={!@multiline}
-        type={@type}
-        id={@id}
-        name={@name}
-        value={input_value(@type, @value)}
-        disabled={@disabled}
-        placeholder={@label}
-        aria-invalid={@errors != [] && "true"}
-        class={Helpers.classes(@paperize, dense_field_classes(@size), nil)}
-        {@rest}
-      />
-      <span :if={@end_adornment != []} data-pp-adornment="end" class={adornment_classes(:end)}>
-        {render_slot(@end_adornment)}
-      </span>
-    </div>
-    """
-  end
-
   def pp_text_field(assigns) do
     assigns =
       assign(
@@ -177,7 +129,7 @@ defmodule PhoenixPaper.TextField do
 
     ~H"""
     <div data-pp-component="text-field" class={Helpers.classes(@paperize, "flex flex-col gap-1", @class)}>
-      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @errors, @size), nil)}>
+      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @errors), nil)}>
         <span :if={@start_adornment != []} data-pp-adornment="start" class={adornment_classes(:start)}>
           {render_slot(@start_adornment)}
         </span>
@@ -191,7 +143,7 @@ defmodule PhoenixPaper.TextField do
             placeholder=" "
             aria-invalid={@errors != [] && "true"}
             aria-describedby={@describedby}
-            class={Helpers.classes(@paperize, [input_classes(@variant, @size), "resize-y"], nil)}
+            class={Helpers.classes(@paperize, [input_classes(@variant), "resize-y"], nil)}
             {@rest}
           >{@value}</textarea>
           <input
@@ -204,13 +156,13 @@ defmodule PhoenixPaper.TextField do
             placeholder=" "
             aria-invalid={@errors != [] && "true"}
             aria-describedby={@describedby}
-            class={Helpers.classes(@paperize, input_classes(@variant, @size), nil)}
+            class={Helpers.classes(@paperize, input_classes(@variant), nil)}
             {@rest}
           />
           <label
             :if={@label}
             for={@id}
-            class={Helpers.classes(@paperize, label_classes(@variant, @size, @color, @errors, @multiline), nil)}
+            class={Helpers.classes(@paperize, label_classes(@variant, @color, @errors, @multiline), nil)}
           >
             {@label}
           </label>
@@ -260,10 +212,10 @@ defmodule PhoenixPaper.TextField do
 
   # ---- wrapper ----
 
-  defp wrapper_classes("outlined", color, errors, size) do
+  defp wrapper_classes("outlined", color, errors) do
     [
       "relative flex items-stretch rounded-pp-xs has-[:disabled]:pointer-events-none has-[:disabled]:opacity-38",
-      height(size),
+      "min-h-14",
       "has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "focus-within:[&>fieldset>legend]:max-w-full focus-within:[&>fieldset>legend]:px-1",
@@ -272,18 +224,15 @@ defmodule PhoenixPaper.TextField do
     ]
   end
 
-  defp wrapper_classes("filled", color, errors, size) do
+  defp wrapper_classes("filled", color, errors) do
     [
       "relative flex items-stretch rounded-t-pp-xs bg-pp-surface-container-highest has-[:disabled]:pointer-events-none has-[:disabled]:opacity-38",
       "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-pp-on-surface before:opacity-0 before:transition-opacity hover:before:opacity-8",
-      height(size),
+      "min-h-14",
       filled_indicator_classes(color, errors),
-      filled_adornment_classes(size)
+      filled_adornment_classes()
     ]
   end
-
-  defp height("medium"), do: "min-h-14"
-  defp height("small"), do: "min-h-10"
 
   defp outlined_state_classes(_color, errors) when errors != [],
     do: "focus-within:[&>fieldset]:border-2"
@@ -331,16 +280,10 @@ defmodule PhoenixPaper.TextField do
   # to the input's baseline: `items-end` plus the input's bottom padding.
   # `has-*` lives on the wrapper because the adornment is the input's
   # sibling, not its ancestor.
-  defp filled_adornment_classes("medium") do
+  defp filled_adornment_classes do
     "has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-2 " <>
       "has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-2 " <>
       "focus-within:[&>[data-pp-adornment]]:items-end focus-within:[&>[data-pp-adornment]]:pb-2"
-  end
-
-  defp filled_adornment_classes("small") do
-    "has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[input:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-1 " <>
-      "has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:items-end has-[textarea:not(:placeholder-shown)]:[&>[data-pp-adornment]]:pb-1 " <>
-      "focus-within:[&>[data-pp-adornment]]:items-end focus-within:[&>[data-pp-adornment]]:pb-1"
   end
 
   defp fieldset_classes(errors) when errors != [],
@@ -357,50 +300,36 @@ defmodule PhoenixPaper.TextField do
 
   # ---- input ----
 
-  defp input_classes("outlined", "medium"),
+  defp input_classes("outlined"),
     do:
       "peer block w-full min-w-0 bg-transparent px-4 py-4 pp-body-large text-pp-on-surface outline-none placeholder:text-transparent"
 
-  defp input_classes("outlined", "small"),
-    do:
-      "peer block w-full min-w-0 bg-transparent px-4 py-2.5 pp-body-medium text-pp-on-surface outline-none placeholder:text-transparent"
-
-  defp input_classes("filled", "medium"),
+  defp input_classes("filled"),
     do:
       "peer block w-full min-w-0 bg-transparent px-4 pt-6 pb-2 pp-body-large text-pp-on-surface outline-none placeholder:text-transparent"
-
-  defp input_classes("filled", "small"),
-    do:
-      "peer block w-full min-w-0 bg-transparent px-4 pt-4 pb-1 pp-body-medium text-pp-on-surface outline-none placeholder:text-transparent"
 
   # ---- label ----
 
   # Resting: centered (or on the first line when multiline), on-surface-
   # variant. Floated (focus or a value): body-small, at the top of a filled
   # field or centered on an outlined field's border.
-  defp label_classes(variant, size, color, errors, multiline) do
+  defp label_classes(variant, color, errors, multiline) do
     [
       "pointer-events-none absolute start-4 max-w-[calc(100%-2rem)] truncate transition-all duration-150 ease-pp-standard",
-      resting(size, multiline),
-      floated(variant, size),
+      resting(multiline),
+      floated(variant),
       label_color(color, errors)
     ]
   end
 
-  defp resting("medium", false), do: "top-1/2 -translate-y-1/2 pp-body-large"
-  defp resting("small", false), do: "top-1/2 -translate-y-1/2 pp-body-medium"
-  defp resting("medium", true), do: "top-4 translate-y-0 pp-body-large"
-  defp resting("small", true), do: "top-2.5 translate-y-0 pp-body-medium"
+  defp resting(false), do: "top-1/2 -translate-y-1/2 pp-body-large"
+  defp resting(true), do: "top-4 translate-y-0 pp-body-large"
 
-  defp floated("filled", "medium"),
+  defp floated("filled"),
     do:
       "peer-focus:top-2 peer-focus:translate-y-0 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:pp-body-small"
 
-  defp floated("filled", "small"),
-    do:
-      "peer-focus:top-0.5 peer-focus:translate-y-0 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:pp-body-small"
-
-  defp floated("outlined", _size),
+  defp floated("outlined"),
     do:
       "peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:pp-body-small"
 
@@ -415,57 +344,4 @@ defmodule PhoenixPaper.TextField do
 
   defp adornment_classes(:end),
     do: "relative flex shrink-0 items-center pe-3 pp-body-large text-pp-on-surface-variant"
-
-  # ---- hide_label ----
-
-  defp dense_wrapper_classes(variant, color, errors) do
-    [
-      "relative flex items-stretch has-[:disabled]:pointer-events-none has-[:disabled]:opacity-38",
-      dense_border_classes(variant, color, errors)
-    ]
-  end
-
-  defp dense_border_classes("outlined", _color, errors) when errors != [],
-    do: "rounded-pp-xs border-2 border-pp-error"
-
-  defp dense_border_classes("filled", _color, errors) when errors != [],
-    do:
-      "rounded-t-pp-xs bg-pp-surface-container-highest shadow-[inset_0_-2px_0_0_var(--color-pp-error)]"
-
-  defp dense_border_classes("outlined", color, []),
-    do: [
-      "rounded-pp-xs border border-pp-outline hover:border-pp-on-surface focus-within:border-2",
-      dense_focus_border(color)
-    ]
-
-  defp dense_border_classes("filled", color, []),
-    do: [
-      "rounded-t-pp-xs bg-pp-surface-container-highest shadow-[inset_0_-1px_0_0_var(--color-pp-on-surface-variant)]",
-      dense_focus_indicator(color)
-    ]
-
-  defp dense_focus_border("primary"), do: "focus-within:border-pp-primary"
-  defp dense_focus_border("secondary"), do: "focus-within:border-pp-secondary"
-  defp dense_focus_border("tertiary"), do: "focus-within:border-pp-tertiary"
-  defp dense_focus_border("error"), do: "focus-within:border-pp-error"
-
-  defp dense_focus_indicator("primary"),
-    do: "focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-primary)]"
-
-  defp dense_focus_indicator("secondary"),
-    do: "focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-secondary)]"
-
-  defp dense_focus_indicator("tertiary"),
-    do: "focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-tertiary)]"
-
-  defp dense_focus_indicator("error"),
-    do: "focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-error)]"
-
-  defp dense_field_classes("medium"),
-    do:
-      "block w-full min-w-0 bg-transparent px-4 py-4 pp-body-large text-pp-on-surface outline-none placeholder:text-pp-on-surface-variant"
-
-  defp dense_field_classes("small"),
-    do:
-      "block w-full min-w-0 bg-transparent px-3 py-2 pp-body-medium text-pp-on-surface outline-none placeholder:text-pp-on-surface-variant"
 end

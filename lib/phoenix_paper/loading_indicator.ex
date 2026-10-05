@@ -18,7 +18,7 @@ defmodule PhoenixPaper.LoadingIndicator do
   shapes (all sampled as the same 72-point polygon, so they interpolate),
   each step on the Expressive fast spatial spring, while the SVG rotates.
   Chromium and Firefox animate `d` in CSS; Safari doesn't, so it shows
-  a rotating soft burst there. With the optional JS hook (see
+  a rotating soft burst there. With the PhoenixPaper JS hook (see
   `PhoenixPaper.Helpers.hook/1`) and an `id`, the hook morphs the path
   itself, which works everywhere.
 

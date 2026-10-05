@@ -23,7 +23,7 @@ defmodule PhoenixPaper.BottomSheet do
   focus trapping, Escape/scrim click to dismiss (plus `on_cancel`). The
   handle is a button that dismisses too.
 
-  With the optional JS hook (see `PhoenixPaper.Helpers.hook/1`) the sheet
+  With the PhoenixPaper JS hook (see `PhoenixPaper.Helpers.hook/1`) the sheet
   can be **dragged down** by its handle to dismiss, following the pointer
   and springing back if released early. (The hook sits on the handle, not
   the sheet: the sheet is a `focus_wrap/1`, which already carries

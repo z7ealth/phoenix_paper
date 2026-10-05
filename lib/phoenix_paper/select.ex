@@ -3,17 +3,13 @@ defmodule PhoenixPaper.Select do
   An MD3 select field (`pp_select/1`) — a native `<select>` styled as an
   MD3 `outlined`/`filled` text field with a trailing drop-down arrow. Its
   label is always floated (a select always shows a value), so the
-  outlined notch is always open. For a styled, searchable menu instead of
-  the browser's native list, see `PhoenixPaper.PowerSelect`.
+  outlined notch is always open.
 
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
 
-  `hide_label` is the dense, inline variant — the counterpart of
-  `PhoenixPaper.TextField`'s own `hide_label` (see its module doc): it drops
-  the outer wrapper column, the floating label and the helper/error rows,
-  leaving a compact bordered `<select>` box sized to sit in a filter
-  toolbar. Pass `prompt` to give it placeholder-style text.
+  Migrating from 0.4: `hide_label` is gone (MD3 fields always have a
+  label).
 
   Migrating from 0.3: `helper_text` → `supporting_text`; `shape` is gone
   (MD3 fixes the corners).
@@ -35,11 +31,6 @@ defmodule PhoenixPaper.Select do
   attr(:supporting_text, :string, default: nil)
   attr(:disabled, :boolean, default: false)
 
-  attr(:hide_label, :boolean,
-    default: false,
-    doc: "dense inline variant — no wrapper column, no floating label, no helper/error text"
-  )
-
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(autofocus form multiple required))
@@ -54,39 +45,6 @@ defmodule PhoenixPaper.Select do
     |> assign(:value, assigns.value || field.value)
     |> assign(:errors, Enum.map(errors, &Helpers.translate_error/1))
     |> pp_select()
-  end
-
-  def pp_select(%{hide_label: true} = assigns) do
-    assigns = assign(assigns, :normalized_options, Enum.map(assigns.options, &normalize_option/1))
-
-    ~H"""
-    <div
-      data-pp-component="select"
-      data-pp-dense="true"
-      class={Helpers.classes(@paperize, dense_wrapper_classes(@variant, @errors), @class)}
-    >
-      <select
-        id={@id}
-        name={@name}
-        disabled={@disabled}
-        class={Helpers.classes(@paperize, dense_select_classes(), nil)}
-        {@rest}
-      >
-        <option :if={@prompt} value="">{@prompt}</option>
-        <option
-          :for={{opt_label, opt_value} <- @normalized_options}
-          value={opt_value}
-          selected={to_string(opt_value) == to_string(@value)}
-        >
-          {opt_label}
-        </option>
-      </select>
-      <span
-        :if={@paperize}
-        class="pointer-events-none absolute end-4 top-1/2 size-0 -translate-y-1/2 border-x-[5px] border-t-[5px] border-x-transparent border-t-pp-on-surface-variant"
-      />
-    </div>
-    """
   end
 
   def pp_select(assigns) do
@@ -181,25 +139,6 @@ defmodule PhoenixPaper.Select do
   # fixed-height `items-end` wrapper instead, leaving the label room on top.
   defp select_classes do
     "peer block w-full cursor-pointer appearance-none bg-transparent px-4 py-2 pe-10 pp-body-large text-pp-on-surface outline-none disabled:cursor-default"
-  end
-
-  defp dense_wrapper_classes("outlined", []),
-    do:
-      "relative flex items-center rounded-pp-xs border border-pp-outline hover:border-pp-on-surface focus-within:border-2 focus-within:!border-pp-primary has-[:disabled]:opacity-38"
-
-  defp dense_wrapper_classes("outlined", _errors),
-    do: "relative flex items-center rounded-pp-xs border-2 border-pp-error"
-
-  defp dense_wrapper_classes("filled", []),
-    do:
-      "relative flex items-center rounded-t-pp-xs bg-pp-surface-container-highest shadow-[inset_0_-1px_0_0_var(--color-pp-on-surface-variant)] focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-primary)] has-[:disabled]:opacity-38"
-
-  defp dense_wrapper_classes("filled", _errors),
-    do:
-      "relative flex items-center rounded-t-pp-xs bg-pp-surface-container-highest shadow-[inset_0_-2px_0_0_var(--color-pp-error)]"
-
-  defp dense_select_classes do
-    "block w-full cursor-pointer appearance-none bg-transparent px-3 py-2 pe-9 pp-body-medium text-pp-on-surface outline-none disabled:cursor-default"
   end
 
   defp label_classes("outlined", []),

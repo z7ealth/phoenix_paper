@@ -34,10 +34,6 @@ defmodule PhoenixPaper.Theme do
   Core colors can be pinned like Theme Builder's "custom colors":
   `secondary:`, `tertiary:`, `neutral:`, `error:` take a hex whose hue
   and chroma replace that palette's.
-
-  The status roles PhoenixPaper adds (`success`, `warning`, `info`) get
-  palettes at fixed hues (145°, 80°, 230°) with the same tone mapping as
-  `error`.
   """
 
   alias PhoenixPaper.Theme.Hct
@@ -49,8 +45,8 @@ defmodule PhoenixPaper.Theme do
 
   @doc """
   The tonal palettes for a seed: a map of `:primary`, `:secondary`,
-  `:tertiary`, `:neutral`, `:neutral_variant`, `:error`, `:success`,
-  `:warning`, `:info` to `{hue, chroma}`.
+  `:tertiary`, `:neutral`, `:neutral_variant` and `:error` to
+  `{hue, chroma}`.
   """
   def palettes(seed, opts \\ []) do
     variant = Keyword.get(opts, :variant, :tonal_spot)
@@ -114,7 +110,7 @@ defmodule PhoenixPaper.Theme do
       end
 
     base
-    |> Map.merge(%{error: {25, 84}, success: {145, 48}, warning: {80, 56}, info: {230, 48}})
+    |> Map.put(:error, {25, 84})
     |> pin(:secondary, opts[:secondary])
     |> pin(:tertiary, opts[:tertiary])
     |> pin(:neutral, opts[:neutral])
@@ -179,57 +175,22 @@ defmodule PhoenixPaper.Theme do
     {"scrim", :neutral, 0, 0}
   ]
 
-  @status ~w(success warning info)a
-
   @doc """
   A scheme: a map of role name (`"primary"`, `"surface-container-high"`,
   ...) to hex, for `mode` `:light` or `:dark`. Options as for
-  `palettes/2`, plus `status: false` to leave out the success/warning/info
-  roles.
+  `palettes/2`.
   """
   def scheme(seed, mode, opts \\ []) when mode in [:light, :dark] do
     palettes = palettes(seed, opts)
 
-    status_roles =
-      if Keyword.get(opts, :status, true) do
-        for s <- @status,
-            {suffix, light, dark} <- [
-              {"", 40, 80},
-              {"on-", 100, 20},
-              {"container", 90, 30},
-              {"on-container", 30, 90}
-            ] do
-          name =
-            case suffix do
-              "" -> "#{s}"
-              "on-" -> "on-#{s}"
-              "container" -> "#{s}-container"
-              "on-container" -> "on-#{s}-container"
-            end
-
-          {name, s, light, dark}
-        end
-      else
-        []
-      end
-
-    Map.new(@roles ++ status_roles, fn {name, palette, light, dark} ->
+    Map.new(@roles, fn {name, palette, light, dark} ->
       {hue, chroma} = Map.fetch!(palettes, palette)
       {name, Hct.to_hex(hue, chroma, if(mode == :light, do: light, else: dark))}
     end)
   end
 
   @doc "The role names, in output order."
-  def role_names(opts \\ []) do
-    base = Enum.map(@roles, &elem(&1, 0))
-
-    if Keyword.get(opts, :status, true) do
-      base ++
-        for s <- @status, n <- [s, "on-#{s}", "#{s}-container", "on-#{s}-container"], do: "#{n}"
-    else
-      base
-    end
-  end
+  def role_names, do: Enum.map(@roles, &elem(&1, 0))
 
   @doc """
   The CSS for a theme: `--color-pp-*` overrides for light (`:root`), dark
@@ -239,7 +200,7 @@ defmodule PhoenixPaper.Theme do
   def css(seed, opts \\ []) do
     light = scheme(seed, :light, opts)
     dark = scheme(seed, :dark, opts)
-    names = role_names(opts)
+    names = role_names()
     variant = Keyword.get(opts, :variant, :tonal_spot)
 
     decls = fn scheme, indent ->

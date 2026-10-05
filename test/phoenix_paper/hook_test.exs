@@ -1,24 +1,15 @@
 defmodule PhoenixPaper.HookTest do
-  # Not async: flips application env.
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   use Phoenix.Component
   import Phoenix.LiveViewTest
 
-  setup do
-    on_exit(fn -> Application.delete_env(:phoenix_paper, :hook) end)
-  end
-
-  test "Helpers.hook/1 is nil unless the app opted in, and needs an id" do
-    assert PhoenixPaper.Helpers.hook("x") == nil
-
-    Application.put_env(:phoenix_paper, :hook, true)
+  test "Helpers.hook/1 needs an id" do
     assert PhoenixPaper.Helpers.hook("x") == "PhoenixPaper"
     assert PhoenixPaper.Helpers.hook(nil) == nil
   end
 
-  test "with the hook enabled, components render phx-hook" do
-    Application.put_env(:phoenix_paper, :hook, true)
+  test "components with an id render phx-hook" do
     assigns = %{}
 
     html =
@@ -32,7 +23,6 @@ defmodule PhoenixPaper.HookTest do
   end
 
   test "menus, split buttons and tooltips (with an id) carry the hook for edge flipping" do
-    Application.put_env(:phoenix_paper, :hook, true)
     assigns = %{}
 
     html =

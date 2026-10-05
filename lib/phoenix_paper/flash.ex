@@ -1,71 +1,59 @@
 defmodule PhoenixPaper.Flash do
   @moduledoc """
-  Renders Phoenix's flash messages (`@flash`) as `PhoenixPaper.Snackbar`s
-  (`pp_flash_group/1`) — the Material equivalent of the `flash_group/1` in
+  Renders Phoenix's flash messages (`@flash`) as MD3 snackbars
+  (`pp_flash_group/1`) — the Material counterpart of the `flash_group/1` in
   a freshly generated `core_components.ex`.
 
       <.pp_flash_group flash={@flash} />
 
   Drop it once in your root layout (or app layout), the same place the
   generated `<.flash_group>` goes. It reads `:info` and `:error` out of
-  the flash and shows one inverted-surface chip per present message,
-  stacked at a corner of the viewport:
+  the flash and shows one `PhoenixPaper.Snackbar` per present message,
+  stacked where MD3 puts snackbars (bottom center on compact screens,
+  bottom-start from `sm` up):
 
   - **Dismiss** is wired to LiveView's built-in `lv:clear-flash` client
     event (`Phoenix.LiveView.JS.push("lv:clear-flash", value: %{key: kind})`)
-    — no handler in your LiveView, no `put_flash`/`clear_flash` round trip
-    to write. Clicking the chip's ✕ clears that key; the server re-renders
-    without it and the chip is gone.
-  - **Auto-dismiss** is opt-in: `auto_hide_duration={4000}` makes each chip
-    clear itself after 4s via the same `lv:clear-flash`, using
-    `PhoenixPaper.Snackbar`'s hook-free CSS-animation timer. Left off, the
-    chips stay until dismissed (or replaced by the next navigation, as
-    Phoenix flash already does).
+    — no handler in your LiveView. Clicking a snackbar's close button
+    clears that key; the server re-renders without it and it's gone.
+  - **Auto-dismiss** is opt-in: `auto_hide_duration={4000}` makes each
+    snackbar clear itself after 4s via the same `lv:clear-flash`, using
+    `PhoenixPaper.Snackbar`'s hook-free CSS-animation timer.
 
-  ## Why a wrapper and not just "use `pp_snackbar`"
+  `pp_snackbar` positions itself; a *group* needs to read the flash map,
+  key each dismiss to the right flash key and stack several without them
+  overlapping, so `pp_flash_group` owns the `fixed` stack and each
+  snackbar inside is a `pp_snackbar positioned={false}`.
 
-  `pp_snackbar` is presentation-only and positions itself. A *group* of
-  flash messages needs (a) to read the flash map, (b) to key each chip's
-  dismiss to the right flash key, and (c) to stack several without them
-  landing on top of each other — none of which a single self-positioning
-  toast should own. `pp_flash_group` owns the `fixed` corner stack;
-  each chip inside is a `pp_snackbar positioned={false}`.
-
-  ## Kinds beyond `:info`/`:error`
-
-  Pass `kinds` to change or extend the list (`kinds={[:info, :warning, :error]}`).
-  Each kind gets a leading icon (`info`/`warning`/`error`/`success` are
-  recognised; anything else renders with no icon). Material snackbars are
-  monochrome by spec — the inverted chip is the same for every kind, the
-  icon carries the distinction — so there's deliberately no per-kind
-  background colour here (use `PhoenixPaper.Alert` inside a bare
-  `pp_snackbar` if you want coloured severity surfaces).
+  `kinds` changes or extends the keys rendered
+  (`kinds={[:info, :warning, :error]}`). MD3 snackbars are text-only and
+  look the same whatever the message, so the kind only sets the ARIA role
+  (`alert` for `:error`, `status` otherwise).
 
   ## Connection-lost notices
 
-  `connection_notices` also renders the two "connection lost" chips a
-  generated `core_components.ex` `flash_group/1` shows, so you don't have
-  to keep the generated `<.flash>` around (or hand-build `pp_snackbar`s)
-  just for them:
+  `connection_notices` also renders the two "connection lost" messages a
+  generated `core_components.ex` `flash_group/1` shows:
 
       <.pp_flash_group flash={@flash} connection_notices />
 
-  These aren't flash messages (no server flash entry backs them — the
-  server is exactly what's unreachable). Both chips are rendered `hidden`
-  and toggled purely client-side: `phx-disconnected` removes `hidden` and
-  `phx-connected` puts it back, each scoped to the LiveView container's
-  `.phx-client-error` / `.phx-server-error` class, the same way the
-  generated component does. `client_error_title`/`server_error_title` and
-  `reconnecting_text` override the English defaults (e.g. with `gettext`).
-  They have no ✕ — they go away on their own when the socket reconnects.
+  They aren't flash messages (the server is exactly what's unreachable).
+  Both snackbars are rendered `hidden` and toggled client-side:
+  `phx-disconnected` removes `hidden` and `phx-connected` puts it back,
+  scoped to the LiveView container's `.phx-client-error` /
+  `.phx-server-error` class, the way the generated component does it.
+  `client_error_title`/`server_error_title` and `reconnecting_text`
+  override the English defaults (e.g. with `gettext`).
+
+  ## Migrating from 0.4
+
+  `anchor_origin` and `transition` are gone (snackbars sit at the bottom,
+  with MD3's one entrance), and messages no longer get a leading icon.
   """
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
   import PhoenixPaper.Snackbar, only: [pp_snackbar: 1]
-  import PhoenixPaper.Icon, only: [pp_icon: 1]
-
-  @anchor_values ~w(bottom-left bottom-center bottom-right top-left top-center top-right)
 
   attr(:flash, :map, required: true, doc: "the @flash map from the assigns")
 
@@ -74,18 +62,10 @@ defmodule PhoenixPaper.Flash do
     doc: "flash keys to render, in stacking order"
   )
 
-  attr(:anchor_origin, :string,
-    default: "top-right",
-    values: @anchor_values,
-    doc: "corner/edge of the viewport the stack sits at"
-  )
-
   attr(:auto_hide_duration, :integer,
     default: nil,
     doc: "milliseconds after which each chip clears itself via lv:clear-flash (opt-in)"
   )
-
-  attr(:transition, :string, default: "slide", values: ~w(grow fade slide none))
 
   attr(:connection_notices, :boolean,
     default: false,
@@ -104,16 +84,14 @@ defmodule PhoenixPaper.Flash do
     ~H"""
     <div
       data-pp-component="flash-group"
-      class={[@paperize && stack_classes(@anchor_origin), @class]}
+      class={[@paperize && stack_classes(), @class]}
       {@rest}
     >
       <.pp_flash
         :for={kind <- @kinds}
         kind={kind}
         flash={@flash}
-        anchor_origin={@anchor_origin}
         auto_hide_duration={@auto_hide_duration}
-        transition={@transition}
         paperize={@paperize}
       />
       <.connection_notice
@@ -122,8 +100,6 @@ defmodule PhoenixPaper.Flash do
         error_class="phx-client-error"
         title={@client_error_title}
         text={@reconnecting_text}
-        anchor_origin={@anchor_origin}
-        transition={@transition}
         paperize={@paperize}
       />
       <.connection_notice
@@ -132,8 +108,6 @@ defmodule PhoenixPaper.Flash do
         error_class="phx-server-error"
         title={@server_error_title}
         text={@reconnecting_text}
-        anchor_origin={@anchor_origin}
-        transition={@transition}
         paperize={@paperize}
       />
     </div>
@@ -146,32 +120,20 @@ defmodule PhoenixPaper.Flash do
       id={@id}
       role="alert"
       positioned={false}
-      anchor_origin={@anchor_origin}
-      transition={@transition}
       paperize={@paperize}
       hidden
       phx-disconnected={JS.remove_attribute("hidden", to: ".#{@error_class} ##{@id}")}
       phx-connected={JS.set_attribute({"hidden", ""}, to: "##{@id}")}
     >
-      <span class="flex items-center gap-3">
-        <.pp_icon name="hero-exclamation-circle" size="sm" class="shrink-0" />
-        <span>
-          <span class="block pp-title-small">{@title}</span>
-          <span class="flex items-center gap-1">
-            {@text}
-            <.pp_icon name="hero-arrow-path" size="xs" class="motion-safe:animate-spin" />
-          </span>
-        </span>
-      </span>
+      <span class="block">{@title}</span>
+      <span class="block">{@text}</span>
     </.pp_snackbar>
     """
   end
 
   attr(:kind, :atom, required: true)
   attr(:flash, :map, required: true)
-  attr(:anchor_origin, :string, default: "top-right", values: @anchor_values)
   attr(:auto_hide_duration, :integer, default: nil)
-  attr(:transition, :string, default: "slide")
   attr(:paperize, :boolean, default: true)
 
   @doc "Renders one flash key as a snackbar, or nothing when that key is empty."
@@ -184,47 +146,16 @@ defmodule PhoenixPaper.Flash do
       id={"pp-flash-#{@kind}"}
       role={if @kind == :error, do: "alert", else: "status"}
       positioned={false}
-      anchor_origin={@anchor_origin}
-      transition={@transition}
       auto_hide_duration={@auto_hide_duration}
       on_close={JS.push("lv:clear-flash", value: %{key: to_string(@kind)})}
       paperize={@paperize}
     >
-      <span class="flex items-center gap-3">
-        <.pp_icon :if={icon_name(@kind)} name={icon_name(@kind)} size="sm" class="shrink-0" />
-        <span>{@message}</span>
-      </span>
+      {@message}
     </.pp_snackbar>
     """
   end
 
-  defp icon_name(:info), do: "hero-information-circle"
-  defp icon_name(:success), do: "hero-check-circle"
-  defp icon_name(:warning), do: "hero-exclamation-triangle"
-  defp icon_name(:error), do: "hero-exclamation-circle"
-  defp icon_name(_), do: nil
-
-  defp stack_classes(anchor_origin) do
-    [
-      "pointer-events-none fixed z-50 flex flex-col gap-2 [&_[data-pp-component=snackbar]]:pointer-events-auto",
-      corner_classes(anchor_origin)
-    ]
+  defp stack_classes do
+    "pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:start-6 sm:bottom-6 sm:items-start [&_[data-pp-component=snackbar]]:pointer-events-auto"
   end
-
-  defp corner_classes("bottom-left"),
-    do: "inset-x-4 bottom-4 items-start sm:inset-x-auto sm:left-4"
-
-  defp corner_classes("bottom-center"),
-    do: "inset-x-4 bottom-4 items-center sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
-
-  defp corner_classes("bottom-right"),
-    do: "inset-x-4 bottom-4 items-end sm:inset-x-auto sm:right-4"
-
-  defp corner_classes("top-left"),
-    do: "inset-x-4 top-4 items-start sm:inset-x-auto sm:left-4"
-
-  defp corner_classes("top-center"),
-    do: "inset-x-4 top-4 items-center sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
-
-  defp corner_classes("top-right"), do: "inset-x-4 top-4 items-end sm:inset-x-auto sm:right-4"
 end

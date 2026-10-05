@@ -51,7 +51,7 @@ defmodule PhoenixPaper.Tabs do
   `Tab`/`TabPanel` read the variant from this root through a
   `group/tabs` data attribute, so it's set once, here.
 
-  With the optional JS hook (see `PhoenixPaper.Helpers.hook/1`) the
+  With the PhoenixPaper JS hook (see `PhoenixPaper.Helpers.hook/1`) the
   indicator **slides** from the old tab to the new one on the Expressive
   spatial spring; without it, it moves instantly. MD3's roving `tabindex`
   is implemented, see Keyboard below.

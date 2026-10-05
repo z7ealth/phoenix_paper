@@ -1,12 +1,10 @@
 defmodule PhoenixPaper do
   @moduledoc """
-  PhoenixPaper — a Material Design component library for Phoenix, in the
-  spirit of [ember-paper](https://github.com/miguelcobain/ember-paper),
-  built on Tailwind CSS.
+  PhoenixPaper — Material Design 3 (including M3 Expressive) components
+  for Phoenix and LiveView, built on Tailwind CSS.
 
-  See `AGENTS.md` at the project root for the framework's ground rules
-  (the `paperize` contract, theming, elevation/spacing helpers, icon
-  strategy). See `PhoenixPaper.Components` to import every component at
-  once.
+  See `AGENTS.md` at the project root for the library's ground rules
+  (MD3 tokens, the `paperize` contract, theming, the JS hook). See
+  `PhoenixPaper.Components` to import every component at once.
   """
 end

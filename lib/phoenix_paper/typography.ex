@@ -39,7 +39,7 @@ defmodule PhoenixPaper.Typography do
 
   Leave `color` unset to inherit. Otherwise pick a role: `primary`,
   `secondary`, `tertiary`, `error`, `on-surface` or `on-surface-variant`
-  (MD3's de-emphasized text color, what MUI calls `text.secondary`).
+  (MD3's de-emphasized text color).
 
   ## Migrating from 0.3
 

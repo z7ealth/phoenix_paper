@@ -6,47 +6,51 @@
 > `mix hex.publish` themselves.
 
 PhoenixPaper is a **Material Design 3** component library for **Phoenix**
-— including **M3 Expressive** — styled with **Tailwind CSS**. It began in
-the spirit of [ember-paper](https://github.com/miguelcobain/ember-paper)
-(the Ember.js Material Design addon) and moved to MD3 in 0.4.0; where MD3
-specifies a component, PhoenixPaper follows the spec, and where it doesn't
-(tables, pagination, autocomplete, accordion) the component borrows MUI's
-API and is styled from MD3 tokens. It ships as a
-hex package (a component library, not a Phoenix app) that a Phoenix project
-adds as a dependency.
+— including **M3 Expressive** — styled with **Tailwind CSS**. It ships as
+a hex package (a component library, not a Phoenix app) that a Phoenix
+project adds as a dependency.
+
+**MD3 is the only source.** Every component is one the MD3 spec
+(m3.material.io/components) defines, and its look, behavior and API
+follow that spec. The library doesn't port or imitate other component
+libraries (0.5.0 removed the components and attrs that came from MUI),
+and it doesn't add components MD3 doesn't have — layout primitives,
+tables, pagination, breadcrumbs, accordions, alerts, skeletons and the
+like are the app's own business, written with Tailwind and the MD3
+tokens below. A component may go *beyond* the spec only where Phoenix
+needs it (`field=` form integration, `Flash` for `@flash`, `ThemeToggle`
+for `data-theme`), and then it's still built purely from MD3 parts.
 
 This file is the ground truth for how the library is built. Read it before
 adding or changing a component.
 
 ## Project shape
 
-- `lib/phoenix_paper/*.ex` — one module per component:
+- `lib/phoenix_paper/*.ex` — one module per component, grouped as the MD3
+  spec groups them:
   - Actions: `Button`, `IconButton`, `ButtonGroup`, `SplitButton`, `Fab`,
     `FabMenu`.
+  - Communication: `Badge`, `Progress`, `LoadingIndicator`, `Snackbar`
+    (+ `Flash`, Phoenix's `@flash` as snackbars), `Tooltip`.
+  - Containment: `Card`, `Carousel`, `Dialog`, `Divider`, `List`/
+    `ListItem`, `BottomSheet`, `SideSheet`.
   - Navigation: `TopAppBar`, `NavigationRail`, `NavigationBar`, `Toolbar`,
-    `Tabs`/`Tab`/`TabPanel`, `Menu`, `Breadcrumbs`, `Pagination`.
-  - Inputs: `TextField`, `Select`, `Checkbox`, `Switch`, `RadioGroup`,
-    `Slider`, `NumberField`, `Rating`, `Chip`, `SearchBar`, `Form`, and the
-    LiveComponents `Autocomplete`, `PowerSelect`, `TransferList`,
-    `DatePicker`, `TimePicker`.
-  - Containment: `Paper`, `Card`, `Dialog`, `BottomSheet`, `SideSheet`,
-    `Accordion` (+ `AccordionSummary`/`Details`/`Actions`), `Collapse`,
-    `Carousel`, `List`/`ListItem`/`ListSubheader`, `Divider`, the Table
-    family, `ImageList`/`ImageListItem`.
-  - Communication: `Badge`, `Progress`, `LoadingIndicator`, `Snackbar`,
-    `Flash`, `Tooltip`, `Alert`, `Backdrop`, `Skeleton`.
-  - Other: `Avatar`, `Icon`, `Typography`, `ThemeToggle`, and the layout
-    primitives `Box`, `Container`, `Stack`, `Grid`, `GridItem`.
+    `Tabs`/`Tab`/`TabPanel`, `SearchBar`.
+  - Selection and text inputs: `Checkbox`, `Chip`, `RadioGroup`, `Menu`,
+    `Select`, `Slider`, `Switch`, `TextField`, and the LiveComponents
+    `DatePicker` and `TimePicker`.
+  - Foundations: `Icon`, `Typography` (the type scale), `ThemeToggle`
+    (light/dark), `Theme`/`Theme.Hct` (`mix phoenix_paper.gen.theme`).
 
-  Helpers: `Helpers`, `Elevation`, `Shape`, `Spacing`, `Ripple`, `Toggle`.
+  Helpers: `Helpers`, `Elevation`, `Shape`, `Ripple`, `Toggle`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
   every component's render function at once.
 - `priv/static/phoenix_paper.css` — the MD3 token layer (color roles, type
   scale, shape, elevation, state layers, motion) plus the component
   utilities that are too much for class strings (slider, progress,
   loading indicator, button groups, carousel, ...). Consumers `@import` it.
-- `priv/static/phoenix_paper.js` + `package.json` — the **optional**
-  LiveView hook (see "The optional JS hook" below).
+- `priv/static/phoenix_paper.js` + `package.json` — the LiveView hook
+  (see "The JS hook" below).
 - `test/phoenix_paper/*_test.exs` — one test file per component.
 
 ## Material Design 3 foundations
@@ -61,9 +65,9 @@ or font size:
   `surface-dim`/`-bright`, `surface-container-lowest`/`-low`/(plain)/
   `-high`/`-highest`, `on-surface`, `on-surface-variant`; `outline`,
   `outline-variant`; `inverse-surface`, `inverse-on-surface`,
-  `inverse-primary`; the fixed roles; `scrim`, `shadow`. Plus the
-  PhoenixPaper extension roles `success`/`warning`/`info` (same shape as
-  `error`). Pick the role the MD3 spec names for the component (cards
+  `inverse-primary`; the fixed roles; `scrim`, `shadow`. That's the
+  whole set: no extension roles (0.5.0 removed `success`/`warning`/
+  `info`). Pick the role the MD3 spec names for the component (cards
   `surface-container-low`, menus `surface-container`, dialogs
   `surface-container-high`, ...). Never add an unprefixed token.
 - **Height is color.** MD3 shows a surface's level mainly with the
@@ -109,11 +113,13 @@ or font size:
   `pp-rail-collapsed:` for the navigation rail). Prefer one of those over
   repeating a three-selector condition on every class.
 
-## The optional JS hook
+## The JS hook
 
-PhoenixPaper's rule used to be "no JS hooks". Since 0.4.0 it is: **every
-component works without JavaScript beyond Phoenix's own, and one optional
-hook enhances what CSS can't do (everywhere).** `priv/static/phoenix_paper.js`
+PhoenixPaper's rule used to be "no JS hooks". Since 0.4.0 it is: **one
+hook, registered as part of setup, does what CSS can't do (everywhere);
+every component still renders and works without it running** (hooks
+don't run on controller-rendered pages or before LiveView connects, so
+the CSS behavior underneath covers first paint and dead views). `priv/static/phoenix_paper.js`
 exports one LiveView hook, `PhoenixPaper`, that dispatches on what it's
 mounted on (tabs' sliding indicator, top app bar scroll state, loading
 indicator morph, bottom-sheet drag, carousel mask, time-picker dial drag,
@@ -121,13 +127,14 @@ and edge flipping for menus, submenus and tooltips). Edge flipping sets
 `data-pp-flip` through `hook.js()` (so patches keep it) and is styled by
 **unlayered** rules at the end of `phoenix_paper.css`, which beat
 Tailwind's layered utilities without `!important`. Components render
-`phx-hook={Helpers.hook(id)}`, which is `nil` unless the app set
-`config :phoenix_paper, hook: true` (read at render time) *and* an id is
-available, so apps that don't register the hook never get LiveView's
-"unknown hook" error.
+`phx-hook={Helpers.hook(id)}`, which is `"PhoenixPaper"` whenever an id is
+available (LiveView needs one for a hook) and `nil` otherwise. In 0.4.0
+it was opt-in behind `config :phoenix_paper, hook: true`; since 0.5.0
+there's no switch, and an app that skips registering the hook gets
+LiveView's "unknown hook" console error, which is the intended signal.
 
-When adding hook behavior: the CSS-only version must still work and be
-the documented default; put the hook on an element that doesn't already
+When adding hook behavior: a CSS-only version must still work (it's what
+dead views and first paint get); put the hook on an element that doesn't already
 carry one (`focus_wrap/1` has LiveView's own FocusWrap hook — the bottom
 sheet's hook sits on its handle for that reason); and reapply anything the
 hook sets on the element in `updated()`, since a patch resets it.
@@ -144,20 +151,17 @@ sync, escape-to-close) remain fine and preferred for tiny behaviors.
   app's own generated `core_components.ex` (`button/1`, `input/1`, `icon/1`)
   or with daisyUI-influenced naming.
 - Every component accepts:
-  - `paperize` (`:boolean`, default `true`) — see the contract below. The
-    one exception is `PhoenixPaper.Box`, which has no `paperize` attr at
-    all: it's a bare layout primitive with no default visual style to
-    strip, so the attr would be a no-op. If a new component genuinely
-    never applies any built-in classes, drop `paperize` rather than ship a
-    no-op flag — but that should be rare; almost everything has *some*
-    skin (even `Stack`/`Grid`/`Container` apply layout classes that
-    `paperize={false}` legitimately turns off).
+  - `paperize` (`:boolean`, default `true`) — see the contract below.
   - `class` (`:any`, default `nil`) — concatenated after the component's
     own built-in classes (see "Overriding built-in classes via `class`"
     below for what that does and doesn't guarantee).
   - `rest` (`:global`) — for `phx-*` bindings, `id`, `data-*`, etc.
 - Register new components in `PhoenixPaper.Components`' `__using__/1` in the
   same change.
+- Attrs follow MD3's own vocabulary and options (`variant` names, sizes,
+  colors are the spec's). Don't add an attr for something MD3 fixes
+  (a dialog's width, a snackbar's placement, a card's corners) — fixed
+  values belong in the component's classes.
 - The one-module-per-component rule bends for a small control that's
   meaningless without its parent component — `PhoenixPaper.NavigationRail`
   exports `pp_navigation_rail/1`, its items and its
@@ -179,8 +183,8 @@ instead of duplicating it — passing the same `assigns` map through works
 fine since it's still just a Phoenix.Component function receiving assigns,
 not a macro needing anything special.
 
-`Button`'s link branch (`href`/`navigate`/`patch` set → `Phoenix.Component.link/1`,
-MUI's `Button` `href`/`component={Link}`) has one wrinkle `ListItem`'s
+`Button`'s link branch (`href`/`navigate`/`patch` set → `Phoenix.Component.link/1`)
+has one wrinkle `ListItem`'s
 doesn't: `<button>` has a native `disabled`, `<a>` doesn't. So the link
 branch sets `aria-disabled="true"` (gated on `disabled or loading`)
 instead of `disabled`, and every disabled style is written twice, as
@@ -203,8 +207,7 @@ roots, where the two elements need different attributes anyway.
 
 `PhoenixPaper.Ripple` implements the Material ripple (a circle expanding
 from the click point, then fading) as a small vanilla inline `onclick`
-snippet — no JS hook, no bundler, same philosophy as `NumberField`'s
-steppers. Every genuinely click-driven component (`Button`, `IconButton`, `Fab`,
+snippet — no JS hook, no bundler. Every genuinely click-driven component (`Button`, `IconButton`, `Fab`,
 a linked `ListItem`, ...) exposes a `ripple` boolean attr, **default
 `true`**, wired identically:
 
@@ -253,9 +256,7 @@ Browsers default `<button>` (and `<select>`) to `cursor: default`, **not**
 non-anchor element a component renders needs an explicit `cursor-pointer`
 class, or hovering it gives no visual affordance that it's clickable at
 all. This was missed on every `<button>` in the library for a while
-(`Button`, `Fab`, `NumberField`'s steppers, `Autocomplete`'s option
-button, `TransferList`'s move buttons) before being caught and
-fixed — when adding a new component with a raw `<button>` (or `<select>`),
+(`Button`, `Fab`, ...) before being caught and fixed — when adding a new component with a raw `<button>` (or `<select>`),
 add `cursor-pointer` to its base classes from the start. A `<.link>` or raw
 `<a>` doesn't need it (browsers already do this correctly for anchors), and
 neither does a non-interactive element — `ListItem`'s static (non-link)
@@ -326,38 +327,26 @@ your `class={...}` attribute), so it's not something to rely on. To
 override a specific built-in utility (a color, a size, a border width, a
 padding, ...), prefix your override with Tailwind's `!` (important)
 modifier — e.g. `class="!bg-red-500"` to override a button's default
-`bg-pp-primary`, `class="!size-24"` to override `Avatar`'s preset
+`bg-pp-primary`, `class="!size-8"` to override `Icon`'s preset
 `size-*`. `!` beats a non-`!` class regardless of stylesheet order, so it's
 the one deterministic way to win. This was already the documented
 workaround for the one case even `tails` itself couldn't merge (`size-*`,
-a shorthand its ruleset predates — see `ThemeToggle`'s section below); it's
-now the standard pattern for *every* override, not just that one case.
+a shorthand its ruleset predates); it's now the standard pattern for *every* override, not just that one case.
 
 **Point people at the attr first.** Most of the overrides people reach
 for already have an attr that *changes* the built-in class instead of
 fighting it — a class conflict there isn't a bug to work around with `!`,
-it's a sign the attr was missed. Found in practice: a `class="flex-col"`
-on a `direction="row"` `pp_stack` silently lost to the stack's own
-`flex-row`, and nothing warned. When a component emits a layout/size
+it's a sign the attr was missed. When a component emits a size/color
 class from an attr, name that attr in its moduledoc as the way to change
-it (see `PhoenixPaper.Stack`'s "Use the attrs, not `class`" table). The
-current set:
+it. The current set:
 
 | Component | Built-in class | Change it with |
 |-----------|----------------|----------------|
-| `Stack` | `flex-col`/`flex-row`, `gap-*`, `flex-wrap` | `direction`, `spacing`, `wrap` |
-| `Grid` | `gap-*` | `spacing` |
-| `GridItem` | `col-span-*`, `md:col-span-*` | `span`, `md` |
-| `Container` | `max-w-screen-*` | `max_width` |
-| `Paper` | surface color, `pp-elevation-*`, `rounded-pp-*` | `color`, `elevation`, `shape` |
-| `Card`/`Accordion`/`TableContainer` | surface, `rounded-pp-*` | `variant`, `shape` |
-| `Card` | `p-*` | `padding` |
+| `Card` | surface color, border, shadow | `variant` |
 | `Button`/`IconButton` | colors, height/padding/type, corners | `variant`, `color` (incl. `inherit`), `size`, `shape`, `width` |
-| `Avatar` | `size-*`, colors | `size`, `color` |
 | `Icon` | `size-*` | `size` (`none` = no built-in size) |
 | `Fab`/`FabMenu`/`Button`/`IconButton` | `relative` | `position` |
 | `Typography` | type role, color | `variant`, `emphasized`, `color` |
-| `List`/`ListItem` | `min-h-*`/`py-*`, `ps-*` | `dense`, `nested`, `inset` |
 
 Use `!` only for what no attr covers. A responsive or state variant
 (`md:flex-row`, `hover:...`) adds a *different* class instead of
@@ -383,7 +372,7 @@ Rules:
 - Instead, enumerate every case as a literal string in an explicit
   `case`/`cond`/pattern-matched function clause, in a `.ex` file that's
   covered by the consumer's Tailwind source scan. See
-  `PhoenixPaper.Elevation.class/1`, `PhoenixPaper.Spacing.padding/1`, and
+  `PhoenixPaper.Elevation.class/1`, `PhoenixPaper.Shape.class/1`, and
   `PhoenixPaper.Button`'s `color_classes/2` for the pattern.
 - The same applies to variant-prefixed combinations (`hover:pp-elevation-4`)
   — the whole prefixed token must appear literally somewhere, not be
@@ -394,7 +383,7 @@ Rules:
 
 ## CSS-only interactive state: `peer-*` vs `has-[:checked]:`
 
-Several components (`Checkbox`, `Switch`, `RadioGroup`, `Rating`) fake a
+Several components (`Checkbox`, `Switch`, `RadioGroup`) fake a
 custom-styled control (a box, a track, a circle) around a real, visually
 hidden `<input>`, purely in CSS, no JS. Two different Tailwind mechanisms
 apply depending on where the styled element sits relative to the input, and
@@ -411,15 +400,6 @@ matches, and the "checked" look never appears):
   not a sibling — `peer-checked:` on that ancestor was a real bug once and
   never actually painted the box).
 
-When cascading a fill effect across *multiple* controls sharing one name
-(`Rating`'s "hovering star 3 highlights stars 1-3"), the standard
-`peer-checked:`/`peer-hover:` sibling-combinator behavior already extends
-past the immediate next element to *every later sibling* — so putting a
-shared `peer` class on every input/label pair, laid out flat (not nested per
-item) and reversed with `flex-row-reverse`, is enough; see `Rating` for the
-full pattern and why the elements must be flat siblings, not nested per-star
-wrappers.
-
 A third variant, for toggling something from *outside* its DOM subtree
 entirely (the navigation rail's modal panel, opened by a menu button that
 lives inside the `TopAppBar`, nowhere near the rail): a plain `<label for={checkbox_id}>`
@@ -429,110 +409,40 @@ targeting is id-based, not sibling-based. Only the elements that need to
 actual siblings for `peer-checked:` to reach them; the button that flips it
 doesn't.
 
-`FabMenu` uses the same checkbox, plus a click-away `<label>` for it. (0.3's `SpeedDial` layered a fourth thing on top of that checkbox: the reveal
-target reacts to `peer-checked:` **or** `group-hover:` **or**
-`group-focus-within:` at once, so one CSS-only component opens on tap
-(checkbox, sticky), hover (transient), and keyboard focus. See its own
-section under "Actions" for why the trigger↔actions gap must be padding.
+`FabMenu` uses the same checkbox, plus a click-away `<label>` for it.
 
 ## Stateless function components vs. `Phoenix.LiveComponent`
 
 Every component is a stateless `Phoenix.Component` function (`pp_*/1`) by
 default — that's the whole point of the `pp_` import convention. Reach for a
 `Phoenix.LiveComponent` only when a component needs interactive state a
-single render pass can't express from its attrs alone (`Autocomplete`'s open
-dropdown + filtered list, `PowerSelect`'s search term/results/selection,
-`TransferList`'s left/right item split, `DatePicker`'s viewed month and
-pending date, `TimePicker`'s dial state). Those five are the only such
-components on purpose: they aren't imported by
+single render pass can't express from its attrs alone (`DatePicker`'s
+viewed month and pending date, `TimePicker`'s dial state). Those two are
+the only such components on purpose: they aren't imported by
 `PhoenixPaper.Components` (there's no function to import — they're used
-directly as `<.live_component module={PhoenixPaper.Autocomplete} ...} />`),
+directly as `<.live_component module={PhoenixPaper.DatePicker} ... />`),
 they only work inside a LiveView (not a plain dead/controller-rendered
-page), and that limitation should be called out in their moduledoc. Default
-to a stateless function component; justify a `LiveComponent` explicitly.
+page), and that limitation is called out in their moduledoc. Default to a
+stateless function component; justify a `LiveComponent` explicitly.
 
-## Forms: `PowerSelect` (ember-power-select)
+Both pickers tell the caller's form about changes the same way: hidden
+inputs carry the value, and after each change the server renders a fresh
+`<span id="<id>-changed-N" phx-mounted={JS.dispatch("input", ...)}>`.
+The id changes, so it's a new element, and `phx-mounted` fires after the
+patch, when the hidden inputs already hold the new value; the dispatched
+`input` event bubbles into the form's `phx-change`, like a native input's.
+A LiveComponent has no `attr` defaults (an omitted attr is simply absent),
+so `update/2` fills `@defaults` with `assign_new/3` — correct here, unlike
+in function components (see the `assign_new/3` gotcha below). They're
+tested with `live_isolated/3` through `PhoenixPaper.TestEndpoint` in
+`test/support` (needs the test-only `lazy_html` dep).
 
-A `LiveComponent` modeled on ember-power-select. The server holds the
-search term, the current results, the selection and a pending search; the
-client does only what LiveView leaves alone when it patches. Decisions
-worth knowing before touching it:
+## Containment: `Card`
 
-- **Open/close is `Phoenix.LiveView.JS`** (`show/1`, `hide/2`, `toggle/2`,
-  `pick/5`, public `@doc false` and tested by pattern-matching their ops,
-  like `Tabs.select/2`), not an `open` assign. JS-command display state
-  survives patches, and a click-away doesn't cost a round trip. The list
-  is always rendered, hidden.
-- **Keyboard is one inline `onkeydown` on the root** (`@keyboard_js`). It
-  only moves DOM focus and `.click()`s elements that already exist (options,
-  chips, a hidden `data-pp-close` button running `hide/2`). Focus and
-  clicks can't be undone by a patch, unlike a script mutating attributes
-  (the `ThemeToggle` hydration bug). Type-ahead on a search-less trigger
-  works on the hidden options the same way.
-- **No `<form>` inside, and the search box is detached from the
-  caller's form.** A `phx-change` needs a form, but the component usually
-  sits *inside* the caller's form and a nested `<form>` is dropped by the
-  HTML parser. So the search box uses `phx-keyup` (key events send the
-  input's `value`) with `phx-debounce`, has no `name`, and its `form`
-  attribute points at a nonexistent id. That makes `input.form` null, so
-  LiveView never runs the caller's `phx-change` for it, and it's never
-  submitted. `Autocomplete` had a real nested `<form>` until 0.3.0; it now
-  uses the same trick.
-- **The caller's form still sees changes.** Hidden inputs carry the
-  value. After each change the server renders a fresh
-  `<span id="<id>-changed-N" phx-mounted={JS.dispatch("input", ...)}>`:
-  the id changes, so it's a new element, and `phx-mounted` fires after the
-  patch, when the hidden inputs already hold the new value. The dispatched
-  `input` event bubbles into the caller's form `phx-change`, like a native
-  select's. `on_change` (a function, run in the LiveView process) covers
-  use outside a form.
-- **The parent's `value` is only re-read when it changes**
-  (`external_value`). A parent re-render with a stale value must not undo
-  a pick that hasn't round-tripped yet.
-- **Async search is `start_async/3`.** LiveView drops results from a
-  superseded task by ref, and the task also returns its term, which is
-  compared with the current one. A blank term cancels and shows `options`.
-- **Accent folding is NFD plus stripping `\p{Mn}`**, with a small table
-  for letters that don't decompose (`ø`, `æ`, `œ`, `ß`, `ł`, `đ`, `ð`).
-- **A LiveComponent has no `attr` defaults.** An omitted attr is simply
-  absent, so `update/2` fills `@defaults` with `assign_new/3`. That's
-  correct here, unlike in function components (see the `assign_new/3`
-  gotcha below).
-
-Verified two ways: `live_isolated/3` tests with a real host LiveView
-(search, picks, clear, multiple, disabled options, async ordering, the
-stale-parent case) through `PhoenixPaper.TestEndpoint` in `test/support`
-(needs the test-only `lazy_html` dep). Also headless Chromium driven over
-the DevTools protocol, with the real `phoenix.js`/`phoenix_live_view.js`
-and a LiveSocket that never connects: open/close, click-away, arrow keys,
-Escape, type-ahead, search focus, Enter not submitting, Backspace removing
-a chip, the search box not being in `FormData`. Not covered in the
-browser: the `phx-mounted` dispatch, which only fires after a real patch.
-
-## Layout primitives (`Box`, `Container`, `Stack`, `Grid`/`GridItem`, `ImageList`/`ImageListItem`)
-
-These are named after and loosely modeled on MUI's Layout category
-(mui.com/material-ui) but are Tailwind-native reinterpretations, not ports —
-MUI's `sx` prop is a React-specific styled-system feature with no Phoenix
-equivalent, and a few things are deliberately narrower than MUI's version
-because of the Tailwind class-safety rule above (every responsive/spanning
-class has to be a literal, so covering MUI's full breakpoint matrix means
-writing out every combination by hand). Notably: `GridItem` only supports a
-`md:` breakpoint override, not MUI Grid's full `sm`/`md`/`lg`/`xl` set (see
-its moduledoc for why and how to extend it), and `Stack`'s `divider` prop
-isn't supported since a stateless component only gets one opaque slot, not
-a list of children it could interleave dividers between. `Container`'s
-`max_width` uses Tailwind's own `sm`/`md`/`lg`/`xl`/`2xl` screen scale
-rather than replicating MUI's specific pixel breakpoints.
-
-## Surfaces and composition (`Paper`, `Card`, `Typography`)
-
-`PhoenixPaper.Paper` is the base surface primitive (background + elevation
-+ shape, no padding, no slots) — `Card` is built by composing `Paper`
-rather than duplicating its `paper_classes`, matching MUI's real
-architecture (`Card` wraps `Paper` there too). When a new component needs
-"a raised surface," reach for `<.pp_paper>` instead of hand-rolling
-`bg-pp-surface` + `Elevation.class/1` + `Shape.class/1` again.
+`Card` renders MD3's three cards itself (`elevated`
+`surface-container-low` + level-1 shadow, `filled`
+`surface-container-highest`, `outlined` `surface` + `outline-variant`
+border), with MD3's fixed medium (12dp) corners and 16dp content padding.
 
 **Link attributes need a route to the `<a>`.** A linkable component whose
 `rest` lands on the link itself (`Button`, `ListItem`) must list the
@@ -540,25 +450,13 @@ non-global link attrs in `attr(:rest, :global, include: ~w(target rel
 download hreflang referrerpolicy method csrf_token replace))` — `target`
 and `rel` aren't HTML globals, so without the `include` Phoenix rejects
 them at compile time. A component whose `rest` lands on a *wrapper*
-instead (`Card`: `rest` goes on the `Paper` root, the link is inside it)
+instead (`Card`: `rest` goes on the card root, the link is inside it)
 needs explicit `target`/`rel` attrs forwarded to the link, or they'd end
-up on a `<div>` where they do nothing. `ListItem` and `Card` were both
-missing this until 0.2.6.
+up on a `<div>` where they do nothing.
 
-Composing one PhoenixPaper component inside another needs one extra step
-`Card` uses: `Paper` hardcodes `data-pp-component="paper"` on its own root,
-and every component is expected to mark itself with *its own* name (see
-"Component conventions") — so `Paper` exposes a `component` attr (default
-`"paper"`) that a wrapper overrides, e.g. `<.pp_paper component="card">`.
-Don't try to override it by passing `data-pp-component="card"` through
-`{@rest}` instead — `Paper`'s `<div>` already has that attribute set
-literally, so the one from `rest` would just render as an ignored
-duplicate rather than replacing it; only the first `data-pp-component` a
-browser sees wins.
-
-**`Card`'s link mode is a "stretched link"** (since 0.2.5). The title +
-body `<a>` gets an `after:absolute after:inset-0` overlay against the
-now-`relative` card root, so the whole card, actions row included, is
+**`Card`'s link mode is a "stretched link"** (MD3's clickable card). The
+title + body `<a>` gets an `after:absolute after:inset-0` overlay against
+the `relative` card root, so the whole card, actions row included, is
 the click/hover/focus target, while `:actions` stays outside the `<a>`
 (a button inside a link is invalid). The hover tint and focus ring are
 drawn on that `::after` (`hover:after:bg-...`), not the link box. The
@@ -566,90 +464,7 @@ actions row is `relative z-10` to sit above the overlay, plus
 `pointer-events-none [&>*]:pointer-events-auto` so its buttons keep their
 clicks but the gaps between them fall through to the link. Verified with
 `document.elementFromPoint` in Chromium: title, body and the actions-row
-gap all hit the card link, and the action button hits itself. The ripple
-still spawns from the link element, and its span is positioned against the
-`relative` card root, which works because the link's box starts at the
-root's top-left corner.
-
-## Surfaces: `Accordion`, `AccordionSummary`, `AccordionDetails`, `AccordionActions`
-
-Modeled on MUI's `Accordion` — pure CSS, no JS/LiveView, the same hidden-
-checkbox-plus-`peer-checked:` trick as `NavigationRail`/`Rating`. `pp_accordion/1`
-renders the checkbox itself, as the first child inside its own `Paper`
-surface; the caller writes `AccordionSummary`/`AccordionDetails`/
-`AccordionActions` as its `inner_block`, making them flat siblings *after*
-the checkbox (all three need the *same* `id` as `pp_accordion/1`, to build
-the matching `for=`/`peer-checked:` wiring — there's no way for sibling
-components to discover a shared id implicitly).
-
-Two things worth remembering if you touch this family:
-
-- **`disable_gutters`'s margin needs `has-[:checked]:`, not `peer-checked:`**
-  — caught this while building it, not after. Every *other* CSS reaction in
-  this family targets a true sibling of the checkbox (`AccordionSummary`'s
-  label, `AccordionDetails`, `AccordionActions` — all written by the caller
-  *after* the checkbox in `pp_accordion/1`'s `inner_block`), so
-  `peer-checked:` is correct there. But the gutters margin has to land on
-  `pp_accordion/1`'s own `Paper` root — which is the checkbox's *ancestor*,
-  not its sibling (the checkbox is rendered *inside* that root, as its own
-  first child). `peer-checked:` only reaches later siblings of the peer, so
-  it can't express "this element's own descendant checkbox is checked" —
-  that needs `has-[:checked]:` instead. Same underlying CSS distinction as
-  `peer-*` vs `has-[:checked]:` documented above, just easy to get backwards
-  mid-refactor when three other classes in the same file correctly use
-  `peer-checked:` for a *different* relationship.
-- **Colors and styles live on `pp_accordion/1` only** (since 0.2.5):
-  `variant` (`elevated`/`filled`/`outlined`) and `color`. The filled
-  background comes from `Paper`'s new `color` attr, *not* a `bg-pp-*`
-  passed through `class`: `Paper` already emits `bg-pp-surface`, and with
-  no class merging the two would tie. The parts (summary/details/actions)
-  have no color attr; the root reaches them with
-  `[&>[data-pp-component=accordion-details]]:border-pp-on-primary/20`-style
-  child selectors.
-  Buttons in a filled accordion's actions need `color="inherit"`.
-- **Exclusive single-panel groups are `type="radio"`, not JS/LiveView
-  state.** Give every accordion in a group the same `name` and
-  `pp_accordion/1` renders a radio instead of a checkbox — same-named radios
-  are natively mutually exclusive, so "only one open at a time" needs zero
-  extra code. Verified with real simulated clicks (not just static
-  rendering) that checking one radio in the group correctly unchecks
-  whichever was previously open. The one real gap versus MUI's JS-driven
-  version: a checked radio can't be *unchecked* by clicking it again (an
-  HTML limitation), so the group can't return to "all collapsed" — that's
-  documented as a known, permanent difference, not a bug to fix.
-
-## Surfaces: `Collapse`, and `List`'s collapsible groups
-
-`PhoenixPaper.Collapse` (`pp_collapse/1`) is the light show/hide for when
-`Accordion` is too much: one component, one `id`, a `:trigger` slot and
-the content. Same hidden-checkbox-plus-`peer-checked:` mechanism as
-`Accordion`/`NavigationRail`, but the content animates its height with the
-`grid-template-rows: 0fr → 1fr` trick (a grid track can transition
-between fractions of its content's height, which `height: auto` can't) and
-toggles `invisible`/`visible` alongside it, so links inside a closed
-collapse can't be tabbed to. `visibility` is in the transition list on
-purpose: it flips to `hidden` only at the *end* of closing, so the content
-stays painted while it shrinks.
-
-`PhoenixPaper.List.pp_list_group/1` is the same structure with a list-item-shaped
-trigger (a nested list inside a collapse, MUI's usual nested-nav pattern)
-and lives in `PhoenixPaper.List` because it has no use outside a list. It
-reuses `Collapse.toggle_id/1`, `content_id/1` and `content_classes/0`
-instead of composing `pp_collapse/1`: the list trigger needs *different*
-base classes than `Collapse`'s trigger, and with no class merging (see
-above) that can't be done by passing `trigger_class`. Its trigger label
-carries `data-pp-component="list-item"`, so `List`'s `dense`/`inset` and a
-list-level selectors reach it like any other item.
-
-`List`'s `dense`/`nested`/`inset` use the `Table`-style descendant
-selectors (`[&_[data-pp-component=list-item]]:py-1`). `inset` targets items
-*without* a leading icon via `:not(:has([data-pp-list-item-leading]))`, which
-is why `ListItem`'s leading `<span>` carries that data attribute.
-
-Headless-Chromium caveat, again: reading `visibility` right after clicking
-the toggle returns the *pre*-transition value (see the `Tooltip` note
-below); inject `* { transition: none !important }` before clicking when
-checking the open state.
+gap all hit the card link, and the action button hits itself.
 
 ## Navigation: `TopAppBar` (renamed from `AppBar`, earlier `Navbar`)
 
@@ -657,7 +472,7 @@ MD3's top app bar is **surface-colored**, not primary: `bg-pp-surface`,
 turning `surface-container` when content scrolls under it. The scroll
 color change is CSS (`pp-top-app-bar-scroll`, an `animation-timeline:
 scroll(nearest)` animation over the first 8px) where scroll-driven
-animations exist; the optional hook sets `data-pp-scrolled` elsewhere,
+animations exist; the JS hook sets `data-pp-scrolled` elsewhere,
 and `scrolled` forces it from the server. Variants: `small`,
 `center_aligned`, and the Expressive flexible `medium`/`large` (title on
 its own row) with `subtitle`.
@@ -668,14 +483,13 @@ On a surface bar the default icon-button color (`on-surface-variant`) is
 already right; `color="inherit"` stays the answer on colored surfaces
 (the vibrant `Toolbar`, a filled card).
 
-`max_width`/`disable_gutters` cap and centre the content row. The row's
-layout classes stay unconditional under `paperize={false}` (no inner
-`class` to rebuild them with) — the deliberate exception to "paperize
-drops everything" that `Breadcrumbs`' `<li>`s also make.
+The row's layout classes stay unconditional under `paperize={false}` (no
+inner `class` to rebuild them with) — a deliberate exception to "paperize
+drops everything".
 
 ## Navigation: stacking order
 
-Fixed layers, MD3/MUI order: `TopAppBar`'s `sticky`/`fixed`/`absolute`
+Fixed layers: `TopAppBar`'s `sticky`/`fixed`/`absolute`
 positions are `z-20`, as are a fixed `NavigationBar`/`Toolbar`; the docked
 navigation rail is `md:z-30`; the modal rail's scrim `z-30` and panel
 `z-40`; menus `z-40`; dialogs and sheets `z-50`. Keep new fixed/sticky
@@ -727,124 +541,17 @@ preflight makes the `[hidden]` attribute `display: none !important`, which
 `JS.show`'s inline `display` can't beat.
 
 The primary indicator is as wide as the label because it's positioned
-inside the label's own box. Its slide from tab to tab is the optional
-hook's (a FLIP animation on the spring), and is instant without it.
+inside the label's own box. Its slide from tab to tab is the JS hook's
+(a FLIP animation on the spring), and is instant without it.
 Verified with a unit test pattern-matching `select/2`'s exact op list,
 like every JS-command component.
 
-## Navigation: `Breadcrumbs`
+## Selection: `Menu`
 
-The first slot in this library declared with `attr`s of its own (`slot
-:item do attr :href, :any ... end`) — until now every multi-piece
-component (`Table`'s rows, `ButtonGroup`'s buttons, `List`'s items) took a
-plain opaque `inner_block` and left the caller to write out full child
-components. `Breadcrumbs` needs to know things *about* each item (does it
-have a link, in what order) to auto-insert a separator and to slice the
-list for collapsing, so `:item` carries real attrs instead. Two
-implementation traps worth knowing if you add another attr-carrying slot:
-
-- **Slot attrs can't have a `:default`** (a hard compile error if you try)
-  — unlike top-level `attr`, an omitted, non-required slot attr key is
-  simply *absent* from the slot entry's map, not filled with `nil`. Dot
-  access (`item.href`) raises `KeyError` the first time a caller omits it;
-  bracket access (`item[:href]`) returns `nil` like any other `Map.get/2`
-  and is the only safe way to read an optional slot attr. Verified by
-  actually rendering a slot usage that omits the attr, not just reading
-  the `slot/3` macro's docs — the docs say "an omitted slot will default
-  to `[]`" (talking about the *slot itself* being absent), which reads
-  easy to conflate with "an omitted slot *attr*" behaving the same way; it
-  doesn't.
-- A private function component can have several *clauses* pattern-matching
-  on the shape of `assigns` directly (`defp entry(%{entry: :ellipsis} =
-  assigns)`, `defp entry(%{entry: {:item, item}} = assigns)`, ...) the same
-  as any other Elixir function — used here to dispatch a heterogeneous,
-  server-built list (real items, `:ellipsis`, `:separator` markers,
-  produced by `Enum.intersperse/2`) to different `~H` templates without a
-  `case`/`cond` inside one template. Calling a `defp` component via
-  `<.entry .../>` tag syntax (not just as a plain `{helper(assigns)}` call
-  like `ListItem`'s `item_content/1`) works fine as long as it's in the
-  same module — confirmed against `TransferList`'s own private `list/1`,
-  which already did this.
-
-Which item is "current" (rendered as plain `aria-current="page"` text
-instead of a link) is **not** auto-detected by list position — same
-"stateless function component, no knowledge of the current request"
-reasoning `ListItem`'s `active` attr doc gives. It's simply whichever
-`:item` you leave without `href`/`navigate`/`patch`, matching every one of
-MUI's own docs examples (their last child is always a plain `Typography`,
-never auto-computed either).
-
-Collapsing (`max_items`, default 8, matching MUI) reuses the
-hidden-checkbox-plus-`peer-checked:` trick, but unlike `Accordion`/
-the navigation rail, the checkbox's `id` is generated internally with
-`System.unique_integer/1` rather than taking a caller-supplied `id` attr
-at all — nothing outside this component ever needs to reference it (no
-sibling summary/details/actions, no external toggle button), so there's
-nothing lost by not exposing one. Both the collapsed `<ol>` (first
-`items_before_collapse` + ellipsis + last `items_after_collapse`) and the
-full `<ol>` are always rendered, one hidden via `peer-checked:hidden`/
-`peer-checked:flex` — same "always in the DOM, CSS toggles visibility"
-trade-off as `Dialog`. Verified with a real simulated click on the
-ellipsis `<label>` (not just a static render) that the checkbox actually
-flips and the full list actually becomes visible.
-
-Per the `paperize` contract, per-item *color* (`text-pp-primary` links,
-`text-pp-outline` separator, the ellipsis control's hover styles) is
-gated through `Helpers.classes/3` like everywhere else — but the `flex
-items-center` layout on every `<li>` and both `<ol>`s stays unconditional
-even under `paperize={false}`, the same deliberate exception `TopAppBar`'s
-inner toolbar div makes and for the same reason: there's no `class` attr
-exposed on an individual `<li>` for a `paperize={false}` caller to rebuild
-that row layout themselves.
-
-## Navigation: `Pagination` and `TablePagination`
-
-Both are stateless and **1-based** (MUI's `TablePagination` is 0-based;
-one numbering across the library won). Each control either links or
-fires an event, never both:
-
-- **Link mode**: a `path` function builds each URL — `page -> url` for
-  `Pagination`, `(page, rows_per_page) -> url` for `TablePagination` —
-  and `link` (`patch` default/`navigate`/`href`) picks the link kind. The
-  page lives in the URL, so `handle_params/3` loads it. Picking a new page
-  size links to page 1.
-- **Event mode**: `on_change` (`Pagination`) or `on_page_change`/
-  `on_rows_per_page_change` (`TablePagination`) set `phx-click`, with the
-  value in `phx-value-page`/`phx-value-rows_per_page` and `target` as
-  `phx-target`.
-
-A control that can't move (previous on page 1) renders as a disabled
-`<button>` in both modes, never a link to page 0. `Pagination.items/4` is
-MUI's `usePagination` ellipsis algorithm, public and doctested; its
-constant-length property (the bar doesn't change width while paging) has
-its own test. `TablePagination`'s rows-per-page picker is a `pp_menu` of
-`pp_menu_item`s rather than a native `<select>`: a `<select>` can't
-navigate on change without a script or a wrapping form, and a menu item
-is a plain link. That's why `TablePagination` needs an `id`, and like
-`Menu` it needs the LiveView JS client on the page. Prev/next are
-`pp_icon_button color="inherit"`.
-
-## Forms: `pp_form`
-
-`pp_form/1` is a thin layer over `Phoenix.Component.form/1`, not a
-replacement: it adds a `flex flex-col` + `Spacing.gap(spacing)` column
-and a right-aligned `:actions` slot, and passes everything else through
-by spreading a map into `<.form>`. Only the options the caller actually
-set are forwarded, because `form/1` reads `as`/`method`/`errors`/
-`csrf_token` straight from its assigns and would treat a `nil` as an
-explicit value. Plain `<.form>` stays fully supported; every `pp_*`
-control takes `field=` either way.
-
-## Navigation: `Menu`
-
-MUI files `Menu`/`MenuItem` under its own "Navigation" category
-(mui.com/material-ui/react-menu), so this follows the same grouping —
-`pp_menu/1` is a trigger that reveals a small anchored popover list of
-actions (an overflow menu, a profile menu). It's the second component in
-this library that isn't stateless-and-simple (`Dialog` is the first, see
-above): the checkbox/`peer-checked:` trick every other reveal component
-uses (`Accordion`, `NavigationRail`, `FabMenu`) can only express "is *some*
-sibling checked," with no way to close itself on an outside click or on
+`pp_menu/1` is MD3's menu: a trigger that reveals a small anchored list
+of actions (an overflow menu, a profile menu). The checkbox/
+`peer-checked:` trick other reveal components use (`NavigationRail`,
+`FabMenu`) can only express "is *some* sibling checked," with no way to close itself on an outside click or on
 selecting an item — both baseline-expected menu behavior — so `Menu` uses
 the same `Phoenix.LiveView.JS` + `phx-click-away` mechanism `Dialog` uses
 for its own backdrop-click case, not a new mechanism.
@@ -854,18 +561,16 @@ lives wherever the caller puts it on the page (`phx-click={Dialog.show(id)}`
 on a button anywhere), fully decoupled from the dialog markup itself,
 because a full-screen modal doesn't need to be positioned relative to
 anything. A menu's popover *does* — it has to render right under its own
-trigger — and doing that without a bespoke JS hook measuring
-`getBoundingClientRect` (the thing this library consistently avoids, see
-`Slider`'s `valueLabelDisplay`/`Tabs`'s sliding-indicator notes) means
-plain CSS: `absolute`-positioning the panel against a `relative` ancestor
-that also contains the trigger. So unlike `Dialog`, `pp_menu/1` renders
+trigger — and doing that in CSS (the hook only adds edge flipping)
+means `absolute`-positioning the panel against a `relative` ancestor that
+also contains the trigger. So unlike `Dialog`, `pp_menu/1` renders
 *both* the trigger and the panel itself, as one component, and the
 `:trigger` slot only supplies the trigger's inner content, not a whole
 independent element elsewhere on the page.
 
 **Closing an item closes the menu — via bubbling, not cooperation.**
 `phx-click={close(@id)}` sits on the panel wrapper itself; clicking any
-item inside (a `ListItem`, a plain link, anything) runs that item's own
+item inside (a `pp_menu_item`, a plain link, anything) runs that item's own
 click handling first, then the native DOM click event bubbles up to the
 panel's own listener and closes the menu — zero coordination needed from
 whatever `:inner_block` renders. An element that must *not* close the
@@ -879,10 +584,9 @@ nested submenus' `aria-expanded`.
 **Positioning is unconditional, not gated by `paperize`.** The panel's
 `absolute`/anchor-offset classes live on the outer wrapper `<div>`, never
 routed through `Helpers.classes/3` — same reasoning as `Badge`'s wrapping
-`<span>` and `Autocomplete`'s anchor `<div>` (see "The `paperize`
-contract"): it's positioning plumbing the popover can't function without,
-not visual skin. Only the inner `PhoenixPaper.Paper` surface (background,
-elevation, rounded corners, cosmetic padding/min-width) is paperize-gated.
+`<span>`: it's positioning plumbing the popover can't function without,
+not visual skin. Only the inner surface (background, elevation, rounded
+corners, cosmetic padding/min-width) is paperize-gated.
 
 **The trigger is a `pp_icon_button` or a `pp_button`** (since 0.4.0):
 `trigger_icon` + `trigger_label` give an icon button, otherwise the
@@ -902,13 +606,11 @@ shows it open; check `aria-expanded` (set synchronously) or screenshot.
 
 `anchor` (`bottom-start`/`bottom-end`/`top-start`/`top-end`, default
 `bottom-start`) is where the panel opens. CSS alone can't detect viewport
-collisions, so flipping is the optional hook's job (see "The optional JS
-hook"); without it the anchor is fixed — the same trade-off
-`Tooltip`'s `placement` already documents and for the same reason: real
-auto-flip needs a runtime viewport-space measurement, another JS hook this
-library doesn't add.
+collisions, so flipping is the JS hook's job (see "The JS hook"): it
+measures the open panel and sets `data-pp-flip`. Without an `id` (no
+hook) the anchor is fixed, as `Tooltip`'s `placement` is.
 
-## Forms: `Slider` (MD3 slider, Expressive sizes)
+## Selection: `Slider` (MD3 slider, Expressive sizes)
 
 The native range input draws only the **handle** (MD3's 4dp bar, 2dp
 while pressed): its own track is transparent. The visible track is a
@@ -941,7 +643,7 @@ Vertical sliders use `writing-mode: vertical-lr` (+ Firefox's
 `-moz-orient`) with a complete, separate input utility. Range and vertical
 can't be combined.
 
-## Forms: `TextField` (renamed from `Input`; MD3 text field)
+## Text inputs: `TextField` (MD3 text field)
 
 `TextField.pp_text_field/1` is MD3's text field: `outlined` (default) and
 `filled` (MD3 has no `standard`), 56dp, `body-large` text, the label
@@ -949,34 +651,10 @@ floating to `body-small` — **onto the border** for outlined, to the top
 of the box for filled. `color` (`primary`/`secondary`/`tertiary`/`error`)
 shows on `:focus-within`. Filled's active indicator is an inset bottom
 shadow (1dp → 2dp on focus without moving anything). Errors add a
-trailing error icon, `size="small"` is a dense 40dp field, and
-`multiline` plus the `:start_adornment`/`:end_adornment` slots work as
-before. Not ported from MUI: `select` (that's the separate
-`PhoenixPaper.Select` component), `fullWidth` (just put `class="w-full"` on
-the caller's own wrapper — no component-level attr needed for one utility
-class), `margin` (MUI's `dense`/`normal`/`none` vertical-spacing presets —
-this library leaves vertical spacing between form fields to the caller's own
-layout, same as everywhere else it uses `Stack`/`gap-*` rather than a
-per-component margin attr), and controlled/uncontrolled value semantics
-(N/A — LiveView forms already have one way to be "controlled": `field=`
-from `to_form/2`).
-
-`hide_label` (also on `Select`) *is* essentially MUI's `hiddenLabel` +
-`margin="dense"` rolled together, added because the default field is
-unusably tall/wide for an inline filter toolbar: it renders a **separate
-`def pp_text_field(%{hide_label: true} = assigns)` clause** (cleanest — the
-notch/floating-label machinery below is intricate enough that threading a
-flag through every branch would be a minefield; a whole separate clause
-touches none of it) that drops the outer `flex flex-col gap-1` column, the
-`<label>`, the `<fieldset>` notch and the helper/error `<p>` rows, uses
-`@label` as the `placeholder`, and swaps the asymmetric `pt-7 pb-2`
-padding (which only exists to reserve room for the floated label) for a
-symmetric `py-2.5`/`py-1.5`. Errors still show — as the red border — just
-not the message text, so an error appearing doesn't reflow the toolbar
-row. `outlined`'s border thickens on focus the `Select`-wrapper way
-(`border` → `focus-within:border-2`), accepting the 1px shift rather than
-carrying the fieldset overlay into the dense path. The `field=` clause
-runs first and re-dispatches, so `hide_label` + `field=` composes.
+trailing error icon; `multiline` and the `:start_adornment`/
+`:end_adornment` slots (MD3's leading/trailing icons, prefix/suffix
+text) round it out. There's one size (MD3's 56dp) and the label is
+always there (0.5.0 removed `size="small"` and `hide_label`).
 
 The floating label is the same pure-CSS `peer-*` trick as `Checkbox`/
 `Switch`'s state styling (see "CSS-only interactive state" above): the
@@ -995,8 +673,7 @@ adornment `<span>` sitting between them would have broken every
 `multiline` swaps in a `<textarea rows={@rows}>` for the `<input>` but reuses
 every other class/mechanism unchanged — `:placeholder-shown`/`:focus` work
 identically on both element types, so the label doesn't need to know or care
-which one it's paired with. One easy-to-miss HEEx gotcha here, same class of
-bug as `Box`'s `tag="pre"`: the textarea's value must be written as
+which one it's paired with. One easy-to-miss HEEx gotcha here: the textarea's value must be written as
 `<textarea ...>{@value}</textarea>` with **zero whitespace** between the
 opening tag's `>` and `{@value}` — a newline there gets preserved as a
 leading blank line in every browser's rendering of `<textarea>` content.
@@ -1008,7 +685,7 @@ DOM focus via Chrome DevTools Protocol (`element.focus()` + read
 applied to any state that only exists on `:hover`/`:focus`/`:active`.
 
 `variant="outlined"`'s border has a real notch cut into it around the
-floated label (MUI's "notched outline") via an actual `<fieldset>`/
+floated label (MD3's outlined field notch) via an actual `<fieldset>`/
 `<legend>` — not a CSS trick, a genuine browser behavior: a `<fieldset>`
 natively draws a gap in its own border around an in-flow `<legend>`, no
 custom CSS needed for the gap itself, just color/rounding on top. An
@@ -1046,75 +723,15 @@ that open `max-width`, so the resting legend has **zero** padding (a true
 zero-width box, not just visually small) and the border stays completely
 unbroken until the notch actually needs to open.
 
-## Data display: the Table family (`Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`)
+## Communication: `Badge`, `Chip`, and `Tooltip`
 
-Modeled on MUI's Table components — one small function component per table
-part, composed by the caller (see `PhoenixPaper.Table`'s moduledoc for the
-full composition example). No `TableSortLabel` — `TableCell`'s
-`sortable`/`sort_direction` attrs give the sort-header *look* (a clickable
-header with a direction arrow), but wiring an actual sort click to actual
-reordered data is the caller's LiveView, same as it would be for a
-hand-rolled `<th>`. `TablePagination` arrived in 0.3.0, see "Navigation:
-`Pagination` and `TablePagination`" below.
-
-`dense` (`Table`) and `sticky_header` (`Table`), and `striped` (`TableBody`)
-cascade to every descendant cell via plain CSS descendant selectors
-(`[&_td]:py-1.5`, `[&>tr:nth-child(even)]:bg-...`) rather than an attr
-threaded through every `TableCell` a caller writes — unlike MUI's React
-context, HEEx has no mechanism for a parent to reach into a child
-component's own assigns (the same limitation `ButtonGroup`'s moduledoc
-documents for `color`/`variant`), but a *padding/background* cascade needing
-only one class expressible as a selector works here specifically because CSS
-descendant selectors match on real DOM nesting, not component boundaries —
-`<table>` → `<td>` is real DOM regardless of which function rendered each.
-This trick doesn't generalize to arbitrary-prop cascading like MUI's
-`size`/`color`, only to needs a single compound selector can express.
-
-That same trick is also *why* `TableRow`'s `selected` needs
-`!bg-pp-primary/10` (Tailwind's important modifier) instead of a plain
-`bg-pp-primary/10`: `TableBody`'s `striped` sets its background via
-`[&>tr:nth-child(even)]:bg-...`, a compound selector with higher CSS
-specificity than a bare class on the row itself, so without `!important` a
-selected-and-striped row would silently show the stripe, not the selection
-— found by actually screenshotting a selected+striped row, not by reasoning
-about specificity in the abstract (see "Tailwind class safety" above for
-why every one of these class strings has to be written out literally rather
-than interpolated, same rule as everywhere else).
-
-## Data display: `Avatar`, `Badge`, `Chip`, and `Tooltip`
-
-Four MUI-parity components added together.
-
-- **`Avatar`** layers an `<img>` (when `src` is given) over an always-
-  rendered fallback (the `:inner_block` slot — initials or an icon — or,
-  failing that, a generic person icon), rather than switching between them
-  server-side. A vanilla `onerror="this.style.display='none';"` on the
-  `<img>` (same "small snippet, no hook" precedent as `Ripple`) is what
-  reveals the fallback on a broken image, matching MUI's own children-on-
-  error behavior without a LiveView round-trip or an `onError` callback to
-  wire up. `size` (`small`/`medium`/`large`) is a convenience this library
-  adds — MUI's own `Avatar` has no size prop, expecting `sx`/`className`
-  instead. No `AvatarGroup`: the overlapping-stack look is a plain flex
-  container with `-space-x-*` and a `ring-2 ring-pp-surface` per avatar,
-  already reachable with Tailwind alone — not a real gap the way
-  `Snackbar`'s missing queueing is, so no dedicated component for it.
-
-- **`Badge`** overlaps a small count/status indicator on its child's
-  corner. Hiding logic matches MUI's `Badge` exactly, including a
-  perhaps-surprising edge case: `invisible or (content == 0 and not
-  show_zero) or (is_nil(content) and variant == "standard")` — a
-  `variant="dot"` badge with `content={0}` is hidden by default same as
-  `standard`, only a `nil` content is the one case `dot` treats specially
-  (stays visible, e.g. a blank "online" indicator). `color` defaults to
-  `"error"`, not a `"default"` gray like MUI — this library's `color` scale
-  is `primary`/`secondary`/`tertiary`/`error` plus `success`/`warning`/
-  `info` (see `Alert`), no eighth neutral token exists purely for `Badge`,
-  and an unread-count badge reading as attention-red is the far more common
-  real case anyway. The wrapping `<span>`'s `relative inline-flex shrink-0`
-  is a hardcoded literal, not gated by `paperize` — same reasoning as
-  `Autocomplete`'s anchor `<div class="relative">` (see "The `paperize`
-  contract" above): it's positioning plumbing the badge can't work without,
-  not part of the visual skin.
+- **`Badge`** is MD3's two badges: no `content` gives the 6dp small
+  badge, `content` the 16dp large one (`label-small`, integers above
+  `max`, default 999, shown as `999+`). Always `error`/`on-error`, on the
+  child's top-end corner; a count of `0` hides it. The wrapping `<span>`'s
+  `relative inline-flex shrink-0` is a hardcoded literal, not gated by
+  `paperize`: it's positioning plumbing the badge can't work without, not
+  skin.
 
 - **`Chip`** is MD3's four kinds (`assist`, `filter`, `input`,
   `suggestion`). All but non-clickable input chips are `<button>`s;
@@ -1135,34 +752,20 @@ Four MUI-parity components added together.
   (`surface-container` with subhead and actions, kept open while hovered
   because the gap to the trigger is padding, not margin) variants. Showing
   waits `delay-300`, hiding is immediate. No arrow (MD3 has none).
-  Viewport flipping is the optional hook's (tooltips need an `id` for it).
+  Viewport flipping is the JS hook's (tooltips need an `id` for it).
 
   **A verification dead-end worth knowing about, so it isn't re-walked**:
-  an early headless-Chromium check of the hover reveal seemed to show
-  `group-focus-within:opacity-100` losing to the base `opacity-0` utility
-  once compiled alongside this library's full real stylesheet (thousands
-  of other classes) — but disappeared as soon as `transition-opacity`
-  duration was removed from the test. Root cause, confirmed via
-  `element.getAnimations()`: the element's opacity transition's
-  `playState` stayed `"running"` forever and never advanced, even past its
-  150ms duration — headless Chromium's `--virtual-time-budget` fast-forwards
-  timers but doesn't reliably drive the compositor frames a CSS
-  *transition* (as opposed to an instant style change) needs to progress.
-  Every other component's tests in this library check instant class/attr
-  presence, never an animated property's settled value, which is why this
-  never came up before. The CSS itself was correct the whole time — nothing
-  in `Tooltip`, `Badge`, or `Chip` needed changing. If a future headless
-  check of any *transitioning* property comes back "stuck," suspect the
-  test methodology before the component.
+  headless Chromium's `--virtual-time-budget` fast-forwards timers but
+  doesn't reliably drive the compositor frames a CSS *transition* needs,
+  so a transitioning property (the tooltip's opacity) can read "stuck" at
+  its start value (`element.getAnimations()` shows the transition
+  `"running"` forever). If a headless check of any transitioning property
+  comes back stuck, suspect the test methodology before the component.
 
-## Feedback (`Alert`, `Backdrop`, `Dialog`, `Progress`, `Skeleton`, `Snackbar`)
+## Communication and containment: `Dialog`, sheets, `Progress`, `LoadingIndicator`, `Snackbar`
 
-Modeled on MUI's Feedback category, restyled to MD3 in 0.4.0:
-
-- `Snackbar` is always `inverse-surface`; MD3 has no colored snackbars,
-  so 0.3's `color` attr is gone.
 - `Dialog` is MD3's basic dialog (28dp, `surface-container-high`, hero
-  `icon`) plus `fullscreen`/`responsive` variants.
+  `icon`, 280–560dp wide) plus `fullscreen`/`responsive` variants.
 - `Progress` follows the 2024 MD3 spec: indicator/track gap, stop dot, and
   Expressive `wavy` (a box masked by a repeating SVG wave tile whose
   `mask-position` slides) and `thickness`.
@@ -1170,134 +773,87 @@ Modeled on MUI's Feedback category, restyled to MD3 in 0.4.0:
   with CSS `d: path()` keyframes, generated offline from polar functions.
   The hook carries the same functions for Safari.
 - `BottomSheet`/`SideSheet` reuse `Dialog`'s exact mechanism.
+- `Snackbar` is always `inverse-surface`, at the bottom of the viewport
+  (centered on compact screens, bottom-start from `sm`), entering with
+  MD3's fade-and-expand.
 
-Two older things are still worth knowing before touching any of these:
-
-**`Alert`/`Snackbar` needed a new, separate color axis.** Every other
-component's `color` attr picks from `primary`/`secondary`/`tertiary`/`error`
-— brand/action colors. `Alert`'s `severity` picks from
-`success`/`info`/`warning`/`error` — status colors, a different concept that
-happens to share the name `error` (and does mean the same red) but has no
-brand equivalent for "success" or "info" or "warning". Rather than force
-`Alert` onto the existing 4-color scale (which has no green or amber), added
-`--color-pp-success`/`-warning`/`-info` (+ `-on-*` pairs) to
-`priv/static/phoenix_paper.css`, in both the light (`@theme`) and
-`[data-theme="dark"]` blocks. (A bundled alternate brand palette, removed
-in 0.3.0, deliberately left them out: status colors aren't part of a brand
-identity swap, so an app's own palette override should usually leave them
-alone too.)
-(Older versions of this library also required registering any new `pp-*`
-token in `mix.exs`'s `color_classes` list, for a class-merge dependency
-that's since been dropped — see "Overriding built-in classes via `class`"
-above. A new color token today needs nothing beyond the CSS file itself.)
-
-**`Dialog` was the first component that isn't stateless-and-simple**
-(`Menu` is the second — see "Navigation: `Menu`" above). Every other
-component in this library either needs no interactivity (most of them), a
-tiny bit of pure-CSS trickery (`NavigationRail`, `Rating`, checkbox/switch tricks),
-or genuine server-tracked state as a `Phoenix.LiveComponent`
-(`Autocomplete`, `TransferList`). `Dialog` needs client-side show/hide with
-transitions, backdrop click-to-close, Escape-to-close, and focus trapping —
-none of which need a LiveComponent's server round-trip, so it uses the exact
-mechanism `mix phx.new`'s own generated `core_components.ex` modal already
-uses: always rendered (hidden via CSS), `Phoenix.LiveView.JS` commands
+**`Dialog` uses the generated modal's mechanism.** It needs client-side
+show/hide with transitions, scrim click-to-close, Escape-to-close, and
+focus trapping — none of which need a server round-trip — so it uses what
+`mix phx.new`'s generated `core_components.ex` modal uses: always rendered
+(hidden via CSS), `Phoenix.LiveView.JS` commands
 (`JS.show`/`JS.hide`/`JS.exec`/`JS.focus_first`/`JS.pop_focus`) for the
-transitions, and `Phoenix.Component.focus_wrap/1` (a *built-in* Phoenix
-component backed by the `Phoenix.FocusWrap` hook that ships with
-`phoenix_live_view.js`) for tab-focus trapping — not a hook this library
-wrote. If you've used the generated modal before, `PhoenixPaper.Dialog` is
-that same shape with Material chrome. `max_width` (since 0.2.6, default
-`md` = the old fixed `max-w-md`) is a literal `max_width_class/1` clause
-per value, and it goes on the **focus-wrap container**, not the `Paper`
-panel (fixed in 0.2.7): the `flex items-center justify-center` row sizes
-its direct child, the container, which has no width of its own. With
-`w-full max-w-*` on the panel, `w-full` resolved against a shrink-to-fit
-container, so a canvas or other no-natural-width child collapsed the
-dialog, and long text widened the container past the panel and pushed it
-off-centre. Now the container is `w-full max-w-*` (paperize-gated) and
-the panel is plain `w-full`. Verified by measuring the panel in Chromium
-for canvas, short and long content at 1280px and 500px viewports. The one non-obvious wiring detail:
+transitions, and `Phoenix.Component.focus_wrap/1` (backed by the
+`Phoenix.FocusWrap` hook that ships with `phoenix_live_view.js`) for
+tab-focus trapping. The width goes on the **focus-wrap container**, not
+the panel: the `flex items-center justify-center` row sizes its direct
+child, the container, so with the width on the panel a canvas or other
+no-natural-width child collapsed the dialog and long text pushed it
+off-centre. The container is `w-full max-w-[560px]` (paperize-gated) and
+the panel is plain `w-full`. The one non-obvious wiring detail:
 `data-cancel` has to live on the *outermost* element (the one
-`JS.exec("data-cancel", to: "##{id}")` actually targets by CSS selector),
-not on the inner `Paper` content — putting it on the wrong element means
-`JS.exec` finds nothing and Escape/backdrop-click silently do nothing.
+`JS.exec("data-cancel", to: "##{id}")` targets by CSS selector), not on
+the inner content — on the wrong element, `JS.exec` finds nothing and
+Escape/scrim-click silently do nothing.
 
 `Progress`'s circular variant is real SVG (`stroke-dasharray`/
 `stroke-dashoffset` computed from `value`, with MD3's gap between
 indicator and track worked out in Elixir); the indeterminate ring is the
 same SVG circle with a rotating, growing/shrinking dash
 (`pp-circular-rotate`/`pp-circular-dash`), and the wavy ring is a path
-precomputed at compile time. `Skeleton`'s `animation="pulse"` is Tailwind's own built-in
-`animate-pulse` (nothing to add); `"wave"` needed a real `@keyframes` block
-in `priv/static/phoenix_paper.css`, the same as `Progress`'s indeterminate
-linear bar — animate-spin/animate-pulse cover the other two, but there's no
-built-in Tailwind animation for a sweeping shimmer or a sliding bar.
+precomputed at compile time.
 
-`Snackbar`'s `anchor_origin` (6 corner/edge positions) and `transition`
-(`grow`/`fade`/`slide`/`none`, another set of one-shot `@keyframes`
-utilities same as `Skeleton`'s `wave`) came later, matching MUI's own
-`Snackbar` page — `transition` only animates the *entrance*; see
-`PhoenixPaper.Snackbar`'s moduledoc for why an exit transition and
-consecutive-snackbar queueing still aren't built in (each needs either the
-`Dialog`-style always-rendered-plus-`JS` machinery, or actual state a
-stateless function component has nowhere to hold).
-
-`autoHideDuration` *did* land, as opt-in `auto_hide_duration` (ms) paired
-with `on_close` (a `JS` — MUI's close-IconButton pattern, rendered as a
-trailing ✕). No JS hook: a standalone zero-footprint `<span
-class="pp-snackbar-timeout">` inside the chip runs a no-op `opacity: 1 → 1`
-CSS animation of `var(--pp-snackbar-timeout)` duration, and its
-`onanimationend` (a raw inline handler — legal because the `<span>` isn't
-a function component, same latitude `ThemeToggle`'s `onclick` uses) clicks
-the ✕. It's a *child* span, never the root, so its `animation` shorthand
-can't clash with the root's own entrance `transition` animation. Still
-off by default — the server usually owns "is this message live"
+`Snackbar`'s entrance is a one-shot `@keyframes` utility
+(`pp-snackbar-enter`); there's no exit animation or queue (each would need
+the `Dialog`-style always-rendered machinery or state a stateless function
+component has nowhere to hold). `auto_hide_duration` (ms), paired with
+`on_close` (MD3's close icon button), is hook-free: a zero-size `<span
+class="pp-snackbar-timeout">` inside the snackbar runs a no-op CSS
+animation of `var(--pp-snackbar-timeout)` duration, and its
+`onanimationend` clicks the close button. It's a *child* span, never the
+root, so its `animation` can't clash with the root's entrance. Off by
+default — the server usually owns "is this message live"
 (`Process.send_after/3` clearing the `open` assign); the client timer is
 for the no-round-trip case, i.e. `pp_flash_group`.
 
 `positioned` (default `true`) was split out of the all-or-nothing
-`paperize` gate: `positioned={false}` drops only the `fixed inset-x-4 …`
-anchor classes, keeping the inverted chip/elevation/transition. That's
-what lets `PhoenixPaper.Flash` stack several chips inside its own `fixed`
-corner container instead of each one anchoring itself to the same spot.
+`paperize` gate: `positioned={false}` drops only the `fixed` placement,
+keeping the container/elevation/entrance. That's what lets
+`PhoenixPaper.Flash` stack several snackbars inside its own `fixed`
+container instead of each one anchoring itself to the same spot.
 
-## Feedback: `PhoenixPaper.Flash` (Phoenix flash → snackbars)
+## Communication: `PhoenixPaper.Flash` (Phoenix flash → snackbars)
 
 `pp_flash_group/1` is the Material counterpart of a generated
 `core_components.ex`'s `flash_group/1` — drop it once in the root layout.
 It reads `:info`/`:error` (or whatever `kinds` lists) from `@flash` via
 `Phoenix.Flash.get/2` and renders one `pp_snackbar positioned={false}` per
-present message inside a `fixed` corner stack (`flex flex-col gap-2`).
+present message inside a `fixed` bottom stack (`flex flex-col gap-2`).
 
-- **Dismiss needs no LiveView handler.** The ✕ is
+- **Dismiss needs no LiveView handler.** The close button is
   `JS.push("lv:clear-flash", value: %{key: kind})` — `lv:clear-flash` is
   handled by the LiveView JS client itself: it clears that flash key and
-  the server re-renders without it, so the `:if={@message}` on the chip
-  goes false and it's gone. `auto_hide_duration` threads straight through
-  to each chip and fires the *same* push on the timer.
-- **Monochrome by kind, on purpose.** Material snackbars are a single
-  inverted surface regardless of severity (the `Snackbar` moduledoc's
-  own note) — so the kind only picks a leading heroicon
-  (`icon_name/1`: info/success/warning/error recognised, anything else no
-  icon), never a background color. Colored severity surfaces = an
-  `Alert` inside a bare `pp_snackbar`.
-- **`role`** is `alert` for `:error`, `status` otherwise.
-- **`connection_notices`** (opt-in, since 0.2.4) renders the
-  `:client-error`/`:server-error` "connection lost" chips a generated
-  `core_components` shows. They're a *different* mechanism from flash (no
-  server flash entry — the server is what's unreachable): two
-  `pp_snackbar`s rendered `hidden`, with `phx-disconnected` running
+  the server re-renders without it, so the `:if={@message}` on the
+  snackbar goes false and it's gone. `auto_hide_duration` threads straight
+  through to each snackbar and fires the *same* push on the timer.
+- **Text-only, by spec.** MD3 snackbars have no icon and no per-severity
+  color, so the kind only sets `role` (`alert` for `:error`, `status`
+  otherwise).
+- **`connection_notices`** renders the client-error/server-error
+  "connection lost" messages a generated `core_components` shows. They're
+  a *different* mechanism from flash (no server flash entry — the server
+  is what's unreachable): two `pp_snackbar`s rendered `hidden`, with
+  `phx-disconnected` running
   `JS.remove_attribute("hidden", to: ".phx-client-error #pp-flash-client-error")`
   (resp. `phx-server-error`) and `phx-connected` putting `hidden` back.
   Plain attribute toggling, not `JS.show`/`JS.hide`: `JS.show` sets an
-  inline `display: block`, which would override the chip's own `flex`.
+  inline `display: block`, which would override the snackbar's own `flex`.
   Tailwind's preflight makes `[hidden]` `display: none !important`, so
-  `hidden` wins over the chip's `flex` class while it's set.
+  `hidden` wins over the `flex` class while it's set.
 
-The `stack_classes/1` container is `pointer-events-none` with
+The stack container is `pointer-events-none` with
 `[&_[data-pp-component=snackbar]]:pointer-events-auto` so the transparent
-gaps between/around chips don't eat clicks on the page beneath — the same
-`data-pp-component` compound-selector reach used elsewhere.
+gaps between/around snackbars don't eat clicks on the page beneath.
 
 ## Actions: toggle buttons and button groups (replace `ToggleButton`)
 
@@ -1369,23 +925,20 @@ was `accent` from 0.2 to 0.3, and 0.4.0 renamed it back.
   No build step. The same goes for `--font-pp-brand`/`--font-pp-plain`
   and `--radius-pp-*`.
 
-## `PhoenixPaper.ThemeToggle`, and a class-merging gap it exposed early
+## `PhoenixPaper.ThemeToggle`
 
-**Since 0.2.4 the default is `variant="segmented"`**: System / Light /
-Dark icon buttons, System selected by default (it *removes* `data-theme`).
-Everything below about the sun/moon switch now describes
-`variant="switch"`, kept for callers who want the two-state look. The
-segmented control deliberately avoids the switch's problems rather than
-working around them:
+A System / Light / Dark segmented control (MD3's selected-segment
+`secondary-container` indicator on the spatial spring). System *removes*
+`data-theme`, so the `prefers-color-scheme` block follows the OS; Light
+and Dark set it.
 
 - **Its selected state is CSS keyed off the ancestor's `data-theme`**
   (`[[data-theme=dark]_&]:translate-x-16` on the indicator and the
-  matching button colors), never state stored on the component. So there's
-  no checkbox property for a LiveView patch to reset (the hydration bug
-  below can't happen), no cross-instance sync script, and System is simply
-  "neither light nor dark matched". The trade-off: it reads the *nearest*
-  `data-theme` ancestor, so a scoped `target` only shows correctly when the
-  toggle sits inside that target; documented, not worked around.
+  matching button colors), never state stored on the component. So
+  there's nothing for a LiveView patch to reset, no cross-instance sync
+  script, and System is simply "neither light nor dark matched". The
+  trade-off: it reads the *nearest* `data-theme` ancestor, so a scoped
+  `target` only shows correctly when the toggle sits inside that target.
 - **No `aria-pressed`**, for the same reason: it would have to be set by
   JS on click and a patch can undo it. Each button has `aria-label`/`title`
   instead.
@@ -1393,120 +946,19 @@ working around them:
   only when `target="html"` — the exact key and semantics of Phoenix 1.8's
   generated root layout script, so a 1.8 app restores it on reload with no
   setup; the moduledoc has a four-line `<head>` snippet for other apps.
-  The switch variant writes the same key.
-- **The switch now follows the same rule.** It used to take its look from
-  its checkbox whenever `data-theme` was set, assuming a click had set
-  both together. Wrong after a reload with a saved `"dark"` (the server
-  renders the checkbox at `default_checked`, so: dark page, "off / sun"
-  switch) and after any theme change made elsewhere (the segmented
-  control, Phoenix 1.8's picker). Its track/thumb/icons now carry
-  `[[data-theme=dark]_&]:!...`/`[[data-theme=light]_&]:!...` classes;
-  the `!` is needed because `has-[:checked]:` ties them on specificity.
-  The checkbox only matters with no `data-theme` (System, OS light); the
-  CSS-file rule still covers System + OS dark. Verified in Chromium for
-  all six combinations of theme (none/dark/light) and OS preference, with
-  the checkbox both checked and unchecked.
+- **Why not a switch.** 0.4 also had `variant="switch"`, a sun/moon
+  switch. 0.5.0 removed it: its colors were hand-picked (amber, slate,
+  white) rather than MD3 roles, and its checkbox state could disagree
+  with `data-theme` after a reload or a hydration patch — the lesson
+  being that client-side state a stateless component renders from server
+  assigns must live in an attribute LiveView won't reset (`data-theme` on
+  an ancestor here), not in a form control's property.
 - Verified in headless Chromium by clicking each button: `data-theme`
   removed/`light`/`dark`, `localStorage` matching, and two toggles on the
-  page (one inside a `TopAppBar`) moving their indicators together
-  (`translate` 0 / 32px / 64px — note Tailwind v4's `translate-x-*` sets
-  the standalone `translate` property, so `getComputedStyle(...).transform`
-  reads `none`; read `.translate`).
-
-Rewritten from a thin `PhoenixPaper.Switch` wrapper to its own markup so a
-sun/moon icon could live *inside* the sliding thumb (swapped via a
-`peer-checked:` compound selector reaching into the thumb's own children —
-`Switch` itself has no attr for that). Two things worth knowing:
-
-- **Deliberately no `pp-*` brand color anywhere in it** (thumb fixed
-  white, track a neutral translucent gray) even though `Switch`'s own
-  thumb/track go `pp-primary` when checked. In 0.3 a theme toggle usually
-  sat in a `pp-primary` app bar, where a `bg-pp-primary` thumb would have
-  vanished; MD3 top app bars are surface-colored, but the switch keeps the
-  neutral look so it still reads on a vibrant `Toolbar`. (The segmented
-  variant does use MD3 roles: a `secondary-container` indicator.)
-- **Found a real gap in the `tails` hex package this library used to
-  depend on, before class-merging was dropped entirely** (see "Overriding
-  built-in classes via `class`" above): passing `class="size-3"` to
-  override `PhoenixPaper.Icon`'s default `size-5` left **both** classes in
-  the merged output (verified directly: `Tails.classes("size-5 size-3")`
-  returned `"size-3 size-5"`, not just `"size-3"`) — that version of
-  `tails`'s conflict-resolution ruleset didn't know about Tailwind's
-  `size-*` shorthand (a newer utility; the ruleset predated it), so it
-  didn't treat two `size-*` classes as conflicting the way it did e.g. two
-  `text-*` or `bg-*` classes. With both classes present, which one
-  actually won was down to Tailwind's own internal utility ordering in the
-  generated stylesheet — not something to rely on. Fixed the same way
-  `TableRow`'s `selected` state already does for its own specificity
-  fight: `class="!size-3"` (Tailwind's `!important` prefix), which wins
-  regardless of generation order. This was the first sign that a "merge"
-  dependency only ever helps for the cases it happens to know about and
-  silently does nothing for the rest without any error or warning — the
-  same `!` pattern this one gap needed is now how every override works,
-  everywhere in this library, since there's no merge step left at all.
-  (Since 0.3.0 `Icon` has a `size` attr, so the toggle uses `size="xs"`
-  instead; `size="none"` is the escape hatch for a size outside its
-  presets.)
-- **First version's `<script>`-based system-preference sync looked right
-  and wasn't** — worth knowing in detail since it's the kind of bug that
-  only shows up on a real dark-OS machine, never in a static render or a
-  test. It set the checkbox's `checked` *property* to match
-  `matchMedia('(prefers-color-scheme: dark)')` on mount (the same "small
-  vanilla snippet, no hook" precedent `Ripple`/`NumberField` use). That
-  script itself ran fine — but Phoenix LiveView's connected-mount
-  hydration re-renders and morphdom-patches the page shortly after the
-  dead-rendered first paint, and that patch can replace the checkbox
-  element with a fresh one built from the *server's* render (which has no
-  way to know the client's OS preference and always has
-  `default_checked`), silently discarding the script's mutation. Visible
-  symptom on an actual dark-OS machine: the page renders correctly dark
-  (the CSS fallback is unaffected by any of this), but the toggle *looks*
-  set to light — and because the original click handler read the
-  (silently-reset) `checked` property to decide `"dark"` vs `"light"`, the
-  first click just reasserted "dark" (a no-op the user couldn't see,
-  since the page was already dark via the system fallback), so it took
-  *two* clicks to actually reach light.
-
-  Fixed at both ends, neither depending on the other:
-  1. The click handler now **computes the effective theme itself** —
-     `data-theme` if set, else `matchMedia` — and flips to the opposite,
-     rather than ever trusting the checkbox's own `checked` property. This
-     alone fixes the double-click bug regardless of whether anything
-     synced the checkbox's visual state correctly.
-  2. The toggle's *first-paint appearance* now syncs via a `@media
-     (prefers-color-scheme: dark)` block in `priv/static/phoenix_paper.css`
-     that fakes the "checked" look (track color, thumb position, icon
-     swap) directly in CSS, scoped to `html:not([data-theme])` — CSS has
-     no hydration race to lose, so this can't be silently undone the way
-     the script's property mutation could. It's purely cosmetic (the
-     underlying checkbox is never actually "checked" until a real click
-     happens), which is fine because (1) no longer depends on it being
-     accurate.
-
-  One HEEx fact learned along the way, now moot but worth remembering for
-  next time: `~H` does **not** parse `{...}` interpolation inside a
-  `<script>` tag's body at all — it's treated as raw text, same as a
-  browser's own HTML parser treats `<script>`/`<style>` content. A
-  `{some_function()}` call inside `<script>...</script>` compiled with an
-  "unused function" warning, meaning it was silently never invoked — the
-  script body has to be written as literal text directly in the template.
-- **Multiple instances now stay in sync, scoped by `target`**: a page with
-  more than one `pp_theme_toggle` (e.g. one in a `TopAppBar`, another in a
-  settings panel) used to leave the other one visually stale after a
-  click, since each toggle's `onclick` only ever touched its own checkbox.
-  Fixed by giving the outer `<label>` a `data-pp-target={@target}`
-  attribute and having the click handler, right after computing `next`,
-  run `document.querySelectorAll('[data-pp-component="theme-toggle"]
-  [data-pp-target="..."] input[type=checkbox]')` and set every match's
-  `checked` property (the clicked checkbox matches its own query too, so
-  there's no separate `cb.checked = ...` line anymore — one code path
-  covers both "self" and "siblings"). Scoped to matching `target`, not
-  every toggle on the page unconditionally: a toggle bound to
-  `target="#preview"` and one bound to the default `target="html"`
-  represent two independently-meaningful pieces of state, so syncing them
-  together would be wrong even though both are `pp_theme_toggle`s. Pure
-  `querySelectorAll` at click time — no hooks, no PubSub, works across
-  LiveViews on the same page just as well as within one.
+  page moving their indicators together (`translate` 0 / 32px / 64px —
+  note Tailwind v4's `translate-x-*` sets the standalone `translate`
+  property, so `getComputedStyle(...).transform` reads `none`; read
+  `.translate`).
 
 ## Elevation
 
@@ -1525,16 +977,8 @@ where MD3 does. There's no dark-mode overlay any more (0.3's
 to a literal `rounded-pp-*` class backed by `--radius-pp-*`, optionally
 on one edge (`:top`, `:bottom`, `:start`, `:end`). `Shape.tokens/0` is
 the list for an attr's `values:`. Components with a fixed MD3 shape use
-the token directly. Expressive buttons don't use `Shape`: their shape is
+the token's class directly. Expressive buttons don't use `Shape`: their shape is
 `round`/`square`, with explicit pixel radii so the morph can animate.
-
-## Spacing
-
-`PhoenixPaper.Spacing` maps named tokens (`:xs`, `:sm`, `:md`, `:lg`, `:xl`,
-`:"2xl"`) to literal Tailwind spacing classes (`padding/1`, `gap/1`).
-Tailwind's default scale is already a 4px grid, compatible with Material's
-8dp baseline grid, so this is a naming layer for consistency (a
-project-wide density change becomes a one-file edit), not a new scale.
 
 ## Icons
 
@@ -1549,7 +993,7 @@ a `hero-*` class string the same way, not draw its own SVG.
 
 ## Consumer setup (what a project adding this dependency must do)
 
-1. Add `{:phoenix_paper, "~> 0.4"}` to `mix.exs` (it needs
+1. Add `{:phoenix_paper, "~> 0.5"}` to `mix.exs` (it needs
    `phoenix_live_view ~> 1.1`).
 2. In `lib/my_app_web.ex`, add `use PhoenixPaper.Components` to the
    `html_helpers` quote block, next to the existing `core_components` import.
@@ -1560,9 +1004,8 @@ a `hero-*` class string the same way, not draw its own SVG.
    No `@source` line is needed: `phoenix_paper.css` declares its own
    `@source "../../lib";`, resolved relative to itself. Don't remove it.
 4. Load Roboto Flex (or override `--font-pp-brand`/`--font-pp-plain`).
-5. Optional: register the hook (`import PhoenixPaperHooks from
-   "phoenix_paper"`, spread into the LiveSocket's `hooks`) and set
-   `config :phoenix_paper, hook: true`.
+5. Register the hook: `import PhoenixPaperHooks from "phoenix_paper"`,
+   spread into the LiveSocket's `hooks`.
 
 ## HEEx gotcha: literal `{`/`}` in attribute strings and text
 
@@ -1633,19 +1076,20 @@ library favors:
 Found while reworking `Slider` — `PhoenixPaper.Slider`'s own new `value`
 handling raised `MatchError` on a plain `<.pp_slider name="x" />` with no
 `value` passed, which led to discovering the **same bug already shipping**
-in every other form component's `field=` clause (`Input`, `Checkbox`,
-`Switch`, `RadioGroup`, `Rating`, `NumberField`, `Select`): `field=` never
+in every other form component's `field=` clause (`TextField`, then
+called `Input`, `Checkbox`, `Switch`, `RadioGroup`, `Select`, and two
+components since removed): `field=` never
 actually populated `name`/`id`/`value`/`checked` from the
 `Phoenix.HTML.FormField`. Confirmed by rendering `<.pp_input field={@form[:email]} />`
 directly and finding the output `<input>` had no `id`, `name`, or `value`
 attribute at all — not a hypothetical, an actual broken render. Zero
-existing tests caught it because not one of those seven components' test
+existing tests caught it because not one of those components' test
 files exercised the `field=` code path at all (all now do, and all now
 pass — see below).
 
 **The mechanism**: every affected attr (`value`, `name`, `id`, `checked`)
-is declared with `attr(..., default: nil)` (or `default: false`,
-`default: 0` for `Rating`). Phoenix's `attr` macro fills in that default
+is declared with `attr(..., default: nil)` (or `default: false`).
+Phoenix's `attr` macro fills in that default
 value in the compiled `assigns` map at the call site *before* the
 component function ever runs — so by the time the field-handling clause
 executes `assign_new(:value, fn -> field.value end)`, the key `:value`
@@ -1667,9 +1111,8 @@ so it checks the actual *value* rather than key presence. For a
 `:boolean` attr (`Checkbox`/`Switch`'s `checked`) use
 `if(is_nil(assigns.checked), do: ..., else: assigns.checked)` instead of
 bare `||`, since `false` is a legitimate, meaningful explicit value that
-`checked || fallback` would wrongly discard. For `Rating`'s `value`
-(declared `default: 0`, not `nil`, since a star rating's natural "unset"
-is zero stars) the check is `assigns.value == 0` instead of `is_nil/1`.
+`checked || fallback` would wrongly discard. An attr whose default isn't
+`nil` compares against that default instead.
 
 None of these fixes can perfectly distinguish "caller explicitly passed
 this exact value" from "caller didn't pass it, so the declared default
@@ -1680,8 +1123,8 @@ declared default" as "not explicitly set" is the best available
 approximation, and matches the intent every one of these callers actually
 had.
 
-**Test-coverage lesson**: every one of `Input`/`Checkbox`/`Switch`/
-`RadioGroup`/`Rating`/`NumberField`/`Select`/`Slider`'s test files now has
+**Test-coverage lesson**: every one of `TextField`/`Checkbox`/`Switch`/
+`RadioGroup`/`Select`/`Slider`'s test files now has
 a `"field= populates name/id/value(/checked) from the form field"` test,
 built via `Phoenix.Component.to_form(%{"key" => "val"}, as: :some_prefix)`
 (no `Ecto.Changeset` dependency needed for a simple map-backed form). Add

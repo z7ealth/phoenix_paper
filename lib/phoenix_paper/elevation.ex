@@ -4,7 +4,7 @@ defmodule PhoenixPaper.Elevation do
 
   MD3 has six levels — 0, 1, 3, 6, 8 and 12dp — instead of MD2's 0-24dp
   scale. In MD3 a surface's height is shown mostly by its
-  *surface-container color* (see `PhoenixPaper.Paper`'s `color`), not by
+  *surface-container color* (the `surface-container-*` roles), not by
   shadow: only a few components keep one (elevated button and card, FAB,
   menus, the navigation components when scrolled under). This module maps
   a level to the shadow utility; picking the matching container color is

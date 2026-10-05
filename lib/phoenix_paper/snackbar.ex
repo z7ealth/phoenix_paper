@@ -1,85 +1,48 @@
 defmodule PhoenixPaper.Snackbar do
   @moduledoc """
-  A brief toast notification (`pp_snackbar/1`), in the spirit of MUI's
-  `Snackbar`.
+  An MD3 snackbar (`pp_snackbar/1`): a brief message at the bottom of the
+  screen, with an optional action and close button.
 
-      <.pp_snackbar open={@flash_message != nil}>
-        {@flash_message}
+      <.pp_snackbar open={@message != nil}>
+        {@message}
         <:action>
-          <.pp_button variant="text" phx-click="dismiss_flash">Dismiss</.pp_button>
+          <.pp_button variant="text" phx-click="undo">Undo</.pp_button>
         </:action>
       </.pp_snackbar>
 
-  Positioning (`anchor_origin`), the dark inverted-surface chip, a mount-in
-  `transition`, an optional `:action` slot, an optional `on_close` dismiss
-  button, and an optional `auto_hide_duration`. For rendering Phoenix flash
-  messages as snackbars, reach for `PhoenixPaper.Flash.pp_flash_group/1`,
-  which wraps this component. A few things MUI's `Snackbar` has that this
-  doesn't, and why:
-
-  - **`autoHideDuration` is opt-in and client-only.** Set
-    `auto_hide_duration` (milliseconds) *together with* `on_close` and the
-    snackbar dismisses itself after that delay by triggering `on_close` —
-    implemented with a CSS animation whose `animationend` clicks the close
-    button, no JS hook (the same "small vanilla snippet" philosophy as
-    `PhoenixPaper.Ripple`). The same animation also **doubles as a visible
-    countdown**: a thin bar along the chip's bottom edge shrinks from full
-    width to nothing over exactly `auto_hide_duration`, so the timing that
-    drives the dismissal is the same timing the user can see — there's no
-    separate "fake" progress indicator to keep in sync with the real timer
-    (an earlier version animated an invisible, zero-footprint `opacity: 1 →
-    1` span purely for its `animationend` timing hook; the bar is the same
-    span, now actually painted). Under `paperize={false}` it goes back to
-    invisible-but-functional — only the animation/timing classes stay
-    unconditional, the bar's size/color are stripped like every other
-    built-in visual, so `auto_hide_duration` still works with nothing left
-    to render it. Off by default because the server is usually the better
-    owner of "is this message still live" — one `Process.send_after/3`
-    clearing whatever assign controls `open`, the mechanism `mix phx.new`'s
-    generated flash already uses. Use the client timer when there's no
-    server round-trip to hang it off (a purely client-dismissed flash via
-    `JS.push("lv:clear-flash")`).
-  - **No exit transition.** `open={false}` removes the element from the DOM
-    immediately (`:if` under the hood) — animating *that* would need the
-    same always-rendered-plus-`Phoenix.LiveView.JS` machinery
-    `PhoenixPaper.Dialog` uses, which is a much bigger component for a
-    toast. `transition` only animates the *entrance* (a real CSS
-    `@keyframes` animation that plays once when the element mounts), which
-    covers the common case — a snackbar popping in — without needing that
-    machinery.
-  - **No built-in queueing** of consecutive snackbars (MUI shows them one at
-    a time, queued). That needs a place to actually hold the queue — a
-    LiveComponent or a list in your LiveView's own assigns — not something
-    a stateless function component can own. Render one `pp_snackbar` for
-    whatever message you're currently showing; queuing which message that
-    is is your call, the same as it would be building this by hand.
-  - **No dedicated "wrap an Alert" mode** — MUI's `Snackbar` skips its own
-    background/padding when given a child instead of `message`/`action`, so
-    an `Alert` inside shows only the Alert's own colors. Here, pass
-    `paperize={false}` (drops the inverted-surface chip *and* the
-    positioning classes together, this library's usual all-or-nothing
-    contract) and supply both back yourself via `class`:
-
-        <.pp_snackbar paperize={false} class="fixed inset-x-4 bottom-4 z-50 mx-auto w-fit">
-          <.pp_alert severity="success">Changes saved.</.pp_alert>
-        </.pp_snackbar>
-
-    If you only need to move the chip (keep its styling, drop the
-    viewport anchoring — e.g. to stack several inside your own container),
-    use `positioned={false}` instead of going fully `paperize={false}`.
+  For Phoenix flash messages, use `PhoenixPaper.Flash.pp_flash_group/1`,
+  which renders them as snackbars.
 
   ## Look
 
-  MD3's snackbar: an `inverse-surface` chip (dark on a light theme, light
-  on a dark one) with `body-medium` text, 4dp corners and a level-3
+  MD3's snackbar: an `inverse-surface` container (dark on a light theme,
+  light on a dark one) with `body-medium` text, 4dp corners and a level-3
   shadow. Buttons in `:action` get MD3's `inverse-primary` label color
   automatically (a descendant selector on `pp_button`), so a plain
   `<.pp_button variant="text">Undo</.pp_button>` is right. `two_line`
   stacks a long message above its action, MD3's "longer action" layout.
+  `on_close` adds MD3's optional close icon button.
 
-  0.3's `color` attr is gone: MD3 snackbars are always the inverse
-  surface. For a colored, severity-coded message use an `Alert` inside a
-  `paperize={false}` snackbar (above).
+  It sits at the bottom of the viewport, centered on compact screens and
+  at the bottom-start corner from `sm` up, and enters with MD3's
+  fade-and-expand. `positioned={false}` drops the `fixed` placement so you
+  can place it yourself (`PhoenixPaper.Flash` stacks several that way).
+
+  ## Dismissing
+
+  `open={false}` removes it. The server usually owns that (a
+  `Process.send_after/3` clearing the assign that drives `open`). For a
+  client-side timeout, set `auto_hide_duration` (milliseconds, MD3
+  suggests 4–10 seconds) together with `on_close`: a CSS animation of that
+  length clicks the close button when it ends, no JS hook. There's no
+  exit animation (the element is removed with `:if`) and no queue:
+  render one snackbar for the message you're currently showing.
+
+  ## Migrating from 0.4
+
+  `anchor_origin` and `transition` are gone (MD3 places snackbars at the
+  bottom and gives them one motion), and the auto-hide countdown bar is no
+  longer drawn.
   """
   use Phoenix.Component
 
@@ -92,18 +55,6 @@ defmodule PhoenixPaper.Snackbar do
 
   attr(:two_line, :boolean, default: false, doc: "message above the action (MD3 longer action)")
 
-  attr(:anchor_origin, :string,
-    default: "bottom-left",
-    values: ~w(bottom-left bottom-center bottom-right top-left top-center top-right),
-    doc: "corner/edge of the viewport it's anchored to"
-  )
-
-  attr(:transition, :string,
-    default: "grow",
-    values: ~w(grow fade slide none),
-    doc: "the mount-in animation — there's no exit transition, see the module doc"
-  )
-
   attr(:positioned, :boolean,
     default: true,
     doc:
@@ -112,7 +63,7 @@ defmodule PhoenixPaper.Snackbar do
 
   attr(:on_close, JS,
     default: nil,
-    doc: "when set, renders a trailing ✕ button running this — MUI's close-IconButton pattern"
+    doc: "when set, renders MD3's trailing close icon button, running this"
   )
 
   attr(:auto_hide_duration, :integer,
@@ -134,11 +85,10 @@ defmodule PhoenixPaper.Snackbar do
       :if={@open}
       role="status"
       data-pp-component="snackbar"
-      data-pp-anchor-origin={@anchor_origin}
       class={
         Helpers.classes(
           @paperize,
-          paper_classes(@anchor_origin, @transition, @positioned, @two_line),
+          paper_classes(@positioned, @two_line),
           @class
         )
       }
@@ -170,10 +120,7 @@ defmodule PhoenixPaper.Snackbar do
       <span
         :if={@on_close && @auto_hide_duration}
         aria-hidden="true"
-        class={[
-          "pp-snackbar-timeout pointer-events-none absolute",
-          Helpers.classes(@paperize, "inset-x-0 bottom-0 h-1 bg-pp-inverse-primary/60", nil)
-        ]}
+        class="pp-snackbar-timeout pointer-events-none absolute size-0"
         style={"--pp-snackbar-timeout: #{@auto_hide_duration}ms"}
         onanimationend="var b=this.parentNode.querySelector('[data-pp-snackbar-close]');if(b){b.click()}"
       />
@@ -181,35 +128,13 @@ defmodule PhoenixPaper.Snackbar do
     """
   end
 
-  defp paper_classes(anchor_origin, transition, positioned, two_line) do
+  defp paper_classes(positioned, two_line) do
     [
-      "relative z-50 mx-auto flex w-fit min-w-[min(344px,100%)] max-w-[672px] items-center gap-x-2 overflow-hidden rounded-pp-xs ps-4 pe-2 pp-body-medium",
+      "relative z-50 mx-auto flex w-fit min-w-[min(344px,100%)] max-w-[672px] items-center gap-x-2 overflow-hidden rounded-pp-xs ps-4 pe-2 pp-body-medium pp-snackbar-enter",
       "bg-pp-inverse-surface text-pp-inverse-on-surface [&_[data-pp-component=button]]:text-pp-inverse-primary",
       two_line && "flex-wrap",
       Elevation.class(3),
-      if(positioned, do: anchor_classes(anchor_origin)),
-      transition_classes(transition, anchor_origin)
+      positioned && "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:start-6 sm:bottom-6"
     ]
   end
-
-  defp anchor_classes("bottom-left"), do: "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:left-4"
-
-  defp anchor_classes("bottom-center"),
-    do: "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
-
-  defp anchor_classes("bottom-right"), do: "fixed inset-x-4 bottom-4 sm:inset-x-auto sm:right-4"
-  defp anchor_classes("top-left"), do: "fixed inset-x-4 top-4 sm:inset-x-auto sm:left-4"
-
-  defp anchor_classes("top-center"),
-    do: "fixed inset-x-4 top-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
-
-  defp anchor_classes("top-right"), do: "fixed inset-x-4 top-4 sm:inset-x-auto sm:right-4"
-
-  defp transition_classes("none", _anchor_origin), do: ""
-  defp transition_classes("fade", _anchor_origin), do: "pp-snackbar-fade"
-  defp transition_classes("grow", _anchor_origin), do: "pp-snackbar-grow"
-  defp transition_classes("slide", "top-left"), do: "pp-snackbar-slide-down"
-  defp transition_classes("slide", "top-center"), do: "pp-snackbar-slide-down"
-  defp transition_classes("slide", "top-right"), do: "pp-snackbar-slide-down"
-  defp transition_classes("slide", _bottom_anchor), do: "pp-snackbar-slide-up"
 end

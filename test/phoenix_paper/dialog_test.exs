@@ -49,7 +49,7 @@ defmodule PhoenixPaper.DialogTest do
     """
   end
 
-  describe "max_width" do
+  describe "width" do
     defp container_tag(html) do
       [tag] = Regex.run(~r/<div[^>]*id="d-container"[^>]*>/, html)
       tag
@@ -65,48 +65,15 @@ defmodule PhoenixPaper.DialogTest do
 
       html =
         rendered_to_string(
-          ~H"<PhoenixPaper.Dialog.pp_dialog id='d' max_width='2xl'>x</PhoenixPaper.Dialog.pp_dialog>"
+          ~H"<PhoenixPaper.Dialog.pp_dialog id='d'>x</PhoenixPaper.Dialog.pp_dialog>"
         )
 
       container = container_tag(html)
-      assert container =~ "hidden w-full min-w-[280px] max-w-2xl"
+      assert container =~ "hidden w-full min-w-[280px] max-w-[560px]"
 
       content = content_tag(html)
       assert content =~ "w-full rounded-pp-xl bg-pp-surface-container-high p-6"
       refute content =~ "max-w-"
-    end
-
-    test "defaults to md, the previous fixed width" do
-      assigns = %{}
-
-      html =
-        rendered_to_string(
-          ~H"<PhoenixPaper.Dialog.pp_dialog id='d'>x</PhoenixPaper.Dialog.pp_dialog>"
-        )
-
-      assert container_tag(html) =~ "max-w-lg"
-    end
-
-    test "maps each value to a literal max-w class" do
-      for {value, class} <- [
-            {"xs", "max-w-xs"},
-            {"sm", "max-w-sm"},
-            {"md", "max-w-md"},
-            {"2xl", "max-w-2xl"},
-            {"5xl", "max-w-5xl"},
-            {"full", "max-w-full"}
-          ] do
-        assigns = %{value: value}
-
-        html =
-          rendered_to_string(
-            ~H"<PhoenixPaper.Dialog.pp_dialog id='d' max_width={@value}>x</PhoenixPaper.Dialog.pp_dialog>"
-          )
-
-        tag = container_tag(html)
-        assert tag =~ class
-        refute tag =~ "max-w-lg"
-      end
     end
 
     test "paperize: false leaves the container unsized" do

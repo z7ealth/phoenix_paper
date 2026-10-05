@@ -1,7 +1,8 @@
-// PhoenixPaper — the optional LiveView hook.
+// PhoenixPaper — the LiveView hook.
 //
-// Everything in PhoenixPaper works without this file. Registering it adds
-// the M3 Expressive behaviors CSS can't do (or can't do in every browser):
+// Part of PhoenixPaper's setup: components render phx-hook="PhoenixPaper"
+// (wherever they have an id), and this hook adds the M3 Expressive
+// behaviors CSS can't do, or can't do in every browser:
 //
 //   - Tabs: the active indicator slides from the old tab to the new one.
 //   - TopAppBar: `data-pp-scrolled` while content is scrolled under it
@@ -15,6 +16,10 @@
 //   - Menus, submenus and tooltips: flip to the other side when they'd
 //     overflow the viewport.
 //
+// Every component still renders and works without it running (on
+// controller-rendered pages, before LiveView connects); the hook only
+// adds the behaviors above.
+//
 // Setup (Phoenix 1.8 esbuild resolves `deps/` packages by name):
 //
 //   // assets/js/app.js
@@ -23,9 +28,6 @@
 //     hooks: {...PhoenixPaperHooks, ...yourHooks},
 //     ...
 //   })
-//
-//   # config/config.exs — makes components render phx-hook="PhoenixPaper"
-//   config :phoenix_paper, hook: true
 //
 // One hook name, `PhoenixPaper`, dispatching on what it's mounted on.
 

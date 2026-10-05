@@ -30,7 +30,7 @@ defmodule PhoenixPaper.TopAppBar do
   `surface` and turns `surface-container` once content scrolls under it.
   That color change is CSS: a scroll-driven animation
   (`animation-timeline: scroll()`) on the nearest scroll container, in
-  browsers that support it. With the optional JS hook and an `id`, the
+  browsers that support it. With the PhoenixPaper JS hook and an `id`, the
   bar instead gets `data-pp-scrolled` from a scroll listener, which also
   covers Firefox. `scrolled` forces the scrolled color from the server.
 
@@ -45,11 +45,8 @@ defmodule PhoenixPaper.TopAppBar do
 
   ## Layout
 
-  `max_width` caps and centres the bar's content (the background still
-  spans the page) so its icons line up with a `pp_container` of the same
-  width; `disable_gutters` drops the side padding. The row layout stays on
-  under `paperize={false}` — there's no inner `class` to rebuild it with
-  (see AGENTS.md).
+  The row layout stays on under `paperize={false}` — there's no inner
+  `class` to rebuild it with (see AGENTS.md).
 
   ## Stacking
 
@@ -70,13 +67,6 @@ defmodule PhoenixPaper.TopAppBar do
     values: ~w(static relative sticky fixed absolute)
   )
 
-  attr(:max_width, :string,
-    default: "full",
-    values: ~w(sm md lg xl 2xl full),
-    doc: "caps and centres the bar's content"
-  )
-
-  attr(:disable_gutters, :boolean, default: false)
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -98,7 +88,7 @@ defmodule PhoenixPaper.TopAppBar do
     >
       <div
         :if={@variant in ~w(small center_aligned)}
-        class={[row_classes(@variant), container_classes(@max_width, @disable_gutters)]}
+        class={[row_classes(@variant), "px-1"]}
       >
         <div class="flex min-w-0 items-center justify-start">{render_slot(@leading)}</div>
         <div class={title_wrapper_classes(@variant)}>
@@ -117,7 +107,7 @@ defmodule PhoenixPaper.TopAppBar do
 
       <div
         :if={@variant in ~w(medium large)}
-        class={["flex flex-col", container_classes(@max_width, @disable_gutters)]}
+        class={["flex flex-col", "px-1"]}
       >
         <div class="flex h-16 items-center gap-1">
           <div class="flex items-center">{render_slot(@leading)}</div>
@@ -170,15 +160,4 @@ defmodule PhoenixPaper.TopAppBar do
 
   defp flexible_title_type("medium"), do: "pp-headline-medium"
   defp flexible_title_type("large"), do: "pp-display-small"
-
-  defp container_classes(max_width, disable_gutters) do
-    ["mx-auto w-full", max_width_class(max_width), if(disable_gutters, do: "px-0", else: "px-1")]
-  end
-
-  defp max_width_class("sm"), do: "max-w-screen-sm"
-  defp max_width_class("md"), do: "max-w-screen-md"
-  defp max_width_class("lg"), do: "max-w-screen-lg"
-  defp max_width_class("xl"), do: "max-w-screen-xl"
-  defp max_width_class("2xl"), do: "max-w-screen-2xl"
-  defp max_width_class("full"), do: "max-w-none"
 end

@@ -55,33 +55,16 @@ defmodule PhoenixPaper.FlashTest do
     assert html =~ "--pp-snackbar-timeout: 3000ms"
   end
 
-  test "custom kinds are supported, unknown kinds render without an icon" do
+  test "custom kinds are supported; messages are text-only" do
     html = render_group(%{"warning" => "Careful"}, kinds: [:warning])
     assert html =~ "Careful"
-    assert html =~ "hero-exclamation-triangle"
+    refute html =~ "hero-exclamation"
   end
 
-  test "defaults to the top-right corner" do
+  test "stacks at the bottom like a snackbar" do
     html = render_group(%{"info" => "Saved!"})
 
-    assert html =~ "top-4"
-    refute html =~ "bottom-4"
-  end
-
-  test "anchor_origin overrides the default corner" do
-    assigns = %{flash: %{"info" => "Saved!"}}
-
-    html =
-      render_component(
-        fn assigns ->
-          ~H"""
-          <.pp_flash_group flash={@flash} anchor_origin="bottom-left" />
-          """
-        end,
-        assigns
-      )
-
-    assert html =~ "bottom-4"
+    assert html =~ "fixed inset-x-4 bottom-4"
     refute html =~ "top-4"
   end
 

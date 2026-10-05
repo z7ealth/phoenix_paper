@@ -8,7 +8,8 @@ defmodule PhoenixPaper.CardTest do
   test "renders title, body and actions slots" do
     html = render_component(&card/1)
 
-    assert html =~ "bg-pp-surface"
+    assert html =~ "bg-pp-surface-container-low"
+    assert html =~ "rounded-pp-md"
     assert html =~ "Account"
     assert html =~ "You have no pending invoices."
     assert html =~ "Dismiss"
@@ -41,7 +42,7 @@ defmodule PhoenixPaper.CardTest do
   describe "link mode" do
     defp linked_card(assigns) do
       ~H"""
-      <PhoenixPaper.Card.pp_card navigate="/components" padding={:lg}>
+      <PhoenixPaper.Card.pp_card navigate="/components">
         <:title>Title</:title>
         Body
         <:actions><button>Act</button></:actions>
@@ -57,7 +58,7 @@ defmodule PhoenixPaper.CardTest do
       assert link =~ "data-phx-link"
       assert link =~ "hover:after:bg-current/8"
       assert link =~ "focus-visible:after:outline-pp-secondary"
-      assert html =~ ~s(class="p-6")
+      assert html =~ ~s(class="p-4")
       assert link =~ "onclick="
       assert html =~ "overflow-hidden"
     end

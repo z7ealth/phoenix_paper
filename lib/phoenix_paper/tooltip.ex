@@ -32,7 +32,7 @@ defmodule PhoenixPaper.Tooltip do
   immediate. `title={nil}`/`""` renders just the trigger.
 
   `placement` is `top` (default), `bottom`, `left` or `right`. With the
-  optional JS hook and an `id` on the tooltip, it **flips** to the
+  PhoenixPaper JS hook and an `id` on the tooltip, it **flips** to the
   opposite side when it would overflow the viewport (measured as it
   shows); without the hook the placement is fixed.
 

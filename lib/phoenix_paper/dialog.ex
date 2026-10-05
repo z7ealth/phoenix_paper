@@ -46,24 +46,14 @@ defmodule PhoenixPaper.Dialog do
   text button, "Save"), then the scrolling body. `variant="responsive"`
   is full-screen below `sm` and basic from `sm` up.
 
-  ## `max_width`
+  ## Width
 
-  How wide a basic dialog can grow: `"xs"`, `"sm"`, `"md"`, `"lg"`
-  (default — 32rem, close to MD3's 560dp maximum), `"xl"`, `"2xl"`, `"3xl"`, `"4xl"`,
-  `"5xl"` (Tailwind's `max-w-*` scale, 20rem to 64rem) or `"full"` (the
-  whole viewport width minus the 1rem margin). The dialog is always
-  `w-full` up to that cap, so it still shrinks on small screens. Use this
-  instead of a `class="!max-w-2xl"` override.
-
-  The width and cap sit on the focus-wrap container (the element the
-  centering flex row actually sizes), and the `Paper` panel fills it. With
-  the cap on the panel instead (0.2.6), the container shrank to its
-  content, so a `w-full` child with no natural width (a canvas, an empty
-  input) collapsed to the text width, and long text widened the container
-  past the panel, leaving the dialog off-centre. Under `paperize={false}`
-  the container gets neither class and sizes to its content, as before.
-
-      <.pp_dialog id="report" max_width="2xl">...</.pp_dialog>
+  A basic dialog is MD3's 280–560dp wide: `w-full` up to 560px, so it
+  still shrinks on small screens. The width sits on the focus-wrap
+  container (the element the centering flex row actually sizes) and the
+  panel fills it, so a child with no natural width (a canvas, an empty
+  input) doesn't collapse the dialog. Under `paperize={false}` the
+  container sizes to its content.
 
   Uses `Phoenix.Component.focus_wrap/1` for tab-focus trapping — a built-in
   Phoenix accessibility helper (ships with `phoenix_live_view.js`'s
@@ -83,12 +73,6 @@ defmodule PhoenixPaper.Dialog do
   attr(:icon, :string, default: nil, doc: "a hero-* icon above the title (basic dialogs)")
   attr(:close_label, :string, default: "Close", doc: "full-screen close button label")
   attr(:paperize, :boolean, default: true)
-
-  attr(:max_width, :string,
-    default: "lg",
-    values: ~w(xs sm md lg xl 2xl 3xl 4xl 5xl full),
-    doc: "a basic dialog's maximum width (Tailwind max-w-* scale)"
-  )
 
   attr(:class, :any, default: nil)
 
@@ -126,7 +110,7 @@ defmodule PhoenixPaper.Dialog do
             phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
             phx-key="escape"
             phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-            class={["hidden", @paperize && container_classes(@variant, @max_width)]}
+            class={["hidden", @paperize && container_classes(@variant)]}
           >
             <div
               id={"#{@id}-content"}
@@ -242,13 +226,11 @@ defmodule PhoenixPaper.Dialog do
   defp wrapper_classes("responsive"),
     do: "flex min-h-full sm:items-center sm:justify-center sm:p-6"
 
-  defp container_classes("basic", max_width),
-    do: ["w-full min-w-[280px]", max_width_class(max_width)]
+  defp container_classes("basic"), do: "w-full min-w-[280px] max-w-[560px]"
+  defp container_classes("fullscreen"), do: "min-h-dvh w-full"
 
-  defp container_classes("fullscreen", _max_width), do: "min-h-dvh w-full"
-
-  defp container_classes("responsive", max_width),
-    do: ["min-h-dvh w-full sm:min-h-0 sm:min-w-[280px]", responsive_max_width_class(max_width)]
+  defp container_classes("responsive"),
+    do: "min-h-dvh w-full sm:min-h-0 sm:min-w-[280px] sm:max-w-[560px]"
 
   defp panel_classes("basic"),
     do: "w-full rounded-pp-xl bg-pp-surface-container-high p-6 text-pp-on-surface pp-elevation-3"
@@ -272,26 +254,4 @@ defmodule PhoenixPaper.Dialog do
 
   defp body_classes("responsive"),
     do: "flex-1 overflow-y-auto px-6 pb-6 pp-body-medium sm:p-0 sm:text-pp-on-surface-variant"
-
-  defp max_width_class("xs"), do: "max-w-xs"
-  defp max_width_class("sm"), do: "max-w-sm"
-  defp max_width_class("md"), do: "max-w-md"
-  defp max_width_class("lg"), do: "max-w-lg"
-  defp max_width_class("xl"), do: "max-w-xl"
-  defp max_width_class("2xl"), do: "max-w-2xl"
-  defp max_width_class("3xl"), do: "max-w-3xl"
-  defp max_width_class("4xl"), do: "max-w-4xl"
-  defp max_width_class("5xl"), do: "max-w-5xl"
-  defp max_width_class("full"), do: "max-w-full"
-
-  defp responsive_max_width_class("xs"), do: "sm:max-w-xs"
-  defp responsive_max_width_class("sm"), do: "sm:max-w-sm"
-  defp responsive_max_width_class("md"), do: "sm:max-w-md"
-  defp responsive_max_width_class("lg"), do: "sm:max-w-lg"
-  defp responsive_max_width_class("xl"), do: "sm:max-w-xl"
-  defp responsive_max_width_class("2xl"), do: "sm:max-w-2xl"
-  defp responsive_max_width_class("3xl"), do: "sm:max-w-3xl"
-  defp responsive_max_width_class("4xl"), do: "sm:max-w-4xl"
-  defp responsive_max_width_class("5xl"), do: "sm:max-w-5xl"
-  defp responsive_max_width_class("full"), do: "sm:max-w-full"
 end

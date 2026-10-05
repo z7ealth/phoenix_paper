@@ -1,7 +1,7 @@
 defmodule PhoenixPaper.Card do
   @moduledoc """
-  An MD3 card (`pp_card/1`): `PhoenixPaper.Paper` plus padding and
-  optional media/title/subhead/actions slots.
+  An MD3 card (`pp_card/1`) with optional media/title/subhead/actions
+  slots.
 
       <.pp_card variant="filled">
         <:media><img src={~p"/images/lake.jpg"} alt="" class="h-40 w-full object-cover" /></:media>
@@ -19,18 +19,15 @@ defmodule PhoenixPaper.Card do
   | `filled` | `surface-container-highest`, no shadow |
   | `outlined` | `surface` with an `outline-variant` border |
 
-  Corners default to `:md` (12dp, MD3's card shape). `:media` renders
-  edge to edge above the padded content and is clipped to the card's
-  corners. The title is `title-large`, the subhead `body-medium` in
-  `on-surface-variant`. `padding` (a `PhoenixPaper.Spacing` token) is the
-  content padding.
-
-  0.3's `elevation` attr is gone: MD3 fixes each variant's elevation.
+  Corners are MD3's card shape (medium, 12dp) and the content has 16dp
+  padding. `:media` renders edge to edge above the content and is clipped
+  to the card's corners. The title is `title-large`, the subhead
+  `body-medium` in `on-surface-variant`.
 
   ## Link mode
 
   Pass `href`, `navigate` or `patch` and the card's title and body become
-  one `Phoenix.Component.link/1` — MUI's `CardActionArea`. It gets the
+  one `Phoenix.Component.link/1` (MD3's clickable card). It gets the
   MD3 hover state layer (and the elevated card rises to level 2), a focus ring, and a ripple on click (`ripple`, default `true`, the
   same as `PhoenixPaper.Button`/`PhoenixPaper.ListItem`):
 
@@ -58,24 +55,15 @@ defmodule PhoenixPaper.Card do
         Opens in a new tab.
       </.pp_card>
 
-  In link mode the padding moves from the card root onto the link (and the
-  actions row). The stretch itself is unconditional (it defines what's
+  The stretch itself is unconditional (it defines what's
   clickable); the tint, focus ring and ripple are paperize-gated as usual.
   """
   use Phoenix.Component
 
-  alias PhoenixPaper.{Helpers, Ripple, Spacing}
-  import PhoenixPaper.Paper, only: [pp_paper: 1]
+  alias PhoenixPaper.{Helpers, Ripple}
 
   attr(:paperize, :boolean, default: true)
   attr(:variant, :string, default: "elevated", values: ~w(elevated filled outlined))
-  attr(:padding, :atom, default: :md, values: ~w(none xs sm md lg xl 2xl)a)
-
-  attr(:shape, :atom,
-    default: :md,
-    values: PhoenixPaper.Shape.tokens(),
-    doc: "corner radius token, see PhoenixPaper.Shape"
-  )
 
   attr(:href, :any, default: nil, doc: "makes the media, title and body a link")
   attr(:navigate, :any, default: nil, doc: "like href, a LiveView live navigation")
@@ -109,37 +97,31 @@ defmodule PhoenixPaper.Card do
       |> assign(:ripple?, linked? and assigns.ripple and assigns.paperize)
 
     ~H"""
-    <.pp_paper
+    <div
       :if={!@linked?}
-      color={surface(@variant)}
-      elevation={elevation(@variant)}
-      outlined={@variant == "outlined"}
-      shape={@shape}
-      paperize={@paperize}
-      component="card"
-      class={[@media != [] && "overflow-hidden", @class]}
+      data-pp-component="card"
+      class={Helpers.classes(@paperize, [surface_classes(@variant), @media != [] && "overflow-hidden"], @class)}
       {@rest}
     >
       <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
-      <div class={Helpers.classes(@paperize, Spacing.padding(@padding), nil)}>
+      <div class={Helpers.classes(@paperize, "p-4", nil)}>
         {card_heading(assigns)}
         {render_slot(@inner_block)}
         <div :if={@actions != []} class="mt-4 flex flex-wrap items-center justify-end gap-2">
           {render_slot(@actions)}
         </div>
       </div>
-    </.pp_paper>
-    <.pp_paper
+    </div>
+    <div
       :if={@linked?}
-      color={surface(@variant)}
-      elevation={elevation(@variant)}
-      outlined={@variant == "outlined"}
-      shape={@shape}
-      paperize={@paperize}
-      component="card"
+      data-pp-component="card"
       class={[
         "relative",
-        Helpers.classes(@paperize, ["overflow-hidden pp-motion-effects-default", hover_lift(@variant)], @class)
+        Helpers.classes(
+          @paperize,
+          [surface_classes(@variant), "overflow-hidden pp-motion-effects-default", hover_lift(@variant)],
+          @class
+        )
       ]}
       {@rest}
     >
@@ -154,7 +136,7 @@ defmodule PhoenixPaper.Card do
         onclick={Ripple.on_click(@ripple?)}
       >
         <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
-        <div class={Helpers.classes(@paperize, Spacing.padding(@padding), nil)}>
+        <div class={Helpers.classes(@paperize, "p-4", nil)}>
           {card_heading(assigns)}
           {render_slot(@inner_block)}
         </div>
@@ -167,14 +149,14 @@ defmodule PhoenixPaper.Card do
           actions_layer_classes(),
           Helpers.classes(
             @paperize,
-            ["flex flex-wrap items-center justify-end gap-2 !pt-0", Spacing.padding(@padding)],
+            "flex flex-wrap items-center justify-end gap-2 px-4 pb-4",
             nil
           )
         ]}
       >
         {render_slot(@actions)}
       </div>
-    </.pp_paper>
+    </div>
     """
   end
 
@@ -194,12 +176,14 @@ defmodule PhoenixPaper.Card do
     """
   end
 
-  defp surface("elevated"), do: "surface-container-low"
-  defp surface("filled"), do: "surface-container-highest"
-  defp surface("outlined"), do: "surface"
+  defp surface_classes("elevated"),
+    do: "block rounded-pp-md bg-pp-surface-container-low text-pp-on-surface pp-elevation-1"
 
-  defp elevation("elevated"), do: 1
-  defp elevation(_variant), do: 0
+  defp surface_classes("filled"),
+    do: "block rounded-pp-md bg-pp-surface-container-highest text-pp-on-surface"
+
+  defp surface_classes("outlined"),
+    do: "block rounded-pp-md border border-pp-outline-variant bg-pp-surface text-pp-on-surface"
 
   # An elevated card rises a level while its link is hovered; the others
   # keep MD3's flat look and only show the state layer.

@@ -23,7 +23,7 @@ defmodule PhoenixPaper.TextFieldTest do
     html =
       rendered_to_string(~H"""
       <.pp_text_field field={@form[:starts_at]} type="datetime-local" label="Starts" />
-      <.pp_text_field name="ends_at" type="datetime-local" label="Ends" value={~U[2026-10-01 18:05:00Z]} hide_label />
+      <.pp_text_field name="ends_at" type="datetime-local" label="Ends" value={~U[2026-10-01 18:05:00Z]} />
       """)
 
     assert html =~ ~s(value="2026-10-01T09:30")
@@ -131,21 +131,6 @@ defmodule PhoenixPaper.TextFieldTest do
     assert html =~ "has-[[data-pp-adornment=start]]:[&amp;&gt;fieldset&gt;legend]:ms-12"
   end
 
-  test "hide_label: no label/fieldset/supporting text, label becomes the placeholder" do
-    assigns = %{}
-
-    html =
-      rendered_to_string(
-        ~H"<.pp_text_field name='q' label='Search' hide_label size='small' supporting_text='x' />"
-      )
-
-    assert html =~ ~s(placeholder="Search")
-    assert html =~ ~s(data-pp-dense="true")
-    refute html =~ "<label"
-    refute html =~ "<fieldset"
-    refute html =~ ">x<"
-  end
-
   test "paperize={false} renders no built-in classes and no fieldset" do
     assigns = %{}
 
@@ -155,13 +140,5 @@ defmodule PhoenixPaper.TextFieldTest do
     refute html =~ "pp-body-large"
     refute html =~ "<fieldset"
     assert html =~ "mine"
-  end
-
-  test "small size is the dense 40dp field" do
-    assigns = %{}
-    html = rendered_to_string(~H"<.pp_text_field name='q' label='Q' size='small' />")
-
-    assert html =~ "min-h-10"
-    assert html =~ "pp-body-medium"
   end
 end

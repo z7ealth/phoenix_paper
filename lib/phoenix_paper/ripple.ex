@@ -4,8 +4,7 @@ defmodule PhoenixPaper.Ripple do
   click/tap position and fades out.
 
   Implemented as a small vanilla inline `onclick` snippet — no JS hook, no
-  bundler, no extra dependency, same approach as
-  `PhoenixPaper.NumberField`'s stepper buttons (see AGENTS.md). `onclick`
+  bundler, no extra dependency (see AGENTS.md). `onclick`
   (not `onpointerdown`/`onmousedown`) is used deliberately: Phoenix's HEEx
   compiler only accepts a fixed allowlist of `on*` event attributes on
   function components like `Phoenix.Component.link/1` (which `ListItem`

@@ -1,7 +1,7 @@
 defmodule PhoenixPaper.DatePicker do
   @moduledoc """
   An MD3 date picker — docked or modal — as a `Phoenix.LiveComponent`
-  (LiveView only, like `PhoenixPaper.PowerSelect`).
+  (LiveView only).
 
       <.live_component
         module={PhoenixPaper.DatePicker}
@@ -57,8 +57,8 @@ defmodule PhoenixPaper.DatePicker do
   `value` (or `field=`) is a `Date`, an ISO 8601 string or `nil`. The
   date is submitted from a hidden input under `name` as `YYYY-MM-DD`, and
   every change dispatches an `input` event from it — so the surrounding
-  form's `phx-change` runs, as for a native input (the PowerSelect
-  mechanism: a freshly-id'd `phx-mounted` span after each change). Outside
+  form's `phx-change` runs, as for a native input (a freshly-id'd
+  `phx-mounted` span after each change dispatches it). Outside
   a form, `on_change` (a `Date | nil -> any` function, run in the LiveView
   process) is called on every change. `clearable` adds a Clear action.
   The parent's `value` is re-read only when it changes.

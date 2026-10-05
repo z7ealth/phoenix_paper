@@ -116,25 +116,19 @@ defmodule PhoenixPaper.ListItemTest do
     refute render_component(&static/1) =~ "cursor-pointer"
   end
 
-  test "dense swaps the row padding" do
+  test "MD3 row height and padding" do
     assigns = %{}
 
-    dense =
-      rendered_to_string(
-        ~H"<PhoenixPaper.ListItem.pp_list_item dense>x</PhoenixPaper.ListItem.pp_list_item>"
-      )
-
-    normal =
+    html =
       rendered_to_string(
         ~H"<PhoenixPaper.ListItem.pp_list_item>x</PhoenixPaper.ListItem.pp_list_item>"
       )
 
-    assert dense =~ "py-1"
-    refute dense =~ "py-2"
-    assert normal =~ "py-2"
+    assert html =~ "min-h-14"
+    assert html =~ "py-2"
   end
 
-  test "marks the leading slot so List's inset can find items without one" do
+  test "marks the leading slot" do
     assigns = %{}
 
     html =

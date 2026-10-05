@@ -95,9 +95,9 @@ defmodule PhoenixPaper.ThemeTest do
       assert_in_delta h, 142.1, 3
     end
 
-    test "status roles are included unless status: false" do
-      assert Theme.scheme("#0b57d0", :light)["success-container"]
-      refute Theme.scheme("#0b57d0", :light, status: false)["success"]
+    test "only MD3 roles, no extension roles" do
+      refute Theme.scheme("#0b57d0", :light)["success"]
+      assert Theme.scheme("#0b57d0", :light)["surface-container-high"]
     end
 
     test "css/2 writes light, dark and the system fallback" do
