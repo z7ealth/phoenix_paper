@@ -34,7 +34,7 @@ defmodule PhoenixPaper.Menu do
   `aria-checked`; `disabled` dims it. Items link with `href`/`navigate`/
   `patch`, or are buttons firing whatever `phx-click` you give them. Any
   other content works in the panel too (`pp_divider`, a
-  `pp_list_subheader` for a group heading).
+  `pp_typography variant="title-small"` for a group heading).
 
   ## Submenus
 

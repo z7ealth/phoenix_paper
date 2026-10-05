@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-05
+
+### Fixed
+
+- `PhoenixPaper.Menu` and `PhoenixPaper.NavigationRail` docs still
+  suggested `pp_list_subheader` for group headings, which 0.5.0 removed.
+  They now suggest a `pp_typography variant="title-small"` heading.
+
 ## [0.5.0] - 2026-10-05
 
 PhoenixPaper is now **MD3 only**: every component is one the

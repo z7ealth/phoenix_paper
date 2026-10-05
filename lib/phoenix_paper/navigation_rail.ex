@@ -34,8 +34,8 @@ defmodule PhoenixPaper.NavigationRail do
   `secondary-container` pill around the icon with the label underneath;
   expanded, the pill grows around icon and label. The width and the
   indicator animate on the Expressive spatial spring. For a labeled group
-  of items, put a `pp_list_subheader` between them with
-  `class="pp-rail-collapsed:hidden"` so the heading only shows when the
+  of items, put a `pp_typography variant="title-small"` heading between
+  them with `class="pp-rail-collapsed:hidden"` so it only shows when the
   rail is expanded.
 
   `active` sets `aria-current="page"`. Which item is active is yours to
