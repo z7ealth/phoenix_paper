@@ -1,6 +1,6 @@
 {
   "name": "phoenix_paper",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "The LiveView hook for PhoenixPaper (Material Design 3 components for Phoenix).",
   "license": "MIT",
   "type": "module",

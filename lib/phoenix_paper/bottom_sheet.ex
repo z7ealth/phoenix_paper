@@ -134,6 +134,9 @@ defmodule PhoenixPaper.BottomSheet do
         {"transition-opacity duration-200 ease-pp-emphasized-decelerate", "opacity-0",
          "opacity-100"}
     )
+    # The scrim is hidden by hide/2, so show it again; the wrapper above
+    # already fades it in, so it needs no transition of its own.
+    |> JS.show(to: "##{id}-backdrop")
     |> JS.show(
       to: "##{id}-container",
       display: "block",

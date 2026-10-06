@@ -347,7 +347,10 @@ defmodule PhoenixPaper.Menu do
     do:
       "min-w-[112px] max-w-[280px] w-max flex-col gap-0.5 rounded-pp-lg bg-pp-tertiary-container p-1 text-pp-on-tertiary-container pp-elevation-2"
 
-  defp item_classes(selected) do
+  # Public (@doc false) so `PhoenixPaper.Autocomplete`'s options share the
+  # menu item look without copying the class strings.
+  @doc false
+  def item_classes(selected) do
     [
       "relative flex min-h-12 w-full cursor-pointer select-none items-center gap-3 overflow-hidden px-3 py-2 pp-label-large pp-state-layer pp-focus-ring pp-motion-effects-fast",
       "disabled:pointer-events-none disabled:opacity-38 aria-disabled:pointer-events-none aria-disabled:opacity-38",

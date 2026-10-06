@@ -74,4 +74,24 @@ defmodule PhoenixPaper.SheetsTest do
     assert html =~ "border-s border-pp-outline-variant"
     refute html =~ ~s(aria-label="Close")
   end
+
+  # A modal opened, closed and opened again must look like the first open:
+  # every element hide/2 hides has to be shown again by show/2. The scrim
+  # (`#<id>-backdrop`) once wasn't, so from the second open it was missing.
+  describe "show/2 undoes everything hide/2 hides" do
+    defp targets(%Phoenix.LiveView.JS{ops: ops}, kind) do
+      for [op, args] <- ops, op == kind, do: args[:to] || args["to"]
+    end
+
+    for module <- [PhoenixPaper.Dialog, PhoenixPaper.BottomSheet, PhoenixPaper.SideSheet] do
+      test inspect(module) do
+        module = unquote(module)
+        hidden = targets(module.hide("m"), "hide")
+        shown = targets(module.show("m"), "show")
+
+        assert "#m-backdrop" in hidden
+        assert hidden -- shown == []
+      end
+    end
+  end
 end

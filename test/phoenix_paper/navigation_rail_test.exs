@@ -15,17 +15,62 @@ defmodule PhoenixPaper.NavigationRailTest do
     """
   end
 
-  test "responsive (default): checkbox + scrim + rail as siblings, the menu button targets the checkbox" do
+  test "responsive (default): a modal checkbox, an expand checkbox, the scrim and the rail as siblings" do
     html = render_component(&rail/1, variant: "responsive")
 
-    assert html =~ ~s(id="rail-toggle")
-    assert html =~ "data-pp-rail-toggle"
+    assert html =~
+             ~r/<input[^>]*id="rail-toggle"[^>]*data-pp-rail-toggle[^>]*class="peer\/modal sr-only"/
+
+    assert html =~
+             ~r/<input[^>]*id="rail-expand"[^>]*data-pp-rail-expand[^>]*class="peer\/expand sr-only"/
+
     assert html =~ ~s(data-pp-rail="responsive")
-    assert html =~ ~s(for="rail-toggle")
     assert html =~ "max-md:fixed"
     assert html =~ "md:w-24"
-    assert html =~ "md:peer-checked:w-[280px]"
-    assert html =~ "max-md:peer-checked:block"
+    assert html =~ "md:peer-checked/expand:w-[280px]"
+    assert html =~ "max-md:peer-checked/modal:translate-x-0"
+    [scrim] = Regex.run(~r/<label[^>]*aria-hidden="true"[^>]*>/, html)
+    assert scrim =~ ~s(for="rail-toggle")
+    assert scrim =~ "max-md:peer-checked/modal:block"
+  end
+
+  test "the menu button opens the modal below md and expands the rail from md" do
+    html = render_component(&rail/1, variant: "responsive")
+
+    [modal] = Regex.run(~r/<label[^>]*data-pp-rail-target="modal"[^>]*>/, html)
+    assert modal =~ ~s(for="rail-toggle")
+    assert modal =~ "md:hidden"
+
+    [expand] = Regex.run(~r/<label[^>]*data-pp-rail-target="expand"[^>]*>/, html)
+    assert expand =~ ~s(for="rail-expand")
+    assert expand =~ "max-md:hidden"
+  end
+
+  defp rail_with(assigns) do
+    ~H"""
+    <.pp_navigation_rail id="rail" default_expanded={@expanded} default_open={@open}>
+      <.pp_navigation_rail_item icon="hero-inbox" label="Inbox" navigate="/" />
+    </.pp_navigation_rail>
+    """
+  end
+
+  defp checked?(html, id) do
+    [tag] = Regex.run(~r/<input[^>]*id="#{id}"[^>]*>/, html)
+    tag =~ ~r/\schecked[\s>=\/]/
+  end
+
+  test "default_expanded only expands the desktop rail; the small-screen modal stays closed" do
+    html = render_component(&rail_with/1, expanded: true, open: false)
+
+    assert checked?(html, "rail-expand")
+    refute checked?(html, "rail-toggle")
+  end
+
+  test "default_open opens the small-screen modal, independently" do
+    html = render_component(&rail_with/1, expanded: false, open: true)
+
+    assert checked?(html, "rail-toggle")
+    refute checked?(html, "rail-expand")
   end
 
   test "collapsed/expanded variants render no checkbox, scrim or menu button" do
@@ -68,13 +113,14 @@ defmodule PhoenixPaper.NavigationRailTest do
     assert html =~ "pp-rail-expanded:inline"
   end
 
-  test "pp_navigation_rail_toggle modal_only hides from md up" do
+  test "pp_navigation_rail_toggle modal_only renders only the small-screen label" do
     assigns = %{}
     html = rendered_to_string(~H"<.pp_navigation_rail_toggle for='rail' modal_only />")
 
     assert html =~ ~s(for="rail-toggle")
     assert html =~ "md:hidden"
     assert html =~ "hero-bars-3"
+    refute html =~ "rail-expand"
   end
 
   test "paperize={false} drops the rail's classes" do

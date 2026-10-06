@@ -55,4 +55,16 @@ defmodule PhoenixPaper.SelectTest do
     html = render_component(&select/1)
     assert html =~ "cursor-pointer"
   end
+
+  test "the outlined fieldset starts 8px above the box so its border is on the box edge" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_select name="s" label="S" options={["a"]} />
+      """)
+
+    [fieldset] = Regex.run(~r/<fieldset[^>]*>/, html)
+    assert fieldset =~ "inset-x-0 bottom-0 -top-2"
+  end
 end

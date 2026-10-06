@@ -25,6 +25,19 @@ defmodule PhoenixPaper.NavigationRail do
   put another in your `PhoenixPaper.TopAppBar`'s `:leading` with
   `modal_only` so small screens can open the modal rail.
 
+  A responsive rail has two independent states, each with its own
+  starting value:
+
+  - `default_expanded` — whether the docked rail starts **expanded** on
+    `md` and up (280dp, labels beside icons) instead of collapsed.
+  - `default_open` — whether the **modal** rail starts open on small
+    screens. Leave it `false` (the default) unless the page is the menu:
+    an open modal covers the content until it's dismissed.
+
+  So `default_expanded` gives "expanded on desktop, closed on phones".
+  Until 0.5.2 one checkbox held both states, so `default_expanded` also
+  opened the modal on every small-screen page load.
+
   ## Items
 
   `pp_navigation_rail_item/1` takes `icon`, `label`, an optional
@@ -49,13 +62,21 @@ defmodule PhoenixPaper.NavigationRail do
 
   ## How it works
 
-  CSS only, the 0.3 `Drawer` mechanism: a hidden checkbox
-  (`data-pp-rail-toggle`), a scrim `<label>` for it, and the rail as their
-  later sibling. Every layout change is a `pp-rail-expanded:` /
+  CSS only: two hidden checkboxes — `data-pp-rail-toggle` (the modal,
+  small screens) and `data-pp-rail-expand` (expanded, `md` and up) — a
+  scrim `<label>` for the first, and the rail as their later sibling. The
+  rail's classes react to them as named peers (`peer-checked/modal:`,
+  `peer-checked/expand:`), since a plain `peer-checked:` would fire for
+  either. Every layout change is a `pp-rail-expanded:` /
   `pp-rail-collapsed:` variant (defined in `phoenix_paper.css`) instead of
-  three selectors per class. Render the three as siblings — the component
+  three selectors per class. Render them as siblings — the component
   does — and keep the rail outside any element that would break
   `position: sticky` (an `overflow: hidden` ancestor).
+
+  The menu button is two `<label>`s, one per checkbox, each shown only at
+  its breakpoint (`md:hidden` for the modal, `max-md:hidden` for
+  expanding), so the same button opens the modal on a phone and expands
+  the rail on a desktop.
 
   Stacking: modal panel `z-40`, scrim `z-30`, the docked rail `md:z-30`;
   a sticky `TopAppBar` is `z-20`.
@@ -74,7 +95,12 @@ defmodule PhoenixPaper.NavigationRail do
 
   attr(:default_expanded, :boolean,
     default: false,
-    doc: "responsive rails only: start expanded on md+ (and open on small screens)"
+    doc: "responsive rails only: start expanded on md and up"
+  )
+
+  attr(:default_open, :boolean,
+    default: false,
+    doc: "responsive rails only: start with the small-screen modal open"
   )
 
   attr(:label, :string, default: "Main navigation", doc: "the nav landmark's aria-label")
@@ -102,16 +128,25 @@ defmodule PhoenixPaper.NavigationRail do
       :if={@variant == "responsive"}
       type="checkbox"
       id={toggle_id(@id)}
-      checked={@default_expanded}
+      checked={@default_open}
       data-pp-rail-toggle
       aria-label={@label}
-      class="peer sr-only"
+      class="peer/modal sr-only"
+    />
+    <input
+      :if={@variant == "responsive"}
+      type="checkbox"
+      id={expand_id(@id)}
+      checked={@default_expanded}
+      data-pp-rail-expand
+      aria-label={@label}
+      class="peer/expand sr-only"
     />
     <label
       :if={@variant == "responsive"}
       for={toggle_id(@id)}
       aria-hidden="true"
-      class="fixed inset-0 z-30 hidden bg-pp-scrim/32 max-md:peer-checked:block"
+      class="fixed inset-0 z-30 hidden bg-pp-scrim/32 max-md:peer-checked/modal:block"
     />
     <nav
       id={@id}
@@ -152,10 +187,12 @@ defmodule PhoenixPaper.NavigationRail do
   attr(:class, :any, default: nil)
 
   @doc """
-  The menu button that expands/collapses a responsive `pp_navigation_rail/1`
-  (and opens/closes its modal on small screens). A `<label>` for the rail's
-  checkbox, so it works from anywhere on the page, styled as a standard
-  icon button.
+  The menu button of a responsive `pp_navigation_rail/1`: it opens/closes
+  the modal rail on small screens and expands/collapses the docked rail
+  from `md` up. Each state has its own checkbox, so this is two `<label>`s
+  styled as a standard icon button, each shown only at its breakpoint
+  (`modal_only` keeps just the small-screen one). Labels work from
+  anywhere on the page.
   """
   def pp_navigation_rail_toggle(assigns) do
     ~H"""
@@ -164,20 +201,27 @@ defmodule PhoenixPaper.NavigationRail do
       aria-label={@label}
       title={@label}
       data-pp-component="navigation-rail-toggle"
-      class={
-        Helpers.classes(
-          @paperize,
-          [
-            "relative inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-pp-on-surface-variant pp-state-layer",
-            @modal_only && "md:hidden"
-          ],
-          @class
-        )
-      }
+      data-pp-rail-target="modal"
+      class={Helpers.classes(@paperize, [toggle_classes(), "md:hidden"], @class)}
+    >
+      <Icon.pp_icon name="hero-bars-3" />
+    </label>
+    <label
+      :if={!@modal_only}
+      for={expand_id(@for)}
+      aria-label={@label}
+      title={@label}
+      data-pp-component="navigation-rail-toggle"
+      data-pp-rail-target="expand"
+      class={Helpers.classes(@paperize, [toggle_classes(), "max-md:hidden"], @class)}
     >
       <Icon.pp_icon name="hero-bars-3" />
     </label>
     """
+  end
+
+  defp toggle_classes do
+    "relative inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-pp-on-surface-variant pp-state-layer"
   end
 
   attr(:icon, :string, required: true, doc: "a hero-* icon name")
@@ -276,16 +320,17 @@ defmodule PhoenixPaper.NavigationRail do
   end
 
   defp toggle_id(id), do: "#{id}-toggle"
+  defp expand_id(id), do: "#{id}-expand"
 
   defp paper_classes("responsive") do
     [
       "flex flex-col gap-4 overflow-x-hidden py-4 pp-motion-spatial-default",
       # Small screens: a modal expanded rail, off-canvas until checked.
-      "max-md:fixed max-md:inset-y-0 max-md:start-0 max-md:z-40 max-md:w-[min(360px,85vw)] max-md:-translate-x-full max-md:peer-checked:translate-x-0 max-md:rounded-e-pp-lg max-md:bg-pp-surface-container-low max-md:text-pp-on-surface",
+      "max-md:fixed max-md:inset-y-0 max-md:start-0 max-md:z-40 max-md:w-[min(360px,85vw)] max-md:-translate-x-full max-md:peer-checked/modal:translate-x-0 max-md:rounded-e-pp-lg max-md:bg-pp-surface-container-low max-md:text-pp-on-surface",
       Elevation.class(0),
-      "max-md:peer-checked:pp-elevation-1",
+      "max-md:peer-checked/modal:pp-elevation-1",
       # md+: docked; collapsed 96dp, expanded 280dp.
-      "md:sticky md:top-0 md:z-30 md:h-dvh md:shrink-0 md:w-24 md:peer-checked:w-[280px] md:bg-pp-surface md:text-pp-on-surface"
+      "md:sticky md:top-0 md:z-30 md:h-dvh md:shrink-0 md:w-24 md:peer-checked/expand:w-[280px] md:bg-pp-surface md:text-pp-on-surface"
     ]
   end
 

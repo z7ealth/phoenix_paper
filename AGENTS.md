@@ -10,16 +10,32 @@ PhoenixPaper is a **Material Design 3** component library for **Phoenix**
 a hex package (a component library, not a Phoenix app) that a Phoenix
 project adds as a dependency.
 
-**MD3 is the only source.** Every component is one the MD3 spec
-(m3.material.io/components) defines, and its look, behavior and API
-follow that spec. The library doesn't port or imitate other component
-libraries (0.5.0 removed the components and attrs that came from MUI),
-and it doesn't add components MD3 doesn't have — layout primitives,
-tables, pagination, breadcrumbs, accordions, alerts, skeletons and the
-like are the app's own business, written with Tailwind and the MD3
-tokens below. A component may go *beyond* the spec only where Phoenix
-needs it (`field=` form integration, `Flash` for `@flash`, `ThemeToggle`
-for `data-theme`), and then it's still built purely from MD3 parts.
+**MD3 is the only source.** Every component is either one the MD3 spec
+(m3.material.io/components) defines — its look, behavior and API follow
+that spec — or a **composite of MD3 parts** for a common need MD3 leaves
+open. The library doesn't port or imitate other component libraries
+(0.5.0 removed the components and attrs that came from MUI).
+
+A composite (since 0.5.2: `Table` and its parts, `TablePagination`,
+`Pagination`, `Breadcrumbs`, `Autocomplete`, `NumberField`,
+`PasswordField`) is allowed
+when it's built *only* from existing MD3 components and tokens: no new
+visual vocabulary, no color, shape or type value MD3 doesn't have, and
+no attr options copied from another library. It reuses the library's
+own components where it can (`NumberField` and `PasswordField` are a
+`pp_text_field` with `pp_icon_button`s; `Autocomplete` is a
+`pp_text_field` over the menu surface and `Menu.item_classes/1`).
+
+Layout is the app's business — layout primitives, grids, spacing
+helpers are written with Tailwind and the MD3 tokens below — with one
+exception: MD3's own **canonical layouts** (`PaneLayout`'s list-detail
+and supporting pane), because MD3's Layout foundations specify them
+(window size classes, margins, spacers, fixed pane widths). Composites
+whose MD3 form would be a stretch (accordions, alerts, skeletons,
+ratings, steppers) stay out. A component may also go *beyond* the spec
+where Phoenix needs it (`field=` form integration, `Flash` for `@flash`,
+`ThemeToggle` for `data-theme`, `Upload` for LiveView uploads), again
+built purely from MD3 parts.
 
 This file is the ground truth for how the library is built. Read it before
 adding or changing a component.
@@ -33,7 +49,8 @@ adding or changing a component.
   - Communication: `Badge`, `Progress`, `LoadingIndicator`, `Snackbar`
     (+ `Flash`, Phoenix's `@flash` as snackbars), `Tooltip`.
   - Containment: `Card`, `Carousel`, `Dialog`, `Divider`, `List`/
-    `ListItem`, `BottomSheet`, `SideSheet`.
+    `ListItem` (+ `Avatar`, MD3's list leading element), `BottomSheet`,
+    `SideSheet`.
   - Navigation: `TopAppBar`, `NavigationRail`, `NavigationBar`, `Toolbar`,
     `Tabs`/`Tab`/`TabPanel`, `SearchBar`.
   - Selection and text inputs: `Checkbox`, `Chip`, `RadioGroup`, `Menu`,
@@ -41,6 +58,14 @@ adding or changing a component.
     `DatePicker` and `TimePicker`.
   - Foundations: `Icon`, `Typography` (the type scale), `ThemeToggle`
     (light/dark), `Theme`/`Theme.Hct` (`mix phoenix_paper.gen.theme`).
+  - Composites of MD3 parts: `Table` (+ `TableContainer`, `TableHead`,
+    `TableBody`, `TableRow`, `TableCell`, `TableFooter`),
+    `TablePagination`, `Pagination`, `Breadcrumbs`, `NumberField`,
+    `PasswordField`, and the LiveComponent `Autocomplete` (with
+    `multiple` input chips).
+  - Layout: `PaneLayout` (MD3's list-detail and supporting-pane
+    canonical layouts).
+  - Phoenix integration: `Flash` (above), `Upload` (LiveView uploads).
 
   Helpers: `Helpers`, `Elevation`, `Shape`, `Ripple`, `Toggle`.
 - `lib/phoenix_paper/components.ex` — `use PhoenixPaper.Components` imports
@@ -417,15 +442,16 @@ Every component is a stateless `Phoenix.Component` function (`pp_*/1`) by
 default — that's the whole point of the `pp_` import convention. Reach for a
 `Phoenix.LiveComponent` only when a component needs interactive state a
 single render pass can't express from its attrs alone (`DatePicker`'s
-viewed month and pending date, `TimePicker`'s dial state). Those two are
-the only such components on purpose: they aren't imported by
+viewed month and pending date, `TimePicker`'s dial state,
+`Autocomplete`'s query and filtered options). Those three are the only
+such components on purpose: they aren't imported by
 `PhoenixPaper.Components` (there's no function to import — they're used
 directly as `<.live_component module={PhoenixPaper.DatePicker} ... />`),
 they only work inside a LiveView (not a plain dead/controller-rendered
 page), and that limitation is called out in their moduledoc. Default to a
 stateless function component; justify a `LiveComponent` explicitly.
 
-Both pickers tell the caller's form about changes the same way: hidden
+All three tell the caller's form about changes the same way: hidden
 inputs carry the value, and after each change the server renders a fresh
 `<span id="<id>-changed-N" phx-mounted={JS.dispatch("input", ...)}>`.
 The id changes, so it's a new element, and `phx-mounted` fires after the
@@ -466,6 +492,129 @@ clicks but the gaps between them fall through to the link. Verified with
 `document.elementFromPoint` in Chromium: title, body and the actions-row
 gap all hit the card link, and the action button hits itself.
 
+## Composites: tables, pagination, breadcrumbs, `NumberField`, `Autocomplete`
+
+Removed in 0.5.0 with the rest of the MUI-derived components, brought
+back in 0.5.2 rebuilt as composites of MD3 parts (see the rule at the
+top). What each is made of, and what was dropped on the way back:
+
+- **The Table family** composes like an HTML table (`pp_table` >
+  `pp_table_head`/`pp_table_body`/`pp_table_footer` > `pp_table_row` >
+  `pp_table_cell`), inside an optional `pp_table_container` that draws a
+  card surface (`Card`'s three variants, fixed medium corners) and
+  scrolls horizontally. Cells: `body-medium` in `on-surface`, headers
+  `title-small` in `on-surface-variant`, `outline-variant` dividers, the
+  8% state layer on row hover, `secondary-container` + `aria-selected`
+  for a selected row. Sortable headers use an MD3 icon arrow, the focus
+  ring and `aria-sort`. `sticky_header` and the dividers reach their
+  cells through descendant selectors (`[&_thead]:sticky`,
+  `[&>tr]:border-b`), since HEEx can't push attrs into children the
+  caller wrote. MUI's `dense` and `striped` didn't come back, which also
+  let `selected` drop the `!bg-` it needed to beat the stripe.
+- **`Pagination`** is a row of 40dp MD3 standard icon buttons; the
+  current page takes `secondary-container` and `aria-current="page"`.
+  It shows first/last/current ±1 (`items/2`, doctested, constant length
+  so the bar doesn't change width). MUI's `sibling_count`,
+  `boundary_count`, first/last buttons and variant/shape/size/color
+  options didn't come back.
+- **`TablePagination`** is a `pp_menu` rows-per-page picker, the range
+  text and two `pp_icon_button`s, needs an `id` (for the menu), and is
+  1-based like `Pagination`. Both link (`path` + `link`) or fire events
+  (`on_*`), never both; a control that can't move is a disabled button,
+  never a link to page 0. Labels are `rows_per_page_label` and
+  `range_label` (renamed from MUI's).
+- **`Breadcrumbs`**: linked items are compact text buttons (`label-large`
+  `primary`, state layer, focus ring), the current item (the one without
+  a link — not inferred from position) is `on-surface` text, and the
+  separator is a chevron icon (`rtl:rotate-180`). It wraps rather than
+  collapsing; MUI's `max_items` collapse and custom separator didn't come
+  back. Its `:item` slot attrs have no defaults (slot attrs can't), so
+  they're read with `item[:href]`, never `item.href`.
+- **`NumberField`** is a `pp_text_field type="number"` (so the floating
+  label, notch, supporting text and errors are the text field's) with
+  two `pp_icon_button` steppers in `:end_adornment`, both trailing — a
+  40dp leading button would misalign the outlined notch, whose offset is
+  sized for a 24dp icon. The steppers call `stepUp()`/`stepDown()` and
+  dispatch an `input` event (inline `onclick`, `ripple={false}` so it
+  doesn't fight the ripple's own `onclick`).
+- **`Autocomplete`** (LiveComponent) is a `pp_text_field` acting as an
+  ARIA combobox over a `listbox` drawn as the MD3 menu surface, whose
+  options reuse `Menu.item_classes/1` (public, `@doc false`) so they look
+  exactly like menu items without copying class strings — but keep
+  `role="option"`, which `pp_menu_item`'s fixed `menuitem` role wouldn't
+  allow. The text box is detached from the caller's form (`form` points
+  at a missing id, no `name`, `phx-keyup` instead of `phx-change`); a
+  hidden input carries the value and the changed-span dispatch tells the
+  form. Arrow keys move DOM focus through the options via one inline
+  `onkeydown` (focus can't be undone by a patch); Escape and click-away
+  close it. Filtering folds case and accents (NFD, strip `\p{Mn}`).
+
+## Composites added later in 0.5.2: `PasswordField`, `Autocomplete` `multiple`, `Upload`, `PaneLayout`
+
+- **`PasswordField`** is a `pp_text_field type="password"` whose trailing
+  icon is a `pp_icon_button` *toggle* (`hero-eye` / `selected_icon`
+  `hero-eye-slash`, `aria-pressed`) — MD3's visibility-icon pattern. The
+  icon button's `on_toggle` adds `JS.toggle_attribute({"type", "text",
+  "password"}, to: "#id")`, so one `phx-click` flips both, client-side.
+  JS-command attributes survive LiveView patches; a script setting
+  `input.type` directly would be reset to `password` by the next patch.
+  Checked in headless Chromium with the real LiveView client (password →
+  text → password, `aria-pressed` following).
+- **`Autocomplete`'s `multiple`** turns picks into MD3 input chips
+  (`pp_chip variant="input"`, `deletable`) **inside the text field**, as
+  MD3 shows them, and keeps the listbox open (`aria-multiselectable`);
+  picking a selected option removes it, and Backspace in an empty box
+  clicks the last `chip-delete` control (from the same inline
+  `onkeydown`). The value is a list submitted as `name[]`, plus an empty
+  `name[]` sentinel so removing every chip still submits the field
+  (callers filter `""`).
+- **`TextField`'s `:chips` and `:menu` slots** make that possible.
+  `:chips` renders in a wrapping flex row before the input (the input
+  becomes a `min-w-[4ch] flex-1` item); while it's given, the label uses
+  static raised classes and the outlined notch is held open, instead of
+  the `peer-[:not(:placeholder-shown)]`/`has-[...]` triggers — the server
+  knows the slot is there, so no CSS has to detect chips. The trigger is
+  the slot being *given*, not rendering something: callers pass it with
+  `:if={list != []}` (an always-present slot rendering nothing raised the
+  label with zero chips — caught in a screenshot, now tested). `:menu`
+  renders inside the field box (the positioning ancestor), so
+  `Autocomplete`'s listbox at `top-full` sits under the box however tall
+  the chips make it, and focus in the options keeps the field's
+  `focus-within` (MD3's focused field while its menu is open). Measured
+  in Chromium with the compiled CSS: outlined chip fields stay 56px
+  (12px + a 32px chip + 12px), filled ones are 64px (room for the raised
+  label above the chips), the menu sits 4px under the box.
+  A HEEx trap found the same way: `{@flag && render_slot(...)}` renders
+  the literal text `false` when the flag is false; use
+  `{if @flag, do: ...}`. The text field tests assert no `>false<` text.
+- **`Upload`** wraps `live_file_input/1`. The drop zone is
+  `surface-container-low` + `outline-variant`, with MD3's dragged state
+  (16% layer, `primary` outline) keyed off the `phx-drop-target-active`
+  class LiveView adds during a drag. The browse button is a tonal
+  `pp_button` whose inline `onclick` clicks the hidden file input
+  (`ripple={false}`, so it doesn't collide with the ripple's own
+  `onclick`). Each entry: `live_img_preview/1` (images) or a document
+  icon, a linear `pp_progress` while uploading, `upload_errors/2` mapped
+  to text (`error_to_string` overrides), and a cancel `pp_icon_button`
+  sending `on_cancel` with `phx-value-ref`. Tested through LiveViewTest's
+  real upload protocol (`file_input/4` + `render_upload/3`), which joins
+  an upload channel — that's why `test_helper.exs` starts a PubSub for
+  `PhoenixPaper.TestEndpoint`. Two test-only quirks: `render_upload/3`
+  can only stop at whole chunks, so the test files are 10 bytes (10% and
+  40% split exactly; a 3-byte file reports 33%/66% and logs a warning),
+  and cancelling an in-progress entry removes it when its channel
+  exits, just after the click's reply — assert on the next `render/1`.
+- **`PaneLayout`** (`pp_list_detail`, `pp_supporting_pane`) follows MD3's
+  Layout foundations: window size classes compact < 600dp ≤ medium <
+  840dp ≤ expanded, as literal `min-[600px]:`/`min-[840px]:` variants
+  (Tailwind's defaults are 640/768/1024 and don't match); 16dp margins
+  on compact, 24dp from medium; a 24dp spacer; 360dp fixed panes.
+  List-detail shows one pane below 840dp (`show_detail` picks which) and
+  both from 840dp; the supporting pane stacks below 840dp. Panes are
+  plain regions without a surface. Under `paperize={false}` only the
+  `hidden`/`flex` visibility classes stay (they're what makes it a
+  layout); margins, spacer and widths go.
+
 ## Navigation: `TopAppBar` (renamed from `AppBar`, earlier `Navbar`)
 
 MD3's top app bar is **surface-colored**, not primary: `bg-pp-surface`,
@@ -499,12 +648,28 @@ components on this ladder.
 
 M3 Expressive retires the navigation drawer in favor of the expanded
 navigation rail, so 0.4.0 removed `Drawer`. `pp_navigation_rail/1` keeps
-the drawer's mechanism: a hidden checkbox (`data-pp-rail-toggle`), a
-scrim `<label>` and the rail rendered as siblings, with
-`pp_navigation_rail_toggle/1` as a `<label for>` that works from anywhere
-(the top app bar). `variant="responsive"`: below `md` the checkbox opens a
-modal expanded rail; from `md` the rail is docked, 96dp collapsed, and the
-checkbox expands it to 280dp. `collapsed`/`expanded` are fixed.
+the drawer's mechanism — hidden checkboxes, a scrim `<label>` and the
+rail rendered as siblings, with `pp_navigation_rail_toggle/1` as
+`<label for>`s that work from anywhere (the top app bar) — but with
+**two** checkboxes for a `variant="responsive"` rail: below `md`,
+`data-pp-rail-toggle` (`#<id>-toggle`, starts from `default_open`) opens
+the modal expanded rail; from `md`, the rail is docked, 96dp collapsed,
+and `data-pp-rail-expand` (`#<id>-expand`, starts from
+`default_expanded`) expands it to 280dp. `collapsed`/`expanded` are fixed.
+
+Until 0.5.2 it was one checkbox for both, so `default_expanded` — meant
+for the desktop — also opened the modal (and its scrim) on every phone
+page load (reported from a real site). With two checkboxes, every class
+that reacts to one names it: named peers (`peer/modal`, `peer/expand` on
+the inputs; `max-md:peer-checked/modal:`, `md:peer-checked/expand:` on
+the rail and scrim), since an unnamed `peer-checked:` fires for any
+checked `.peer` sibling. The `pp-rail-expanded:`/`pp-rail-collapsed:`
+variants key off `[data-pp-rail-expand]`. The toggle is two labels, one
+per checkbox, shown only at their breakpoint (`md:hidden` /
+`max-md:hidden`); `modal_only` keeps the first. Verified in Chromium on
+the compiled CSS at 390px and 1280px with `default_expanded`: phone loads
+with the modal closed and opens it from the button; desktop loads
+expanded (280px) and collapses (96px) from the button.
 
 Every element that changes between collapsed and expanded uses the
 `pp-rail-expanded:`/`pp-rail-collapsed:` custom variants
@@ -723,7 +888,37 @@ that open `max-width`, so the resting legend has **zero** padding (a true
 zero-width box, not just visually small) and the border stays completely
 unbroken until the notch actually needs to open.
 
-## Communication: `Badge`, `Chip`, and `Tooltip`
+**Second follow-up, caught from a user screenshot in 0.5.2**: every
+raised outlined label sat 8px *above* the border, and every outlined box
+looked 48px tall instead of 56. A fieldset draws its top border through
+the vertical middle of its `<legend>`, and the legend is 16px tall
+(`body-small`), so with the fieldset at `inset-0` the drawn border ran
+8px below the box's top edge — while the label is positioned against the
+box. The fieldset now starts 8px higher (`inset-x-0 bottom-0 -top-2`,
+half the legend), putting the line on the box edge. `Select` had the same
+fieldset and the same fix. Measured with `getBoundingClientRect` in
+Chromium against the compiled CSS (the border's y is the fieldset's top
+plus half the legend's height): raised labels now center exactly on the
+line, resting labels on the 56px box's middle.
+
+The same pass fixed the notch with a leading prefix: it used to be cut at
+a fixed `ms-12` (sized for a 24dp icon), so a `$` prefix put the label at
+x=38 and the notch at x=49. Now the label's containing block is the
+field box (the input's wrapper isn't `relative`) and its `start` is
+`auto` at rest — so it sits at its *static* position, after whatever
+leads the input, plus `ms-4` — and raised in an outlined field it takes
+`start-0`: 16dp from the edge, MD3's placement for a populated outlined
+field with a leading icon, which is exactly where the (now fixed) notch
+is. A raised filled label keeps its static position, aligned with the
+input text, as MD3 places it. `start` going from `auto` to `0` doesn't
+animate, so with a leading icon the label moves sideways in one step as
+it rises; without one, the static position already is the edge, so
+nothing jumps. Headless note: focus state needs
+`Emulation.setFocusEmulationEnabled` over the DevTools protocol — without
+it the page has no focus, `:focus` never matches, and a focused field
+looks unfocused.
+
+## Communication: `Badge`, `Chip`, `Tooltip`, and `Avatar`
 
 - **`Badge`** is MD3's two badges: no `content` gives the 6dp small
   badge, `content` the 16dp large one (`label-small`, integers above
@@ -745,6 +940,13 @@ unbroken until the notch actually needs to open.
   window-level listener, so stopping propagation broke `on_delete`
   entirely (found with a real click), and LiveView already resolves a
   click to the nearest `phx-click`.
+
+- **`Avatar`** is MD3's list leading element: one 40dp circle in
+  `primary-container` with `title-medium` initials (or an icon) in
+  `on-primary-container`, and an optional `<img>` over it. The fallback
+  is always rendered underneath; a tiny inline `onerror` hides a broken
+  image. 0.4's `size`/`variant`/`color` didn't come back (MD3 fixes all
+  three).
 
 - **`Tooltip`** is pure CSS: a named `group/tooltip` wrapper with
   `group-hover/tooltip:`/`group-focus-within/tooltip:` (named so an outer
@@ -795,6 +997,18 @@ the panel is plain `w-full`. The one non-obvious wiring detail:
 `JS.exec("data-cancel", to: "##{id}")` targets by CSS selector), not on
 the inner content — on the wrong element, `JS.exec` finds nothing and
 Escape/scrim-click silently do nothing.
+
+**`show/2` must undo everything `hide/2` does.** `hide/2` fades out the
+wrapper, the panel *and* the scrim (`#<id>-backdrop`); until 0.5.2,
+`show/2` only brought back the first two, so from the second open on the
+scrim stayed `display: none` (the first open looked fine because the
+scrim had never been hidden yet). A unit test in `sheets_test.exs` now
+asserts that every target `hide/2` hides appears in `show/2`, for all
+three modals. It was confirmed in headless Chromium with the real
+LiveView client (opening, closing and reopening each modal, reading the
+scrim's computed `display`): the old code shows `none` on the second
+open, the fixed code `block` every time. When adding an element a modal
+hides, add it to `show/2` in the same change.
 
 `Progress`'s circular variant is real SVG (`stroke-dasharray`/
 `stroke-dashoffset` computed from `value`, with MD3's gap between
@@ -1124,7 +1338,7 @@ approximation, and matches the intent every one of these callers actually
 had.
 
 **Test-coverage lesson**: every one of `TextField`/`Checkbox`/`Switch`/
-`RadioGroup`/`Select`/`Slider`'s test files now has
+`RadioGroup`/`Select`/`Slider`/`NumberField`'s test files now has
 a `"field= populates name/id/value(/checked) from the form field"` test,
 built via `Phoenix.Component.to_form(%{"key" => "val"}, as: :some_prefix)`
 (no `Ecto.Changeset` dependency needed for a simple map-backed form). Add

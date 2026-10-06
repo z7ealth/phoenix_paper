@@ -17,16 +17,18 @@ defmodule PhoenixPaper.Components do
   generated `core_components.ex` (`button/1`, `input/1`, `icon/1`, ...) or
   with daisyUI class names.
 
-  `PhoenixPaper.DatePicker` and `PhoenixPaper.TimePicker` need
-  interactive state, so they're `Phoenix.LiveComponent`s instead of
+  `PhoenixPaper.Autocomplete`, `PhoenixPaper.DatePicker` and
+  `PhoenixPaper.TimePicker` need interactive state, so they're `Phoenix.LiveComponent`s instead of
   function components — use them directly with
   `<.live_component module={...} />`, they aren't imported here.
   """
 
   defmacro __using__(_opts) do
     quote do
+      import PhoenixPaper.Avatar, only: [pp_avatar: 1]
       import PhoenixPaper.Badge, only: [pp_badge: 1]
       import PhoenixPaper.BottomSheet, only: [pp_bottom_sheet: 1]
+      import PhoenixPaper.Breadcrumbs, only: [pp_breadcrumbs: 1]
       import PhoenixPaper.Button, only: [pp_button: 1]
       import PhoenixPaper.ButtonGroup, only: [pp_button_group: 1]
       import PhoenixPaper.Card, only: [pp_card: 1]
@@ -51,6 +53,10 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.NavigationRail,
         only: [pp_navigation_rail: 1, pp_navigation_rail_item: 1, pp_navigation_rail_toggle: 1]
 
+      import PhoenixPaper.NumberField, only: [pp_number_field: 1]
+      import PhoenixPaper.Pagination, only: [pp_pagination: 1]
+      import PhoenixPaper.PaneLayout, only: [pp_list_detail: 1, pp_supporting_pane: 1]
+      import PhoenixPaper.PasswordField, only: [pp_password_field: 1]
       import PhoenixPaper.Progress, only: [pp_progress: 1]
       import PhoenixPaper.RadioGroup, only: [pp_radio_group: 1]
       import PhoenixPaper.SearchBar, only: [pp_search_bar: 1]
@@ -63,11 +69,20 @@ defmodule PhoenixPaper.Components do
       import PhoenixPaper.Tab, only: [pp_tab: 1]
       import PhoenixPaper.TabPanel, only: [pp_tab_panel: 1]
       import PhoenixPaper.Tabs, only: [pp_tabs: 1]
+      import PhoenixPaper.Table, only: [pp_table: 1]
+      import PhoenixPaper.TableBody, only: [pp_table_body: 1]
+      import PhoenixPaper.TableCell, only: [pp_table_cell: 1]
+      import PhoenixPaper.TableContainer, only: [pp_table_container: 1]
+      import PhoenixPaper.TableFooter, only: [pp_table_footer: 1]
+      import PhoenixPaper.TableHead, only: [pp_table_head: 1]
+      import PhoenixPaper.TablePagination, only: [pp_table_pagination: 1]
+      import PhoenixPaper.TableRow, only: [pp_table_row: 1]
       import PhoenixPaper.TextField, only: [pp_text_field: 1]
       import PhoenixPaper.ThemeToggle, only: [pp_theme_toggle: 1]
       import PhoenixPaper.Toolbar, only: [pp_toolbar: 1]
       import PhoenixPaper.Tooltip, only: [pp_tooltip: 1]
       import PhoenixPaper.TopAppBar, only: [pp_top_app_bar: 1]
+      import PhoenixPaper.Upload, only: [pp_upload: 1]
       import PhoenixPaper.Typography, only: [pp_typography: 1]
     end
   end

@@ -16,9 +16,11 @@ navigation rail) — styled with Tailwind CSS.
 MD3 is the only source: every component is one the
 [MD3 spec](https://m3.material.io/components) defines, built to that
 spec, adapted to Phoenix's server-rendered, stateless-function-component
-model. Things MD3 doesn't define (layout grids, tables, pagination,
-breadcrumbs, ...) are left to your own Tailwind, using the same MD3
-tokens.
+model, or a composite built only from MD3 parts for something common MD3
+leaves open (data tables, pagination, breadcrumbs, autocomplete with
+input chips, number and password fields, file uploads). MD3's canonical
+pane layouts are included; any other layout is left to your own
+Tailwind, using the same MD3 tokens.
 
 See [`AGENTS.md`](AGENTS.md) for the framework's ground rules: the
 `paperize` escape hatch every component supports, the MD3 token layer
@@ -33,7 +35,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.5.0`) and please
+> (e.g. `~> 0.5.2`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -43,7 +45,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.5.0"}
+    {:phoenix_paper, "~> 0.5.2"}
   ]
 end
 ```
@@ -196,6 +198,11 @@ works too: paste its roles as `--color-pp-*` overrides.
   <.pp_select field={@form[:country]} label="Country" options={["Canada", "Mexico"]} />
   <.live_component module={PhoenixPaper.DatePicker} id="due" field={@form[:due_on]} label="Due date" />
   <.live_component module={PhoenixPaper.TimePicker} id="at" field={@form[:starts_at]} label="Start time" />
+  <.live_component module={PhoenixPaper.Autocomplete} id="city" field={@form[:city]} label="City" options={@cities} />
+  <.pp_number_field field={@form[:seats]} label="Seats" min="1" />
+  <.pp_password_field field={@form[:password]} label="Password" autocomplete="new-password" />
+  <.live_component module={PhoenixPaper.Autocomplete} id="tags" field={@form[:tags]} label="Tags" options={@tags} multiple />
+  <.pp_upload upload={@uploads.photos} on_cancel="cancel_upload" supporting_text="JPG or PNG, up to 8 MB" />
   <.pp_checkbox field={@form[:accept]} label="I agree to the terms" />
   <.pp_switch field={@form[:notifications]} label="Notifications" icons />
   <.pp_slider field={@form[:volume]} label="Volume" value_indicator />
@@ -230,6 +237,41 @@ works too: paste its roles as `--color-pp-*` overrides.
   <:item :for={p <- @places} label={p.name}><img src={p.photo} alt="" class="size-full object-cover" /></:item>
 </.pp_carousel>
 
+<%!-- MD3 canonical layouts: list-detail and supporting pane --%>
+<.pp_list_detail show_detail={@message != nil}>
+  <:list><.pp_list>...</.pp_list></:list>
+  <:detail>...</:detail>
+</.pp_list_detail>
+
+<%!-- Data: composites of MD3 parts --%>
+<.pp_breadcrumbs>
+  <:item navigate={~p"/"}>Home</:item>
+  <:item>Users</:item>
+</.pp_breadcrumbs>
+
+<.pp_table_container>
+  <.pp_table>
+    <.pp_table_head>
+      <.pp_table_row>
+        <.pp_table_cell variant="head" sortable sort_direction="asc" phx-click="sort">Name</.pp_table_cell>
+        <.pp_table_cell variant="head" align="right">Role</.pp_table_cell>
+      </.pp_table_row>
+    </.pp_table_head>
+    <.pp_table_body>
+      <.pp_table_row :for={u <- @users} selected={u.id in @selected}>
+        <.pp_table_cell>
+          <span class="flex items-center gap-3"><.pp_avatar>{initials(u)}</.pp_avatar>{u.name}</span>
+        </.pp_table_cell>
+        <.pp_table_cell align="right">{u.role}</.pp_table_cell>
+      </.pp_table_row>
+    </.pp_table_body>
+  </.pp_table>
+  <.pp_table_pagination id="users-pages" page={@page} count={@total} rows_per_page={@per_page}
+    path={&~p"/users?page=#{&1}&per_page=#{&2}"} />
+</.pp_table_container>
+
+<.pp_pagination page={@page} count={@pages} path={&~p"/posts?page=#{&1}"} />
+
 <%!-- Bottom navigation on phones, toolbars for page actions --%>
 <.pp_navigation_bar position="fixed" class="md:hidden">
   <.pp_navigation_bar_item icon="hero-home" label="Home" navigate={~p"/"} active />
@@ -240,8 +282,11 @@ works too: paste its roles as `--color-pp-*` overrides.
 ```
 
 Upgrading? The [CHANGELOG](CHANGELOG.md) lists what each release
-removed or renamed: 0.5.0 drops every component MD3 doesn't define, and
-0.4.0 has the full 0.3 → MD3 migration table.
+removed or renamed: 0.5.0 dropped every component MD3 doesn't define,
+0.5.2 brought back tables, pagination, breadcrumbs, autocomplete, number
+fields and avatars rebuilt from MD3 parts (and added password fields,
+input-chip multi-select, uploads and pane layouts), and 0.4.0 has the
+full 0.3 → MD3 migration table.
 
 Every component accepts `paperize={false}` to drop PhoenixPaper's classes
 entirely and render with only your own `class`; see `AGENTS.md` for the

@@ -126,13 +126,16 @@ defmodule PhoenixPaper.Select do
     do:
       "relative flex h-14 items-end rounded-t-pp-xs bg-pp-surface-container-highest shadow-[inset_0_-1px_0_0_var(--color-pp-error)] focus-within:shadow-[inset_0_-2px_0_0_var(--color-pp-error)] has-[:disabled]:opacity-38"
 
+  # `-top-2`: a fieldset draws its top border through the middle of its
+  # 16px legend; starting it 8px higher puts the line on the box edge (see
+  # `PhoenixPaper.TextField`).
   defp fieldset_classes([]),
     do:
-      "pointer-events-none absolute inset-0 m-0 min-w-0 rounded-pp-xs border border-pp-outline p-0 transition-colors"
+      "pointer-events-none absolute inset-x-0 bottom-0 -top-2 m-0 min-w-0 rounded-pp-xs border border-pp-outline p-0 transition-colors"
 
   defp fieldset_classes(_errors),
     do:
-      "pointer-events-none absolute inset-0 m-0 min-w-0 rounded-pp-xs border border-pp-error p-0"
+      "pointer-events-none absolute inset-x-0 bottom-0 -top-2 m-0 min-w-0 rounded-pp-xs border border-pp-error p-0"
 
   # `<select>` centers its displayed value inside its own box regardless of
   # asymmetric padding, so a filled select is pinned to the bottom of the

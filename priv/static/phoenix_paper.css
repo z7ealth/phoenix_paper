@@ -775,8 +775,11 @@
  *   - `data-pp-rail="expanded"`: always expanded.
  *   - `data-pp-rail="collapsed"`: always collapsed.
  *   - `data-pp-rail="responsive"`: below `md` the rail is a modal
- *     (always in its expanded layout, slid in by the checkbox); from `md`
- *     up it's collapsed, and the checkbox expands it.
+ *     (always in its expanded layout, slid in by its own checkbox,
+ *     `data-pp-rail-toggle`); from `md` up it's collapsed, and a second
+ *     checkbox, `data-pp-rail-expand`, expands it. Two checkboxes so the
+ *     two states start independently (expanded on desktop doesn't mean
+ *     the modal starts open on a phone).
  *
  * These two variants name that condition once, so every rail element can
  * say `pp-rail-expanded:flex-row` instead of repeating three selectors.
@@ -800,8 +803,8 @@
   }
 
   @media (width >= 48rem) {
-    &:where([data-pp-rail-toggle]:checked ~ [data-pp-rail="responsive"]),
-    :where([data-pp-rail-toggle]:checked ~ [data-pp-rail="responsive"]) & {
+    &:where([data-pp-rail-expand]:checked ~ [data-pp-rail="responsive"]),
+    :where([data-pp-rail-expand]:checked ~ [data-pp-rail="responsive"]) & {
       @slot;
     }
   }
@@ -814,8 +817,8 @@
   }
 
   @media (width >= 48rem) {
-    &:where([data-pp-rail-toggle]:not(:checked) ~ [data-pp-rail="responsive"]),
-    :where([data-pp-rail-toggle]:not(:checked) ~ [data-pp-rail="responsive"]) & {
+    &:where([data-pp-rail-expand]:not(:checked) ~ [data-pp-rail="responsive"]),
+    :where([data-pp-rail-expand]:not(:checked) ~ [data-pp-rail="responsive"]) & {
       @slot;
     }
   }

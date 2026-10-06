@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-06
+
+Six components removed in 0.5.0 are back, rebuilt to the MD3-only rule:
+each is either an MD3 element or a **composite built only from MD3
+parts** (existing PhoenixPaper components and `pp-*` tokens), with none
+of the MUI options they had in 0.4. Four new ones fill the gaps a web
+app hits most: password fields, multi-select with input chips, file
+uploads, and MD3's canonical pane layouts.
+
+### Added
+
+- **`Avatar`** (`pp_avatar`) — MD3's list leading element: a 40dp
+  `primary-container` circle with `title-medium` initials, an icon, or an
+  image (falling back to the initials if it fails to load).
+- **The Table family** — `pp_table`, `pp_table_container`,
+  `pp_table_head`, `pp_table_body`, `pp_table_row`, `pp_table_cell`,
+  `pp_table_footer`: MD3 type roles, `outline-variant` dividers, the
+  state layer on row hover, `secondary-container` selected rows
+  (`aria-selected`), sortable headers with an icon arrow and `aria-sort`,
+  `sticky_header`, and a card-surface container (`variant` as for
+  `Card`).
+- **`TablePagination`** (`pp_table_pagination`) — a `pp_menu`
+  rows-per-page picker, the range, and previous/next `pp_icon_button`s;
+  links or events, 1-based.
+- **`Pagination`** (`pp_pagination`) — MD3 standard icon buttons, the
+  current page in `secondary-container`; first, last and the current page
+  ±1, the rest collapsed.
+- **`Breadcrumbs`** (`pp_breadcrumbs`) — text-button links, the current
+  page as `on-surface` text, chevron separators.
+- **`NumberField`** (`pp_number_field`) — a `pp_text_field type="number"`
+  with trailing `pp_icon_button` steppers.
+- **`Autocomplete`** (LiveComponent) — a `pp_text_field` combobox over
+  the MD3 menu surface; `field=`, case- and accent-insensitive filtering,
+  arrow-key navigation, and picks reach the form's `phx-change`.
+  `multiple` picks several values as MD3 input chips inside the field
+  (removable, Backspace removes the last), submitted as `name[]` with an
+  empty sentinel so clearing every chip still submits.
+- `TextField` gains a `:chips` slot (MD3 input chips inside the field,
+  before the input; the label stays raised and the outlined notch open
+  while it's given) and a `:menu` slot (content anchored to the field
+  box, e.g. a listbox under it).
+- **`PasswordField`** (`pp_password_field`) — a `pp_text_field
+  type="password"` with MD3's trailing visibility toggle (an icon-button
+  toggle that flips the input's `type` client-side, kept across LiveView
+  patches).
+- **`Upload`** (`pp_upload`) — LiveView uploads (`live_file_input`) as an
+  MD3 drop zone with a tonal browse button and MD3's dragged state, plus
+  one row per file: image preview or document icon, linear progress,
+  errors in text (`error_to_string` to translate), and a cancel button
+  (`on_cancel`, `phx-value-ref`).
+- **`PaneLayout`** — MD3's canonical layouts, `pp_list_detail` (one pane
+  below 840dp, chosen with `show_detail`; list at 360dp beside the
+  detail from 840dp) and `pp_supporting_pane` (stacked below 840dp, a
+  360dp supporting pane beside the main one from 840dp), with MD3's
+  margins (16/24dp) and 24dp spacer.
+
+### Changed from 0.4
+
+If you're coming straight from 0.4, these differ from their 0.4
+versions:
+
+| Component | Not back | Now |
+|-----------|----------|-----|
+| `Avatar` | `size`, `variant`, `color` | one MD3 size, shape and color |
+| `Table` | `dense` | — |
+| `TableBody` | `striped` | — |
+| `TableContainer` | `shape` | MD3's fixed card corners |
+| `TableCell` | the "▲" text arrow | an icon, plus `aria-sort` and a focus ring |
+| `Pagination` | `sibling_count`, `boundary_count`, `show_first_button`, `show_last_button`, `hide_prev_button`, `hide_next_button`, `variant`, `shape`, `size`, `color`; `items/4` | `items/2` |
+| `TablePagination` | `show_first_button`, `show_last_button`; `label_rows_per_page`, `label_displayed_rows` | `rows_per_page_label`, `range_label` |
+| `Breadcrumbs` | `max_items`, `items_before_collapse`, `items_after_collapse`, `expand_text`, `:separator` | a chevron separator; long trails wrap |
+| `NumberField` | the label above the box, a stepper on each side | a floating-label MD3 text field, both steppers trailing; new `decrease_label`/`increase_label` |
+| `Autocomplete` | `placeholder`, `shape` | a real `pp_text_field`; new `field=`, `variant`, `supporting_text`, `errors`, `disabled`, `on_change`, `no_results_label` |
+
+### Fixed
+
+- **`NavigationRail`'s `default_expanded` opened the modal rail on
+  phones.** One checkbox held both states, so "start expanded on desktop"
+  also meant "start with the modal open, covering the page" on every
+  small-screen load. The rail now has two checkboxes: `default_expanded`
+  only expands the docked rail (`md` and up), and the new `default_open`
+  (default `false`) decides whether the small-screen modal starts open.
+  The menu button opens the modal on small screens and expands the rail
+  from `md`, as before. If you relied on `default_expanded` opening the
+  modal, add `default_open`.
+- **Outlined text fields and selects:** raised labels sat 8px above the
+  border and every outlined field looked 48px tall instead of MD3's 56dp
+  (a fieldset draws its border through the middle of its legend; it now
+  starts half a legend higher). With a leading icon or prefix, the raised
+  label and the notch now line up at 16dp from the field's edge, MD3's
+  placement — before, a `$` prefix left the label outside its notch.
+- `Dialog`, `BottomSheet` and `SideSheet` lost their scrim from the
+  second time they were opened: `hide/2` hides `#<id>-backdrop`, but
+  `show/2` never showed it again. The sheet still closed on an outside
+  click (that's `phx-click-away` on the panel), so it looked like a
+  missing backdrop, not a broken one. `show/2` now restores it.
+
 ## [0.5.1] - 2026-10-05
 
 ### Fixed

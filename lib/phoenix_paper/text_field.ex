@@ -40,6 +40,37 @@ defmodule PhoenixPaper.TextField do
   icon button; they're flex siblings of the input, outside its
   positioning box, so they never touch the input's padding.
 
+  ## Input chips
+
+  The `:chips` slot puts MD3 input chips inside the field, before the
+  input, in a row that wraps (the field grows a line at a time):
+
+      <.pp_text_field id="to" label="To">
+        <:chips>
+          <.pp_chip :for={r <- @recipients} variant="input" deletable on_delete={JS.push("remove", value: %{id: r.id})}>
+            {r.name}
+          </.pp_chip>
+        </:chips>
+      </.pp_text_field>
+
+  While there are chips the label stays raised and the outlined notch
+  stays open, as MD3 shows it — the server knows the slot isn't empty, so
+  this doesn't depend on `:placeholder-shown`. That's keyed off the slot
+  being *given*, so pass it only when there are chips:
+  `<:chips :if={@recipients != []}>` (a slot that's present but renders
+  nothing still raises the label). A click on the empty part
+  of the row focuses the input. Single-line fields only (`multiline`
+  ignores `:chips`). `PhoenixPaper.Autocomplete`'s `multiple` mode uses
+  it.
+
+  ## Anchored content
+
+  The `:menu` slot renders inside the field box (its positioning
+  ancestor), for content anchored to it — e.g. a listbox with
+  `absolute inset-x-0 top-full`. It sits under the box however tall the
+  chips make it, and focus inside it keeps the field in MD3's focused
+  state. `PhoenixPaper.Autocomplete` uses it for its options.
+
   ## How the outlined notch works
 
   The border is a `<fieldset>` absolutely positioned over the field, and
@@ -55,9 +86,17 @@ defmodule PhoenixPaper.TextField do
   unscoped `has-[:not(:placeholder-shown)]` also matches the `<label>`
   and would keep the notch open forever.
 
-  A `:start_adornment` moves the label right; the legend follows with a
-  fixed offset sized for a 24dp leading icon (MD3's case). A wider prefix
-  can misalign the notch — there's no CSS-only way to measure it.
+  The fieldset starts 8px above the box (`-top-2`): browsers draw a
+  fieldset's top border through the middle of its legend, which is 16px
+  tall, so without the offset the visible border would sit 8px below the
+  box edge and the raised label would float above the line.
+
+  With a `:start_adornment` (a leading icon or prefix), the resting label
+  sits over the input, after the adornment, whatever its width. Raised,
+  an outlined field's label moves to 16dp from the container edge, as MD3
+  places it — the same spot the notch is always cut — so the two line up
+  for an icon, a `$` prefix or anything else. A filled field's raised
+  label stays aligned with the input text, as MD3 places that one.
 
   The input always has `placeholder=" "` (a single space) so
   `:placeholder-shown` tracks emptiness; a real `placeholder` attr would
@@ -105,6 +144,12 @@ defmodule PhoenixPaper.TextField do
   slot(:start_adornment)
   slot(:end_adornment)
 
+  slot(:chips,
+    doc: "MD3 input chips inside the field, before the input; keeps the label raised"
+  )
+
+  slot(:menu, doc: "content anchored to the field box, e.g. a listbox at top-full")
+
   @doc "Renders a text field. See the module doc."
   def pp_text_field(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
@@ -120,20 +165,25 @@ defmodule PhoenixPaper.TextField do
 
   def pp_text_field(assigns) do
     assigns =
-      assign(
-        assigns,
+      assigns
+      |> assign(
         :describedby,
         (assigns.supporting_text || assigns.errors != []) && assigns.id &&
           "#{assigns.id}-supporting"
       )
+      |> assign(:chips?, assigns.chips != [] and not assigns.multiline)
 
     ~H"""
     <div data-pp-component="text-field" class={Helpers.classes(@paperize, "flex flex-col gap-1", @class)}>
-      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @errors), nil)}>
+      <div class={Helpers.classes(@paperize, wrapper_classes(@variant, @color, @errors, @chips?), nil)}>
         <span :if={@start_adornment != []} data-pp-adornment="start" class={adornment_classes(:start)}>
           {render_slot(@start_adornment)}
         </span>
-        <div class="relative min-w-0 flex-1">
+        <div
+          class={if @chips?, do: chip_row_classes(@variant), else: "min-w-0 flex-1"}
+          onclick={@chips? && "if(event.target===this){this.querySelector('input').focus()}"}
+        >
+          {if @chips?, do: render_slot(@chips)}
           <textarea
             :if={@multiline}
             id={@id}
@@ -156,13 +206,19 @@ defmodule PhoenixPaper.TextField do
             placeholder=" "
             aria-invalid={@errors != [] && "true"}
             aria-describedby={@describedby}
-            class={Helpers.classes(@paperize, input_classes(@variant), nil)}
+            class={Helpers.classes(@paperize, input_classes(@variant, @chips?), nil)}
             {@rest}
           />
           <label
             :if={@label}
             for={@id}
-            class={Helpers.classes(@paperize, label_classes(@variant, @color, @errors, @multiline), nil)}
+            class={
+              Helpers.classes(
+                @paperize,
+                label_classes(@variant, @color, @errors, @multiline, @chips?),
+                nil
+              )
+            }
           >
             {@label}
           </label>
@@ -186,6 +242,7 @@ defmodule PhoenixPaper.TextField do
             <span :if={@label}>{@label}</span>
           </legend>
         </fieldset>
+        {render_slot(@menu)}
       </div>
       <div :if={@describedby || @supporting_text} id={@describedby} class="flex flex-col">
         <p
@@ -212,19 +269,20 @@ defmodule PhoenixPaper.TextField do
 
   # ---- wrapper ----
 
-  defp wrapper_classes("outlined", color, errors) do
+  defp wrapper_classes("outlined", color, errors, chips?) do
     [
+      # With chips the label is always raised, so the notch is always open.
+      chips? && "[&>fieldset>legend]:max-w-full [&>fieldset>legend]:px-1",
       "relative flex items-stretch rounded-pp-xs has-[:disabled]:pointer-events-none has-[:disabled]:opacity-38",
       "min-h-14",
       "has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[input:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:max-w-full has-[textarea:not(:placeholder-shown)]:[&>fieldset>legend]:px-1",
       "focus-within:[&>fieldset>legend]:max-w-full focus-within:[&>fieldset>legend]:px-1",
-      "has-[[data-pp-adornment=start]]:[&>fieldset>legend]:ms-12",
       outlined_state_classes(color, errors)
     ]
   end
 
-  defp wrapper_classes("filled", color, errors) do
+  defp wrapper_classes("filled", color, errors, _chips?) do
     [
       "relative flex items-stretch rounded-t-pp-xs bg-pp-surface-container-highest has-[:disabled]:pointer-events-none has-[:disabled]:opacity-38",
       "before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-pp-on-surface before:opacity-0 before:transition-opacity hover:before:opacity-8",
@@ -286,19 +344,35 @@ defmodule PhoenixPaper.TextField do
       "focus-within:[&>[data-pp-adornment]]:items-end focus-within:[&>[data-pp-adornment]]:pb-2"
   end
 
+  # A fieldset draws its top border through the middle of its legend, and
+  # the legend is 16px tall (body-small), so the border would sit 8px below
+  # the box's top edge — shrinking the visible field to 48px and leaving the
+  # raised label, which is positioned against the box, 8px above the line.
+  # Starting the fieldset 8px higher (`-top-2`) puts the drawn border
+  # exactly on the box edge.
   defp fieldset_classes(errors) when errors != [],
     do:
-      "pointer-events-none absolute inset-0 m-0 min-w-0 rounded-pp-xs border border-pp-error p-0"
+      "pointer-events-none absolute inset-x-0 bottom-0 -top-2 m-0 min-w-0 rounded-pp-xs border border-pp-error p-0"
 
   defp fieldset_classes([]),
     do:
-      "pointer-events-none absolute inset-0 m-0 min-w-0 rounded-pp-xs border border-pp-outline p-0 transition-colors"
+      "pointer-events-none absolute inset-x-0 bottom-0 -top-2 m-0 min-w-0 rounded-pp-xs border border-pp-outline p-0 transition-colors"
 
   defp legend_classes do
     "invisible ms-3 max-w-0 overflow-hidden whitespace-nowrap px-0 pp-body-small transition-[max-width] duration-150"
   end
 
   # ---- input ----
+
+  # Inside a chip row the input is one flex item among the chips: no own
+  # horizontal padding (the row has it), at least 4 characters wide so it
+  # stays beside the chips when there's a little room and wraps to its own
+  # line rather than shrinking to nothing.
+  defp input_classes(_variant, true),
+    do:
+      "peer block min-w-[4ch] flex-1 bg-transparent py-1 pp-body-large text-pp-on-surface outline-none placeholder:text-transparent"
+
+  defp input_classes(variant, false), do: input_classes(variant)
 
   defp input_classes("outlined"),
     do:
@@ -313,9 +387,30 @@ defmodule PhoenixPaper.TextField do
   # Resting: centered (or on the first line when multiline), on-surface-
   # variant. Floated (focus or a value): body-small, at the top of a filled
   # field or centered on an outlined field's border.
+  # With chips the label is raised for good (the server knows the slot
+  # isn't empty), whatever `:placeholder-shown` says.
+  defp label_classes(variant, color, errors, _multiline, true) do
+    [
+      "pointer-events-none absolute ms-4 max-w-[calc(100%-2rem)] truncate transition-all duration-150 ease-pp-standard",
+      raised(variant),
+      label_color(color, errors)
+    ]
+  end
+
+  defp label_classes(variant, color, errors, multiline, false),
+    do: label_classes(variant, color, errors, multiline)
+
+  # Where the label sits horizontally: its containing block is the whole
+  # field box (the input's wrapper isn't positioned), and its `start` is
+  # `auto` at rest, so it falls back to its static position — the start of
+  # the input's wrapper, after any leading icon or prefix — plus `ms-4`.
+  # Raised in an outlined field it takes `start-0`: 16dp from the box
+  # edge whatever leads the input, as MD3 places it, which is also where
+  # the notch is cut. Raised in a filled field it keeps its static
+  # position, aligned with the input text, as MD3 places that one.
   defp label_classes(variant, color, errors, multiline) do
     [
-      "pointer-events-none absolute start-4 max-w-[calc(100%-2rem)] truncate transition-all duration-150 ease-pp-standard",
+      "pointer-events-none absolute ms-4 max-w-[calc(100%-2rem)] truncate transition-all duration-150 ease-pp-standard",
       resting(multiline),
       floated(variant),
       label_color(color, errors)
@@ -325,13 +420,25 @@ defmodule PhoenixPaper.TextField do
   defp resting(false), do: "top-1/2 -translate-y-1/2 pp-body-large"
   defp resting(true), do: "top-4 translate-y-0 pp-body-large"
 
+  defp raised("filled"), do: "top-2 translate-y-0 pp-body-small"
+  defp raised("outlined"), do: "start-0 top-0 -translate-y-1/2 pp-body-small"
+
+  # The chips and the input share one wrapping row. Outlined: 12dp above
+  # and below a 32dp chip keeps the resting 56dp height. Filled: room at
+  # the top for the raised label.
+  defp chip_row_classes("outlined"),
+    do: "flex min-w-0 flex-1 cursor-text flex-wrap items-center gap-2 px-4 py-3"
+
+  defp chip_row_classes("filled"),
+    do: "flex min-w-0 flex-1 cursor-text flex-wrap items-center gap-2 px-4 pt-6 pb-2"
+
   defp floated("filled"),
     do:
       "peer-focus:top-2 peer-focus:translate-y-0 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:pp-body-small"
 
   defp floated("outlined"),
     do:
-      "peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:pp-body-small"
+      "peer-focus:start-0 peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:pp-body-small peer-[:not(:placeholder-shown)]:start-0 peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:-translate-y-1/2 peer-[:not(:placeholder-shown)]:pp-body-small"
 
   defp label_color(_color, errors) when errors != [], do: "text-pp-error"
   defp label_color("primary", []), do: "text-pp-on-surface-variant peer-focus:text-pp-primary"
