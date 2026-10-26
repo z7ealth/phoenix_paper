@@ -39,6 +39,57 @@ defmodule PhoenixPaper.CardTest do
     """
   end
 
+  describe "filling its container" do
+    defp fill_card(assigns) do
+      ~H"""
+      <.pp_card class="h-full" content_class="flex flex-col">
+        <:title>Traffic</:title>
+        <div class="mt-auto">Chart</div>
+      </.pp_card>
+      """
+    end
+
+    defp fill_linked_card(assigns) do
+      ~H"""
+      <.pp_card href="/traffic" content_class="flex flex-col">Chart</.pp_card>
+      """
+    end
+
+    test "the root is a flex column whose content box grows and takes content_class" do
+      html = render_component(&fill_card/1)
+
+      assert html =~ ~r/data-pp-component="card"[^>]*class="flex flex-col rounded-pp-md/
+      assert html =~ ~r/<div class="flex-1 p-4 [^"]* flex flex-col">/
+    end
+
+    test "in link mode the link grows too, and the content box takes content_class" do
+      html = render_component(&fill_linked_card/1)
+
+      [link] = Regex.run(~r/<a[^>]*data-pp-card-action-area[^>]*>/, html)
+      assert link =~ "flex flex-1 flex-col"
+      assert html =~ ~r/<div class="flex-1 p-4 [^"]* flex flex-col">/
+    end
+
+    test "a list directly in the content bleeds to the card's edges" do
+      html = render_component(&fill_card/1)
+
+      assert html =~ "[&amp;&gt;[data-pp-component=list]]:-mx-4"
+      assert html =~ "[&amp;&gt;[data-pp-component=list]]:py-0"
+    end
+
+    test "paperize={false} drops the content box classes but keeps content_class" do
+      html =
+        render_component(fn assigns ->
+          ~H"""
+          <.pp_card paperize={false} content_class="my-content">Body</.pp_card>
+          """
+        end)
+
+      assert html =~ ~s(<div class="my-content">)
+      refute html =~ "p-4"
+    end
+  end
+
   describe "link mode" do
     defp linked_card(assigns) do
       ~H"""
@@ -58,7 +109,7 @@ defmodule PhoenixPaper.CardTest do
       assert link =~ "data-phx-link"
       assert link =~ "hover:after:bg-current/8"
       assert link =~ "focus-visible:after:outline-pp-secondary"
-      assert html =~ ~s(class="p-4")
+      assert html =~ ~s(class="flex-1 p-4 )
       assert link =~ "onclick="
       assert html =~ "overflow-hidden"
     end

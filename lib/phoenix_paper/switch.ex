@@ -14,6 +14,15 @@ defmodule PhoenixPaper.Switch do
   40dp state layer sits behind the handle. `icons` puts a check (on) / ✕
   (off) inside the handle, which then stays 24dp in both states, per MD3.
 
+  ## Dense rows
+
+  There's no smaller size: MD3 fixes the switch at 52×32 with a 48dp
+  touch target. Shrinking it with `scale-*` only shrinks the drawing
+  (the layout box stays 52×32) and takes the touch target below MD3's
+  minimum. Where a row is too tight for a switch, use the controls MD3
+  sizes for density: a `PhoenixPaper.Checkbox` (18dp box, 40dp target)
+  or a toggle `PhoenixPaper.IconButton` (`toggle`, `selected`).
+
   Under `paperize={false}` it's a bare native checkbox and `class`
   targets it, the same as `PhoenixPaper.Checkbox`.
   """

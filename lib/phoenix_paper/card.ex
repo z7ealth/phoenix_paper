@@ -24,6 +24,34 @@ defmodule PhoenixPaper.Card do
   to the card's corners. The title is `title-large`, the subhead
   `body-medium` in `on-surface-variant`.
 
+  ## Filling a grid cell
+
+  The card is a flex column and its padded content box grows to fill
+  it, so a card given a height (`class="h-full"` in a grid cell) passes
+  that height down. `content_class` adds classes to the content box
+  itself — make it a flex column to push the last child to the bottom:
+
+      <.pp_card class="h-full" content_class="flex flex-col">
+        <:title>Traffic</:title>
+        <.chart class="mt-auto" />
+      </.pp_card>
+
+  ## Lists in a card
+
+  A `pp_list` placed directly in the card's content lines up with the
+  card on its own: it bleeds to the card's edges (its items' 16dp
+  padding replaces the card's, so item text aligns with the title, and
+  the hover layer spans the card) and drops its own 8dp top and bottom
+  padding, which the card's padding already provides.
+
+      <.pp_card variant="outlined">
+        <:title>Devices</:title>
+        <.pp_list>
+          <.pp_list_item>Laptop</.pp_list_item>
+          <.pp_list_item>Phone</.pp_list_item>
+        </.pp_list>
+      </.pp_card>
+
   ## Link mode
 
   Pass `href`, `navigate` or `patch` and the card's title and body become
@@ -77,6 +105,12 @@ defmodule PhoenixPaper.Card do
   )
 
   attr(:class, :any, default: nil)
+
+  attr(:content_class, :any,
+    default: nil,
+    doc: "extra classes for the padded content box (title, body, actions)"
+  )
+
   attr(:rest, :global)
 
   slot(:media, doc: "full-bleed media above the content (an image, a video)")
@@ -104,7 +138,7 @@ defmodule PhoenixPaper.Card do
       {@rest}
     >
       <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
-      <div class={Helpers.classes(@paperize, "p-4", nil)}>
+      <div class={Helpers.classes(@paperize, content_classes(), @content_class)}>
         {card_heading(assigns)}
         {render_slot(@inner_block)}
         <div :if={@actions != []} class="mt-4 flex flex-wrap items-center justify-end gap-2">
@@ -132,11 +166,14 @@ defmodule PhoenixPaper.Card do
         target={@target}
         rel={@rel}
         data-pp-card-action-area
-        class={[stretch_classes(), Helpers.classes(@paperize, action_area_classes(), nil)]}
+        class={[
+          stretch_classes(),
+          Helpers.classes(@paperize, action_area_classes(), nil)
+        ]}
         onclick={Ripple.on_click(@ripple?)}
       >
         <div :if={@media != []} data-pp-card-media>{render_slot(@media)}</div>
-        <div class={Helpers.classes(@paperize, "p-4", nil)}>
+        <div class={Helpers.classes(@paperize, content_classes(), @content_class)}>
           {card_heading(assigns)}
           {render_slot(@inner_block)}
         </div>
@@ -177,13 +214,24 @@ defmodule PhoenixPaper.Card do
   end
 
   defp surface_classes("elevated"),
-    do: "block rounded-pp-md bg-pp-surface-container-low text-pp-on-surface pp-elevation-1"
+    do:
+      "flex flex-col rounded-pp-md bg-pp-surface-container-low text-pp-on-surface pp-elevation-1"
 
   defp surface_classes("filled"),
-    do: "block rounded-pp-md bg-pp-surface-container-highest text-pp-on-surface"
+    do: "flex flex-col rounded-pp-md bg-pp-surface-container-highest text-pp-on-surface"
 
   defp surface_classes("outlined"),
-    do: "block rounded-pp-md border border-pp-outline-variant bg-pp-surface text-pp-on-surface"
+    do:
+      "flex flex-col rounded-pp-md border border-pp-outline-variant bg-pp-surface text-pp-on-surface"
+
+  # The content box grows to fill a stretched card (the root is a flex
+  # column). A list placed directly in it bleeds to the card's edges and
+  # drops its own vertical padding: its items' 16dp padding stands in
+  # for the card's, and the card's padding for the list's. The selector
+  # (0,2,0) beats the list's own `py-2` (0,1,0).
+  defp content_classes do
+    "flex-1 p-4 [&>[data-pp-component=list]]:-mx-4 [&>[data-pp-component=list]]:py-0"
+  end
 
   # An elevated card rises a level while its link is hovered; the others
   # keep MD3's flat look and only show the state layer.
@@ -193,9 +241,10 @@ defmodule PhoenixPaper.Card do
   # The "stretched link": the link's ::after covers the whole card (the
   # root is `relative`), so the card is clickable everywhere, actions row
   # included. Unconditional like Menu's positioning — it defines what's
-  # clickable, it isn't skin.
+  # clickable, it isn't skin. It's a flex column that grows, so the
+  # content box inside it can fill a stretched card.
   defp stretch_classes do
-    "block after:absolute after:inset-0 after:content-['']"
+    "flex flex-1 flex-col after:absolute after:inset-0 after:content-['']"
   end
 
   # The state layer and focus ring are painted on that same ::after

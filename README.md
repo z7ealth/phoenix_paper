@@ -35,7 +35,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.5.2`) and please
+> (e.g. `~> 0.5.3`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -45,10 +45,16 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.5.2"}
+    {:phoenix_paper, "~> 0.5.3"}
   ]
 end
 ```
+
+PhoenixPaper requires **`phoenix_live_view ~> 1.1`** (it uses
+`Phoenix.Component.dynamic_tag/1`, new in 1.1). Apps generated before
+Phoenix 1.8 usually have an older LiveView locked, so if `mix deps.get`
+fails to resolve, set `{:phoenix_live_view, "~> 1.1"}` in your own deps
+and run `mix deps.update phoenix_live_view`.
 
 Then, in `lib/my_app_web.ex`, import the components next to your existing
 `core_components`:
@@ -111,6 +117,38 @@ default, `neutral`, `vibrant`, `expressive`, `fidelity`, `monochrome`) and
 exported from
 [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/)
 works too: paste its roles as `--color-pp-*` overrides.
+
+For a named palette (Catppuccin, Nord, a brand guide) that already says
+which hex each role gets, put the roles in a JSON file and pass
+`--palette`:
+
+```sh
+mix phoenix_paper.gen.theme --palette catppuccin.json              # every role given
+mix phoenix_paper.gen.theme --seed "#8839ef" --palette brand.json  # the seed fills the rest
+```
+
+```json
+{
+  "light": {"primary": "#8839ef", "on-primary": "#eff1f5", "surface": "#eff1f5"},
+  "dark":  {"primary": "#cba6f7", "on-primary": "#1e1e2e", "surface": "#1e1e2e"}
+}
+```
+
+Keys are the role names below (without the `--color-pp-` prefix, though
+it's accepted). The dark values are written to both the
+`[data-theme="dark"]` block and the `prefers-color-scheme` block.
+
+The color roles are MD3's and only MD3's: `primary`, `secondary`,
+`tertiary` and `error` (each with `on-*`, `*-container`,
+`on-*-container` and the fixed roles), the surface scale, `outline`,
+`outline-variant`, the inverse roles, `shadow` and `scrim`. **There is no
+`success`, `warning` or `info`**, because MD3 has none (0.5.0 removed
+them). Map states onto the roles MD3 has: `error`/`error-container` for
+anything that needs attention, and `primary`, `tertiary` or their
+containers for positive or neutral states. If your app really needs a
+status color, define it as your own token in `app.css` outside the
+`pp-` namespace (e.g. `--color-app-success`) so a theme regeneration
+never touches it.
 
 ## Usage
 
@@ -285,7 +323,9 @@ Upgrading? The [CHANGELOG](CHANGELOG.md) lists what each release
 removed or renamed: 0.5.0 dropped every component MD3 doesn't define,
 0.5.2 brought back tables, pagination, breadcrumbs, autocomplete, number
 fields and avatars rebuilt from MD3 parts (and added password fields,
-input-chip multi-select, uploads and pane layouts), and 0.4.0 has the
+input-chip multi-select, uploads and pane layouts), 0.5.3 made cards
+fill their container and host lists edge to edge and added `--palette`
+to the theme generator, and 0.4.0 has the
 full 0.3 → MD3 migration table.
 
 Every component accepts `paperize={false}` to drop PhoenixPaper's classes

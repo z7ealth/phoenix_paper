@@ -109,6 +109,47 @@ defmodule PhoenixPaper.ThemeTest do
       assert css =~ "--color-pp-surface-container-high:"
       assert length(String.split(css, "--color-pp-primary:")) == 4
     end
+
+    test "overrides replace generated roles per mode" do
+      overrides = %{light: %{"primary" => "#8839ef"}, dark: %{"primary" => "#cba6f7"}}
+
+      assert Theme.scheme("#0b57d0", :light, overrides: overrides)["primary"] == "#8839ef"
+      assert Theme.scheme("#0b57d0", :dark, overrides: overrides)["primary"] == "#cba6f7"
+
+      assert Theme.scheme("#0b57d0", :light, overrides: overrides)["secondary"] ==
+               Theme.scheme("#0b57d0", :light)["secondary"]
+    end
+
+    test "a complete set of overrides needs no seed, and the dark values land in both dark blocks" do
+      light = Map.new(Theme.role_names(), &{&1, "#eff1f5"})
+      dark = Map.new(Theme.role_names(), &{&1, "#1e1e2e"})
+      css = Theme.css(nil, overrides: %{light: light, dark: dark})
+
+      assert css =~ "Explicit roles, no seed."
+      assert length(String.split(css, "--color-pp-primary: #1e1e2e;")) == 3
+      assert length(String.split(css, "--color-pp-primary: #eff1f5;")) == 2
+
+      assert_raise ArgumentError, ~r/no seed/, fn ->
+        Theme.css(nil, overrides: %{light: %{"primary" => "#000000"}})
+      end
+    end
+
+    test "normalize_overrides/1 checks modes, roles and hex" do
+      assert Theme.normalize_overrides(%{"dark" => %{"--color-pp-primary" => "CBA6F7"}}) ==
+               %{dark: %{"primary" => "#cba6f7"}}
+
+      assert_raise ArgumentError, ~r/unknown mode/, fn ->
+        Theme.normalize_overrides(%{"dim" => %{}})
+      end
+
+      assert_raise ArgumentError, ~r/unknown role "success"/, fn ->
+        Theme.normalize_overrides(%{"light" => %{"success" => "#00ff00"}})
+      end
+
+      assert_raise ArgumentError, ~r/light.primary must be a hex/, fn ->
+        Theme.normalize_overrides(%{"light" => %{"primary" => "purple"}})
+      end
+    end
   end
 
   describe "mix phoenix_paper.gen.theme" do
@@ -139,6 +180,53 @@ defmodule PhoenixPaper.ThemeTest do
       ])
 
       assert File.read!(path) =~ "vibrant scheme"
+    end
+
+    test "--palette reads explicit roles, with or without a seed", %{path: path} do
+      File.mkdir_p!(Path.dirname(path))
+      palette = Path.join(Path.dirname(path), "palette.json")
+
+      File.write!(palette, ~s({"light": {"primary": "#8839ef"}, "dark": {"primary": "#cba6f7"}}))
+
+      Mix.Tasks.PhoenixPaper.Gen.Theme.run([
+        "--seed",
+        "#0b57d0",
+        "--palette",
+        palette,
+        "--output",
+        path
+      ])
+
+      css = File.read!(path)
+      assert css =~ "--color-pp-primary: #8839ef;"
+      assert css =~ "with explicit roles"
+
+      assert_raise Mix.Error, ~r/incomplete without --seed/, fn ->
+        Mix.Tasks.PhoenixPaper.Gen.Theme.run(["--palette", palette, "--stdout"])
+      end
+
+      full = Map.new(Theme.role_names(), &{&1, "#123456"})
+      File.write!(palette, Jason.encode!(%{light: full, dark: full}))
+      Mix.Tasks.PhoenixPaper.Gen.Theme.run(["--palette", palette, "--output", path, "--force"])
+      assert File.read!(path) =~ "Explicit roles, no seed."
+
+      File.write!(palette, ~s({"light": {"success": "#00ff00"}}))
+
+      assert_raise Mix.Error, ~r/unknown role/, fn ->
+        Mix.Tasks.PhoenixPaper.Gen.Theme.run([
+          "--seed",
+          "#0b57d0",
+          "--palette",
+          palette,
+          "--stdout"
+        ])
+      end
+
+      File.write!(palette, "not json")
+
+      assert_raise Mix.Error, ~r/isn't valid JSON/, fn ->
+        Mix.Tasks.PhoenixPaper.Gen.Theme.run(["--palette", palette, "--stdout"])
+      end
     end
 
     test "validates its options" do

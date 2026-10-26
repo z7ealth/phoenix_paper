@@ -470,6 +470,22 @@ tested with `live_isolated/3` through `PhoenixPaper.TestEndpoint` in
 `surface-container-highest`, `outlined` `surface` + `outline-variant`
 border), with MD3's fixed medium (12dp) corners and 16dp content padding.
 
+**It fills its container** (since 0.5.3): the root is a flex column and
+the padded content box is `flex-1` (in link mode the link is a growing
+flex column too, unconditionally, like the stretch), so `h-full` on a
+card in a grid cell reaches its content. `content_class` adds classes to
+that content box (paperize-gated like the box itself), e.g.
+`flex flex-col` so `mt-auto` bottom-aligns a chart. The content box is
+not a flex column by default: that would turn inline body text into
+separate flex items.
+
+**A list directly in the content bleeds to the card's edges**: the
+content box carries `[&>[data-pp-component=list]]:-mx-4` and `...:py-0`
+(specificity 0,2,0, which beats the list's own `py-2` without `!`), so
+item padding stands in for the card's and item text aligns with the
+title. Reported from a real migration, where callers needed
+`-mx-4 !py-0` on every list.
+
 **Link attributes need a route to the `<a>`.** A linkable component whose
 `rest` lands on the link itself (`Button`, `ListItem`) must list the
 non-global link attrs in `attr(:rest, :global, include: ~w(target rel
@@ -1136,6 +1152,11 @@ was `accent` from 0.2 to 0.3, and 0.4.0 renamed it back.
   and paste. The HCT port is checked against the library's published
   reference values (red/green/blue) and Theme Builder's tonal-spot output
   for the baseline seed; keep those tests green if you touch it.
+  `--palette file.json` (`{"light": {role: hex}, "dark": {...}}`,
+  `Theme`'s `overrides:`) replaces generated roles with explicit ones —
+  for named palettes — and with every role in both modes needs no seed.
+  Role names are validated against `Theme.role_names/0`, so a
+  `success` key is rejected like everywhere else.
   No build step. The same goes for `--font-pp-brand`/`--font-pp-plain`
   and `--radius-pp-*`.
 

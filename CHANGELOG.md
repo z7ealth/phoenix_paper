@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-10-26
+
+Fixes from a real daisyUI → PhoenixPaper migration.
+
+### Added
+
+- **`Card` `content_class`** — extra classes for the padded content box
+  (title, body, actions), which callers couldn't reach before.
+- **`mix phoenix_paper.gen.theme --palette file.json`** — explicit role
+  values (`{"light": {...}, "dark": {...}}`) that replace the generated
+  ones. With every role given for both modes `--seed` is optional, so a
+  named palette (Catppuccin, Nord, ...) no longer has to be hand-written
+  as CSS; the dark values go to both dark blocks. Backed by
+  `PhoenixPaper.Theme`'s new `overrides:` option and
+  `normalize_overrides/1`.
+
+### Changed
+
+- **`Card` fills its container.** The card is a flex column and its
+  content box (and, in link mode, the link) grows, so a card with
+  `h-full` in a grid cell passes its height down; with
+  `content_class="flex flex-col"`, `mt-auto` pushes a chart to the
+  bottom. The root's `block` became `flex flex-col`.
+- **A `pp_list` directly in a card's content lines up with the card**:
+  it bleeds to the card's edges (items' 16dp padding replaces the
+  card's) and drops its own 8dp vertical padding. The `-mx-4 !py-0`
+  workaround is no longer needed; remove it.
+
+### Documentation
+
+- README: the `phoenix_live_view ~> 1.1` requirement is stated in the
+  install section; the Theming section covers `--palette` and explains
+  that there are no `success`/`warning`/`info` roles and what to use
+  instead.
+- `Switch`: why there's no compact size, and what to use in dense rows
+  (checkbox or toggle icon button) instead of `scale-*`.
+- `ButtonGroup`: the connected variant's mixed corners are the spec's,
+  not a bug.
+
 ## [0.5.2] - 2026-10-06
 
 Six components removed in 0.5.0 are back, rebuilt to the MD3-only rule:

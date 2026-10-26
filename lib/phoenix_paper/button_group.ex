@@ -16,6 +16,12 @@ defmodule PhoenixPaper.ButtonGroup do
     press. A selected (`aria-pressed`) button goes fully round. This is
     the replacement for segmented buttons.
 
+    The mixed corners are expected, not a styling bug: only the group's
+    two outer ends are round, every inner corner is small, and a
+    selected button turns into a full pill inside the row, as the
+    Expressive spec draws connected groups. If you want every button
+    fully round, use the `standard` variant.
+
   `size` must match the children's `size` (it picks the gap and the
   corner radii); HEEx can't push attrs into child components, so it isn't
   inherited — set both.
