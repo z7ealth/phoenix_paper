@@ -3,6 +3,8 @@ defmodule PhoenixPaper.PaneLayout do
   MD3's canonical pane layouts: list-detail (`pp_list_detail/1`) and
   supporting pane (`pp_supporting_pane/1`).
 
+  [Live demo →](https://phoenixpaper.dev/components/surfaces#pane-layout)
+
   These come from MD3's Layout foundations rather than its component
   pages: window size classes, panes, margins and spacers. They follow
   that spec:

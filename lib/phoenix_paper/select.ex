@@ -5,6 +5,8 @@ defmodule PhoenixPaper.Select do
   label is always floated (a select always shows a value), so the
   outlined notch is always open.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#select)
+
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
 

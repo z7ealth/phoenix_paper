@@ -2,6 +2,8 @@ defmodule PhoenixPaper.Elevation do
   @moduledoc """
   MD3 elevation levels (0-5) as Tailwind utility classes.
 
+  [Live demo →](https://phoenixpaper.dev/components/helpers#elevation)
+
   MD3 has six levels — 0, 1, 3, 6, 8 and 12dp — instead of MD2's 0-24dp
   scale. In MD3 a surface's height is shown mostly by its
   *surface-container color* (the `surface-container-*` roles), not by

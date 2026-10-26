@@ -4,6 +4,8 @@ defmodule PhoenixPaper.NavigationBar do
   the bottom bar for switching between 3–5 top-level destinations on
   small screens.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#navigation-bar)
+
       <.pp_navigation_bar position="fixed" class="md:hidden">
         <.pp_navigation_bar_item icon="hero-home" active_icon="hero-home-solid" label="Home" navigate={~p"/"} active />
         <.pp_navigation_bar_item icon="hero-magnifying-glass" label="Search" navigate={~p"/search"} />

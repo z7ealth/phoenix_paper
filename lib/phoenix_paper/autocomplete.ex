@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Autocomplete do
   `Phoenix.LiveComponent` — so it works inside a LiveView only, like
   `PhoenixPaper.DatePicker`.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#autocomplete)
+
       <.live_component
         module={PhoenixPaper.Autocomplete}
         id="country"

@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Tabs do
   `PhoenixPaper.TabPanel` (its content, usually written after the whole
   `pp_tabs/1` block):
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#tabs)
+
       <.pp_tabs id="demo-tabs">
         <.pp_tab id="demo-tabs" value="one" default_selected>One</.pp_tab>
         <.pp_tab id="demo-tabs" value="two">Two</.pp_tab>

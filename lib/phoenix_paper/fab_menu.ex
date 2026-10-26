@@ -4,6 +4,8 @@ defmodule PhoenixPaper.FabMenu do
   stack of related actions. It replaces 0.3's `SpeedDial` (MD3 retired the
   speed dial in favor of this).
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#fab-menu)
+
       <.pp_fab_menu id="create" label="Create" position="fixed" class="bottom-4 right-4">
         <:item icon="hero-document" label="Document" navigate={~p"/docs/new"} />
         <:item icon="hero-table-cells" label="Spreadsheet" on_click={JS.push("new_sheet")} />

@@ -4,6 +4,8 @@ defmodule PhoenixPaper.TableFooter do
   — renders a `<tfoot>` of `PhoenixPaper.TableRow`s, typically for totals or
   summary values. See `PhoenixPaper.Table`'s moduledoc for a full example.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
   Like `PhoenixPaper.TableHead`, the separating border lives on every
   descendant cell rather than on the `<tfoot>` element itself, for the same
   cross-browser reason.

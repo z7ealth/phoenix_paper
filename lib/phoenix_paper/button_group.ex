@@ -5,6 +5,8 @@ defmodule PhoenixPaper.ButtonGroup do
   behavior. It replaces 0.3's `ToggleButton`/`ButtonGroup` pair and MD3's
   (now deprecated) segmented buttons.
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#button-group)
+
   ## Variants
 
   - `standard` (default): spaced buttons. Pressing one widens it into the

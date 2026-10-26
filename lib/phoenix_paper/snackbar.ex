@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Snackbar do
   An MD3 snackbar (`pp_snackbar/1`): a brief message at the bottom of the
   screen, with an optional action and close button.
 
+  [Live demo →](https://phoenixpaper.dev/components/feedback#snackbar)
+
       <.pp_snackbar open={@message != nil}>
         {@message}
         <:action>

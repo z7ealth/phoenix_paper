@@ -2,6 +2,8 @@ defmodule PhoenixPaper.Badge do
   @moduledoc """
   An MD3 badge (`pp_badge/1`) on the corner of its child, usually an icon.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#badge)
+
       <.pp_badge content={4}>
         <.pp_icon name="hero-bell" />
       </.pp_badge>

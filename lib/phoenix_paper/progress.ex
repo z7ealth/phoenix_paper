@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Progress do
   MD3 progress indicators (`pp_progress/1`) — linear or circular,
   determinate or indeterminate, flat or M3 Expressive wavy.
 
+  [Live demo →](https://phoenixpaper.dev/components/feedback#progress)
+
       <.pp_progress value={72} label="Uploading" />
       <.pp_progress label="Loading" />
       <.pp_progress variant="circular" value={72} label="Uploading" />

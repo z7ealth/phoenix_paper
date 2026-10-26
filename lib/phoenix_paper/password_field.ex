@@ -3,6 +3,8 @@ defmodule PhoenixPaper.PasswordField do
   A password field (`pp_password_field/1`): an MD3 text field
   (`type="password"`) with MD3's trailing visibility toggle.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#password-field)
+
       <.pp_password_field field={@form[:password]} label="Password" autocomplete="current-password" />
 
   It's a `pp_text_field` (`outlined` or `filled`, floating label,

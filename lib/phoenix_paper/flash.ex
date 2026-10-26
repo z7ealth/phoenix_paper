@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Flash do
   (`pp_flash_group/1`) — the Material counterpart of the `flash_group/1` in
   a freshly generated `core_components.ex`.
 
+  [Live demo →](https://phoenixpaper.dev/components/feedback#flash)
+
       <.pp_flash_group flash={@flash} />
 
   Drop it once in your root layout (or app layout), the same place the

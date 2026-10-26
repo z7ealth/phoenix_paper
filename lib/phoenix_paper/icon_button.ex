@@ -3,6 +3,8 @@ defmodule PhoenixPaper.IconButton do
   An MD3 icon button (`pp_icon_button/1`), with the M3 Expressive sizes,
   widths, shapes, shape morphing and toggle mode.
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#icon-button)
+
       <.pp_icon_button icon="hero-heart" label="Favorite" />
       <.pp_icon_button icon="hero-bookmark" label="Save" variant="tonal" toggle selected={false} />
 

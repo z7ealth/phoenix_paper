@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Ripple do
   The Material Design ripple effect — a circle that expands from the
   click/tap position and fades out.
 
+  [Live demo →](https://phoenixpaper.dev/components/helpers#ripple)
+
   Implemented as a small vanilla inline `onclick` snippet — no JS hook, no
   bundler, no extra dependency (see AGENTS.md). `onclick`
   (not `onpointerdown`/`onmousedown`) is used deliberately: Phoenix's HEEx

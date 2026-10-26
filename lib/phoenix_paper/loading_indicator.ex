@@ -4,6 +4,8 @@ defmodule PhoenixPaper.LoadingIndicator do
   that morphs through MD3's shape library while it spins, for waits too
   short for a progress bar (pull to refresh, a card's content loading).
 
+  [Live demo →](https://phoenixpaper.dev/components/feedback#loading-indicator)
+
       <.pp_loading_indicator label="Loading messages" />
       <.pp_loading_indicator contained />
 

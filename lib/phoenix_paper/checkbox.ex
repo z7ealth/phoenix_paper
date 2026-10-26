@@ -2,6 +2,8 @@ defmodule PhoenixPaper.Checkbox do
   @moduledoc """
   An MD3 checkbox (`pp_checkbox/1`).
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#checkbox)
+
       <.pp_checkbox field={@form[:terms]} label="I accept the terms" />
       <.pp_checkbox name="all" label="Select all" indeterminate />
 

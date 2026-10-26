@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Tab do
   A single MD3 tab (`pp_tab/1`) inside a `PhoenixPaper.Tabs` group — see
   that module for composition, variants and how selection works.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#tabs)
+
       <.pp_tab id="demo-tabs" value="photos" default_selected>
         <:icon><.pp_icon name="hero-photo" /></:icon>
         Photos

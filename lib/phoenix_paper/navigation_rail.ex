@@ -5,6 +5,8 @@ defmodule PhoenixPaper.NavigationRail do
   `Drawer`: M3 Expressive retires the navigation drawer in favor of the
   expanded rail.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#navigation-rail)
+
       <.pp_navigation_rail id="app-rail">
         <:fab icon="hero-pencil" label="Compose" navigate={~p"/compose"} />
         <.pp_navigation_rail_item icon="hero-inbox" active_icon="hero-inbox-solid" label="Inbox" navigate={~p"/"} active badge={4} />

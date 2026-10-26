@@ -4,6 +4,8 @@ defmodule PhoenixPaper.TableContainer do
   MD3 card surface that scrolls horizontally when the table is wider than
   it.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
       <.pp_table_container>
         <.pp_table>
           ...

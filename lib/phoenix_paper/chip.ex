@@ -2,6 +2,8 @@ defmodule PhoenixPaper.Chip do
   @moduledoc """
   MD3 chips (`pp_chip/1`): assist, filter, input and suggestion.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#chip)
+
       <%!-- assist: a smart action, with a leading icon --%>
       <.pp_chip variant="assist" phx-click="add_to_calendar">
         <:icon><.pp_icon name="hero-calendar" /></:icon>

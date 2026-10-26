@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Breadcrumbs do
   A breadcrumb trail (`pp_breadcrumbs/1`) built from MD3 parts: a row of
   `:item`s with a chevron between them.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#breadcrumbs)
+
       <.pp_breadcrumbs>
         <:item navigate={~p"/"}>Home</:item>
         <:item navigate={~p"/catalog"}>Catalog</:item>

@@ -5,6 +5,8 @@ defmodule PhoenixPaper.ThemeToggle do
   `app.css` and `phoenix_paper.css` key dark mode off — see AGENTS.md,
   "Theming").
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#theme-toggle)
+
       <.pp_theme_toggle />
 
   Three icon buttons (monitor, sun, moon) in an `outline-variant` pill,

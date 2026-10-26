@@ -3,6 +3,8 @@ defmodule PhoenixPaper.List do
   An MD3 list (`pp_list/1`): a vertical run of `PhoenixPaper.ListItem`s,
   optionally separated by `PhoenixPaper.Divider`s.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#list)
+
       <.pp_list>
         <.pp_list_item navigate={~p"/"}>Home</.pp_list_item>
         <.pp_list_item navigate={~p"/inbox"}>Inbox</.pp_list_item>

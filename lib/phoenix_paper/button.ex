@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Button do
   An MD3 common button (`pp_button/1`), with the M3 Expressive sizes,
   shapes, shape morphing and toggle buttons.
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#button)
+
       <.pp_button>Save</.pp_button>
       <.pp_button variant="tonal">
         <:start_icon><.pp_icon name="hero-plus" /></:start_icon>

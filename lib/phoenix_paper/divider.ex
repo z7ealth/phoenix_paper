@@ -2,6 +2,8 @@ defmodule PhoenixPaper.Divider do
   @moduledoc """
   A thin separator line (`pp_divider/1`) — most often used between sections
   of a `PhoenixPaper.List`.
+
+  [Live demo →](https://phoenixpaper.dev/components/surfaces#divider)
   """
   use Phoenix.Component
 

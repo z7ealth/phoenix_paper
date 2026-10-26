@@ -7,6 +7,8 @@ defmodule PhoenixPaper.Dialog do
   that generated modal before, this is the same mechanism with MD3 chrome
   and `:title`/`:actions` slots instead of one opaque body.
 
+  [Live demo →](https://phoenixpaper.dev/components/feedback#dialog)
+
       <.pp_button phx-click={PhoenixPaper.Dialog.show("confirm-delete")}>
         Delete
       </.pp_button>

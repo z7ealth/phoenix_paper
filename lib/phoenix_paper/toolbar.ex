@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Toolbar do
   An M3 Expressive toolbar (`pp_toolbar/1`) — a row (or column) of
   actions for the current page. It replaces MD3's bottom app bar.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#toolbar)
+
       <%!-- docked: full-width bar at the bottom of the screen --%>
       <.pp_toolbar position="fixed">
         <.pp_icon_button icon="hero-archive-box" label="Archive" />

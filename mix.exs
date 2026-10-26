@@ -1,8 +1,9 @@
 defmodule PhoenixPaper.MixProject do
   use Mix.Project
 
-  @version "0.5.3"
+  @version "0.5.4"
   @source_url "https://github.com/z7ealth/phoenix_paper"
+  @website_url "https://phoenixpaper.dev"
   @description "Material Design 3 (including M3 Expressive) components for Phoenix and LiveView, styled with Tailwind CSS."
 
   def project do
@@ -18,7 +19,7 @@ defmodule PhoenixPaper.MixProject do
       docs: docs(),
       name: "PhoenixPaper",
       source_url: @source_url,
-      homepage_url: @source_url
+      homepage_url: @website_url
     ]
   end
 
@@ -44,7 +45,7 @@ defmodule PhoenixPaper.MixProject do
       # dependency here or those components break at render time in any
       # consuming app that doesn't happen to pull `jason` in some other way.
       {:jason, "~> 1.4"},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.38", only: :dev, runtime: false},
       # `Phoenix.LiveViewTest.live_isolated/3` (the date/time picker event tests)
       # needs it to parse rendered HTML. Test-only: not shipped to consumers.
       {:lazy_html, ">= 0.1.0", only: :test}
@@ -56,6 +57,7 @@ defmodule PhoenixPaper.MixProject do
       licenses: ["MIT"],
       maintainers: ["Héctor Salinas"],
       links: %{
+        "Website" => @website_url,
         "GitHub" => @source_url,
         "Changelog" => @source_url <> "/blob/master/CHANGELOG.md"
       },
@@ -69,7 +71,15 @@ defmodule PhoenixPaper.MixProject do
       main: "readme",
       source_ref: "v#{@version}",
       source_url: @source_url,
-      extras: ["README.md", "CHANGELOG.md", "AGENTS.md", "LICENSE"]
+      extras: [
+        "README.md",
+        {"Live demo", url: @website_url},
+        {"Components", url: @website_url <> "/components"},
+        {"Theme creator", url: @website_url <> "/theme-creator"},
+        "CHANGELOG.md",
+        "AGENTS.md",
+        "LICENSE"
+      ]
     ]
   end
 end

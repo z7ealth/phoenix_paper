@@ -3,6 +3,8 @@ defmodule PhoenixPaper.ListItem do
   An MD3 list item (`pp_list_item/1`) — for inside `PhoenixPaper.List`,
   but also usable on its own (e.g. inside a `PhoenixPaper.Card`).
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#list)
+
   MD3 look: a 56dp row (72dp with a `:secondary` line) with 16dp side
   padding; the headline is `body-large`, the supporting line `body-medium`
   in `on-surface-variant`, the `:leading` icon `on-surface-variant` (an

@@ -6,6 +6,8 @@ defmodule Mix.Tasks.PhoenixPaper.Gen.Theme do
   dark) from a seed color, the way Material Theme Builder does, and/or
   from explicit role values in a palette file.
 
+  [Try it in the theme creator →](https://phoenixpaper.dev/theme-creator)
+
       $ mix phoenix_paper.gen.theme --seed "#0b57d0"
       $ mix phoenix_paper.gen.theme --seed "#0b57d0" --scheme vibrant --tertiary "#a4407f"
       $ mix phoenix_paper.gen.theme --palette catppuccin.json

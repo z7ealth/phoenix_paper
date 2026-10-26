@@ -3,6 +3,8 @@ defmodule PhoenixPaper.DatePicker do
   An MD3 date picker — docked or modal — as a `Phoenix.LiveComponent`
   (LiveView only).
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#date-picker)
+
       <.live_component
         module={PhoenixPaper.DatePicker}
         id="due-on"

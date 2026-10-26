@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Shape do
   MD3's corner scale (including the M3 Expressive additions) as Tailwind
   classes backed by the `--radius-pp-*` tokens in `phoenix_paper.css`.
 
+  [Live demo →](https://phoenixpaper.dev/components/helpers#shape)
+
   | Token            | MD3 name               | Radius |
   |------------------|------------------------|--------|
   | `:none`          | none                   | 0      |

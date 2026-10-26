@@ -3,6 +3,8 @@ defmodule PhoenixPaper.TimePicker do
   An MD3 time picker — the dial and the keyboard input mode — as a
   `Phoenix.LiveComponent` (LiveView only).
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#time-picker)
+
       <.live_component
         module={PhoenixPaper.TimePicker}
         id="starts-at"

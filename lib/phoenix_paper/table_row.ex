@@ -5,6 +5,8 @@ defmodule PhoenixPaper.TableRow do
   MD3's 8% `on-surface` state layer on hover. See `PhoenixPaper.Table`'s
   moduledoc for a full example.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
   `selected` gives the row MD3's selected color (`secondary-container`)
   and sets `aria-selected`. Pair it with a `PhoenixPaper.Checkbox` in the
   first cell and your own `phx-click`/assign to track which rows are

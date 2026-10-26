@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-10-26
+
+Links to the live demo site, [phoenixpaper.dev](https://phoenixpaper.dev).
+No code changes.
+
+### Documentation
+
+- Hex package links gain **Website** (shown on hex.pm and in
+  `mix hex.info`), and the docs' `homepage_url` is the site.
+- README: a live-demo badge and links next to the existing badges, and
+  a screenshot of the site linking to it.
+- Hexdocs: the sidebar lists **Live demo**, **Components** and **Theme
+  creator** (ExDoc URL extras, so `ex_doc` is now `~> 0.38`), and every
+  component's moduledoc links to its own demo section
+  (`PhoenixPaper.Card` → `/components/data-display#card`, ...).
+
 ## [0.5.3] - 2026-10-26
 
 Fixes from a real daisyUI → PhoenixPaper migration.

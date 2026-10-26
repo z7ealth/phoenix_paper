@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Tooltip do
   MD3 tooltips (`pp_tooltip/1`) — plain and rich — shown on hover and
   keyboard focus.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#tooltip)
+
       <.pp_tooltip title="Delete">
         <.pp_icon_button icon="hero-trash" label="Delete" title={false} />
       </.pp_tooltip>

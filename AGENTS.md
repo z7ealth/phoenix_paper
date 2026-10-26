@@ -183,6 +183,13 @@ sync, escape-to-close) remain fine and preferred for tiny behaviors.
   - `rest` (`:global`) — for `phx-*` bindings, `id`, `data-*`, etc.
 - Register new components in `PhoenixPaper.Components`' `__using__/1` in the
   same change.
+- Every component's moduledoc links to its demo on
+  [phoenixpaper.dev](https://phoenixpaper.dev) right after its first
+  paragraph: `[Live demo →](https://phoenixpaper.dev/components/<category>#<name>)`,
+  with the category page and anchor the site's sidebar uses
+  (`data-display#card`, `forms#text-field`, ...). Sub-parts link to
+  their parent's section (`TableRow` → `#table`). Add the link — and
+  the demo — when adding a component.
 - Attrs follow MD3's own vocabulary and options (`variant` names, sizes,
   colors are the spec's). Don't add an attr for something MD3 fixes
   (a dialog's width, a snackbar's placement, a card's corners) — fixed

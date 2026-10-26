@@ -7,6 +7,11 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/phoenix_paper.svg)](https://hex.pm/packages/phoenix_paper)
 [![Hexdocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/phoenix_paper)
 [![License](https://img.shields.io/hexpm/l/phoenix_paper.svg)](https://github.com/z7ealth/phoenix_paper/blob/master/LICENSE)
+[![Live demo](https://img.shields.io/badge/live_demo-phoenixpaper.dev-6750A4.svg)](https://phoenixpaper.dev)
+
+**[Live demo →](https://phoenixpaper.dev)** · [Components](https://phoenixpaper.dev/components) · [Theme creator](https://phoenixpaper.dev/theme-creator)
+
+[![PhoenixPaper's site, phoenixpaper.dev: buttons, a card, a switch, a checkbox and a slider rendered live](https://raw.githubusercontent.com/z7ealth/phoenix_paper/master/docs/images/phoenixpaper-dev.png)](https://phoenixpaper.dev)
 
 A [Material Design 3](https://m3.material.io/) component library for
 Phoenix — including **M3 Expressive** (springs, shape morphing, the new
@@ -35,7 +40,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.5.3`) and please
+> (e.g. `~> 0.5.4`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -45,7 +50,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.5.3"}
+    {:phoenix_paper, "~> 0.5.4"}
   ]
 end
 ```

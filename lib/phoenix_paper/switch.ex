@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Switch do
   `PhoenixPaper.Checkbox` (a real checkbox underneath, a hidden input so
   "off" submits `"false"`).
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#switch)
+
       <.pp_switch field={@form[:notifications]} label="Notifications" />
       <.pp_switch name="wifi" label="Wi-Fi" icons checked />
 

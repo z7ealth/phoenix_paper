@@ -4,6 +4,8 @@ defmodule PhoenixPaper.SideSheet do
   supplementary content and actions at the end edge of the screen (filters,
   details, settings).
 
+  [Live demo →](https://phoenixpaper.dev/components/surfaces#side-sheet)
+
       <.pp_button phx-click={PhoenixPaper.SideSheet.show("filters")}>Filters</.pp_button>
 
       <.pp_side_sheet id="filters">

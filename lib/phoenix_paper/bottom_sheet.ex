@@ -2,6 +2,8 @@ defmodule PhoenixPaper.BottomSheet do
   @moduledoc """
   An MD3 bottom sheet (`pp_bottom_sheet/1`) — modal or standard.
 
+  [Live demo →](https://phoenixpaper.dev/components/surfaces#bottom-sheet)
+
       <.pp_button phx-click={PhoenixPaper.BottomSheet.show("share")}>Share</.pp_button>
 
       <.pp_bottom_sheet id="share">

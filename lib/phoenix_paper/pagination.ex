@@ -5,6 +5,8 @@ defmodule PhoenixPaper.Pagination do
   when there are many. For a table's "rows per page / 1–10 of 47" footer,
   see `PhoenixPaper.TablePagination`.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#pagination)
+
   Pages are **1-based**. The component is stateless: it renders the `page`
   you pass, and each button either links or fires an event.
 

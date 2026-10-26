@@ -4,6 +4,8 @@ defmodule PhoenixPaper.TableCell do
   `<th>` when `variant="head"`, a `<td>` otherwise. See
   `PhoenixPaper.Table`'s moduledoc for a full example.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
   Head cells are `title-small` in `on-surface-variant`, body cells inherit
   the table's `body-medium`; both have 16dp side padding.
 

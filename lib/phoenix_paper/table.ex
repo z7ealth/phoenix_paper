@@ -6,6 +6,8 @@ defmodule PhoenixPaper.Table do
   `PhoenixPaper.TableFooter`, `PhoenixPaper.TableContainer` and
   `PhoenixPaper.TablePagination`):
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
       <.pp_table_container>
         <.pp_table>
           <.pp_table_head>

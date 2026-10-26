@@ -3,6 +3,8 @@ defmodule PhoenixPaper.TabPanel do
   The content for one `PhoenixPaper.Tab` (`pp_tab_panel/1`) — see
   `PhoenixPaper.Tabs` for composition.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#tabs)
+
   Pass the group's `id` and the matching tab's `value`; mark the panel of
   the `default_selected` tab `default_selected` too. Only that panel is
   visible on first paint; `PhoenixPaper.Tabs.select/2` shows/hides them

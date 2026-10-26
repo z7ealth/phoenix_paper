@@ -4,6 +4,8 @@ defmodule PhoenixPaper.TopAppBar do
   flexible medium/large layouts and subtitles. Renamed from 0.3's
   `AppBar` (`pp_app_bar/1`).
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#top-app-bar)
+
       <.pp_top_app_bar position="sticky">
         <:leading><.pp_navigation_rail_toggle for="app-rail" /></:leading>
         Inbox

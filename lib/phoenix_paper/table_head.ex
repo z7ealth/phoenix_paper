@@ -5,6 +5,8 @@ defmodule PhoenixPaper.TableHead do
   `PhoenixPaper.TableCell`s. See `PhoenixPaper.Table`'s moduledoc for a full
   example.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
   The border under the header lives here (on every descendant `<th>`, not on
   the `<thead>` element itself — a `border-bottom` on `<thead>` doesn't
   render reliably across browsers once `border-collapse` is set on the table,

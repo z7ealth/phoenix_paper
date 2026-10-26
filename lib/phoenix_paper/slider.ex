@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Slider do
   An MD3 slider (`pp_slider/1`), with the M3 Expressive sizes, centered
   slider and value indicator — built on native `<input type="range">`.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#slider)
+
       <.pp_slider name="volume" value={60} label="Volume" />
       <.pp_slider name="balance" value={0} min={-50} max={50} track="centered" />
       <.pp_slider name="price" value={{20, 80}} label="Price" value_indicator />

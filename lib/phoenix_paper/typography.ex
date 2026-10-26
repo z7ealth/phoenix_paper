@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Typography do
   The MD3 type scale (`pp_typography/1`): 15 roles — display, headline,
   title, body and label, each large/medium/small — plus `code`.
 
+  [Live demo →](https://phoenixpaper.dev/components/surfaces#typography)
+
       <.pp_typography variant="headline-medium">Account settings</.pp_typography>
       <.pp_typography variant="body-large">Regular paragraph text.</.pp_typography>
       <.pp_typography variant="label-small" color="on-surface-variant">

@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Theme do
   Generates MD3 color schemes from a seed color — the engine behind
   `mix phoenix_paper.gen.theme`.
 
+  [Theming guide →](https://phoenixpaper.dev/theming)
+
   As in Material Theme Builder, a seed becomes five tonal palettes (hue
   and chroma in `PhoenixPaper.Theme.Hct`, every tone 0–100 available)
   plus an error palette, and every MD3 color role is one tone of one

@@ -3,6 +3,8 @@ defmodule PhoenixPaper.RadioGroup do
   A Material Design radio group (`pp_radio_group/1`) — a labeled set of
   mutually exclusive radio buttons sharing one `name`.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#radio-group)
+
   Accepts either a Phoenix `Phoenix.HTML.FormField` via `field=` or plain
   `name`/`value` attrs.
 

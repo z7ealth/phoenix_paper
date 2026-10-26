@@ -3,6 +3,8 @@ defmodule PhoenixPaper.TextField do
   An MD3 text field (`pp_text_field/1`) with a floating label — pure CSS,
   no JavaScript. Renamed from 0.3's `Input` (`pp_input/1`).
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#text-field)
+
       <.pp_text_field field={@form[:email]} type="email" label="Email" />
 
       <.pp_text_field label="Amount" name="amount" variant="filled">

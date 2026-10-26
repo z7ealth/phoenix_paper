@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Upload do
   browse button, and one row per selected file with its preview,
   progress, errors and a cancel button.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#upload)
+
       # mount/3
       socket |> allow_upload(:photos, accept: ~w(.jpg .png), max_entries: 3)
 

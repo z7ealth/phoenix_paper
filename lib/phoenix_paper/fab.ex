@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Fab do
   An MD3 floating action button (`pp_fab/1`), with the M3 Expressive sizes
   and the extended FAB.
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#floating-action-button)
+
       <.pp_fab icon="hero-pencil" label="Compose" position="fixed" class="bottom-4 right-4" />
       <.pp_fab icon="hero-pencil" label="Compose" extended />
 

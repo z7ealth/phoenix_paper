@@ -4,6 +4,8 @@ defmodule PhoenixPaper.TableBody do
   `<tbody>` of `PhoenixPaper.TableRow`s. See `PhoenixPaper.Table`'s moduledoc
   for a full example.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table)
+
   Row dividers (`outline-variant`) live here, as a CSS selector scoped to
   `> tr` (this body's own rows only, not a header/footer row elsewhere in
   the table), with the last row's divider removed so the body doesn't end

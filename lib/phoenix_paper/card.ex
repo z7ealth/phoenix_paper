@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Card do
   An MD3 card (`pp_card/1`) with optional media/title/subhead/actions
   slots.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#card)
+
       <.pp_card variant="filled">
         <:media><img src={~p"/images/lake.jpg"} alt="" class="h-40 w-full object-cover" /></:media>
         <:title>Lake trip</:title>

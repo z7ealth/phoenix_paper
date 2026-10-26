@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Carousel do
   An M3 Expressive carousel (`pp_carousel/1`) — a horizontally scrolling
   row of visual items (photos, product cards) with snap points.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#carousel)
+
       <.pp_carousel id="featured" label="Featured places">
         <:item :for={place <- @places} label={place.name} navigate={~p"/places/\#{place.id}"}>
           <img src={place.photo} alt="" class="size-full object-cover" />

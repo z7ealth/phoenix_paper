@@ -3,6 +3,8 @@ defmodule PhoenixPaper.NumberField do
   A number field (`pp_number_field/1`): an MD3 text field (`type="number"`)
   with decrease/increase steppers as trailing MD3 icon buttons.
 
+  [Live demo →](https://phoenixpaper.dev/components/forms#number-field)
+
       <.pp_number_field field={@form[:quantity]} label="Quantity" min="1" max="10" />
 
   MD3 has no number field, so this is a composite of MD3 parts: the field

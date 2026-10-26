@@ -6,6 +6,8 @@ defmodule PhoenixPaper.TablePagination do
   navigation (lists, grids, search results), see
   `PhoenixPaper.Pagination`.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#table-pagination)
+
       <.pp_table_container>
         <.pp_table>...</.pp_table>
         <.pp_table_pagination

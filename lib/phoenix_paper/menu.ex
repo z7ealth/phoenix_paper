@@ -4,6 +4,8 @@ defmodule PhoenixPaper.Menu do
   shape and colors — a trigger that opens a short anchored list of
   actions (an overflow menu, a profile menu).
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#menu)
+
       <.pp_menu id="more" trigger_icon="hero-ellipsis-vertical" trigger_label="More options">
         <.pp_menu_item icon="hero-pencil" trailing_text="⌘E" phx-click="edit">Edit</.pp_menu_item>
         <.pp_menu_item icon="hero-document-duplicate" phx-click="duplicate">Duplicate</.pp_menu_item>

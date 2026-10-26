@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Avatar do
   An MD3 avatar (`pp_avatar/1`): the 40dp circle MD3 lists use as a
   leading element, holding a picture, initials or an icon.
 
+  [Live demo →](https://phoenixpaper.dev/components/data-display#avatar)
+
       <.pp_avatar src="/images/remy.jpg" alt="Remy Sharp" />
       <.pp_avatar>RS</.pp_avatar>
 

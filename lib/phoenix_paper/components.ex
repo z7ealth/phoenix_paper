@@ -3,6 +3,8 @@ defmodule PhoenixPaper.Components do
   `use PhoenixPaper.Components` imports every PhoenixPaper component
   (`pp_button/1`, `pp_card/1`, `pp_icon/1`, `pp_checkbox/1`, ...) at once.
 
+  [All components, live →](https://phoenixpaper.dev/components)
+
   Add it next to your app's own `core_components` import, typically in the
   `html_helpers` block of `lib/my_app_web.ex`:
 

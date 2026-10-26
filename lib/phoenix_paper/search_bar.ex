@@ -3,6 +3,8 @@ defmodule PhoenixPaper.SearchBar do
   An MD3 search bar (`pp_search_bar/1`), with an optional docked search
   view for suggestions/results.
 
+  [Live demo →](https://phoenixpaper.dev/components/navigation#search-bar)
+
       <form phx-change="search" phx-submit="search">
         <.pp_search_bar name="q" value={@q} placeholder="Search mail" phx-debounce="300">
           <:trailing><.pp_icon_button icon="hero-user-circle" label="Account" /></:trailing>

@@ -3,6 +3,8 @@ defmodule PhoenixPaper.SplitButton do
   An M3 Expressive split button (`pp_split_button/1`): a primary action
   joined to a trailing button that opens a menu of related actions.
 
+  [Live demo →](https://phoenixpaper.dev/components/actions#split-button)
+
       <.pp_split_button id="send" phx-click="send">
         Send
         <:menu>
