@@ -31,6 +31,38 @@ defmodule PhoenixPaper.TooltipTest do
       """)
 
     refute html =~ "role=\"tooltip\""
+    refute html =~ "onmouseenter"
+  end
+
+  test "drops the trigger's native titles on hover, not the bubble's" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_tooltip title="Delete">
+        <PhoenixPaper.IconButton.pp_icon_button icon="hero-trash" label="Delete" />
+      </.pp_tooltip>
+      """)
+
+    [root] = Regex.run(~r/<span[^>]*data-pp-component="tooltip"[^>]*>/, html)
+
+    assert root =~
+             "onmouseenter=\"this.querySelectorAll(&#39;[title]:not([role=tooltip] *)&#39;).forEach(function(e){e.removeAttribute(&#39;title&#39;)})\""
+
+    # the icon button still renders its title for dead views and no-hover
+    # cases; only the hover handler strips it
+    assert html =~ ~s(title="Delete")
+  end
+
+  test "strips titles under paperize={false} too (behavior, not skin)" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_tooltip title="Delete" paperize={false}><button title="x">x</button></.pp_tooltip>
+      """)
+
+    assert html =~ "onmouseenter="
   end
 
   test "rich: surface-container card with subhead and actions, interactive" do

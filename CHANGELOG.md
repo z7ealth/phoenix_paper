@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-11-02
+
+### Fixed
+
+- **Scrollable tabs no longer shrink and clip their labels on phones.**
+  A tab's `min-w-[90px]` replaced flexbox's `min-width: auto`, so in a
+  narrow `layout="scrollable"` row every tab was squeezed to 90px and
+  its label cut off instead of the row scrolling. Scrollable tabs are
+  now `shrink-0`.
+- **A tooltip no longer doubles up with the browser's.** `pp_tooltip`
+  removes native `title` attributes from its trigger on hover (an inline
+  `onmouseenter`), so a `pp_icon_button` inside it (whose `title`
+  defaults to its label) no longer needs `title={false}`. It still
+  works if you pass it. Titles inside a rich tooltip's bubble are kept.
+
+### Documentation
+
+- README, JS hook setup: `import "phoenix_paper"` resolves through
+  esbuild's `NODE_PATH`, which Phoenix 1.8 apps set already. Older apps
+  get the `config/config.exs` line to add. The CSS import needs nothing.
+- README, fonts: self-hosting Roboto Flex, what happens without it (the
+  `Roboto` → system font fallback), and overriding `--font-pp-brand` /
+  `--font-pp-plain` with an example.
+- README, theming: **always-dark regions**. `data-theme="dark"` on any
+  container gives everything inside it the dark roles, so there's no
+  per-component dark option. Also covers the light-inside-dark
+  limitation and `color="inherit"` for colored containers.
+- `Table`: on compact screens, render the rows as a `pp_list` below
+  600dp instead (MD3 has no stacked table pattern).
+
 ## [0.5.4] - 2026-10-26
 
 Links to the live demo site, [phoenixpaper.dev](https://phoenixpaper.dev).

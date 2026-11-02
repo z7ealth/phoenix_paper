@@ -6,6 +6,11 @@ defmodule PhoenixPaper.DatePickerTest do
 
   @endpoint PhoenixPaper.TestEndpoint
 
+  # A range picker with no value opens on today's month; pinning min/max
+  # to October keeps it there (today is clamped into the window) so the
+  # tests' October days are on screen whatever the date.
+  @october Date.range(~D[2026-10-01], ~D[2026-10-31])
+
   defmodule Host do
     use Phoenix.LiveView
 
@@ -147,7 +152,7 @@ defmodule PhoenixPaper.DatePickerTest do
   end
 
   test "range (docked): two picks commit start/end inputs and band the days between" do
-    {view, _} = mount_picker(range: true, name: "trip")
+    {view, _} = mount_picker(range: true, name: "trip", min: @october.first, max: @october.last)
 
     view |> element("#due-field") |> render_click()
     html = view |> element("button[aria-label='2026-10-12']") |> render_click()
@@ -166,7 +171,14 @@ defmodule PhoenixPaper.DatePickerTest do
   end
 
   test "range (modal): headline shows the pending range, OK after one pick is a one-day range" do
-    {view, _} = mount_picker(range: true, variant: "modal", name: "trip")
+    {view, _} =
+      mount_picker(
+        range: true,
+        variant: "modal",
+        name: "trip",
+        min: @october.first,
+        max: @october.last
+      )
 
     html = view |> element("#due-field") |> render_click()
     assert html =~ "Select dates"

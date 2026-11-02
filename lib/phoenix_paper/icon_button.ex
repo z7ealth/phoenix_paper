@@ -12,7 +12,8 @@ defmodule PhoenixPaper.IconButton do
   the inner block for anything else. `label` is required: it's the
   `aria-label` (an icon-only control has no other accessible name) and the
   native `title` tooltip — pass `title={false}` to drop the tooltip, or wrap
-  the button in a `PhoenixPaper.Tooltip` for an MD3 plain tooltip.
+  the button in a `PhoenixPaper.Tooltip` for an MD3 plain tooltip (which
+  removes the native `title` itself on hover, so the two don't double up).
 
   ## Variants
 

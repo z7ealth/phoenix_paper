@@ -40,7 +40,7 @@ app already vendors, no extra dependency).
 > APIs may change between `0.x` releases (breaking changes are always
 > called out in the [CHANGELOG](CHANGELOG.md)). The goal is a stable,
 > semver-guaranteed API at **1.0.0**. Until then, pin a minor version
-> (e.g. `~> 0.5.4`) and please
+> (e.g. `~> 0.5.5`) and please
 > [report issues](https://github.com/z7ealth/phoenix_paper/issues) you run into.
 
 ## Installation
@@ -50,7 +50,7 @@ Add `phoenix_paper` to your `mix.exs` deps:
 ```elixir
 def deps do
   [
-    {:phoenix_paper, "~> 0.5.4"}
+    {:phoenix_paper, "~> 0.5.5"}
   ]
 end
 ```
@@ -82,13 +82,27 @@ And wire up the Tailwind theme in `assets/css/app.css`:
 
 The stylesheet carries its own `@source` for PhoenixPaper's `lib/`, so there's no separate `@source` line to add.
 
-Register the PhoenixPaper LiveView hook in `assets/js/app.js` (Phoenix's
-esbuild resolves `deps/` packages by name):
+Register the PhoenixPaper LiveView hook in `assets/js/app.js`:
 
 ```js
 import PhoenixPaperHooks from "phoenix_paper"
 const liveSocket = new LiveSocket("/live", Socket, {hooks: {...PhoenixPaperHooks}, ...})
 ```
+
+`"phoenix_paper"` is resolved from `deps/` through esbuild's `NODE_PATH`.
+Phoenix 1.8 apps already set it. Older apps add it to the esbuild
+profile in `config/config.exs`, or the build fails with
+`Could not resolve "phoenix_paper"`:
+
+```elixir
+config :esbuild,
+  my_app: [
+    # ...
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+```
+
+The CSS import above needs nothing: it's a relative path.
 
 It adds what CSS can't do everywhere: the sliding tab indicator,
 drag-to-dismiss bottom sheets, time-picker dial dragging, menus and
@@ -97,11 +111,24 @@ carousel masking in Firefox, and the loading indicator's morph in Safari.
 Components still render and work before LiveView connects and on
 controller-rendered pages, just without those behaviors.
 
-MD3's typeface is Roboto Flex. PhoenixPaper doesn't load fonts; add it to
-your root layout (or override `--font-pp-brand`/`--font-pp-plain`):
+MD3's typeface is Roboto Flex. PhoenixPaper doesn't load fonts (what a
+page loads, and from where, is the app's call); add it to your root
+layout:
 
 ```html
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700&display=swap">
+```
+
+or self-host it (e.g. the `@fontsource-variable/roboto-flex` files) with
+an `@font-face` named `"Roboto Flex"`. Without it nothing breaks: the
+stacks fall back to `Roboto`, then the system UI font. To use your own
+typeface, override the two tokens after the import:
+
+```css
+:root {
+  --font-pp-brand: "Bitter", serif;      /* display, headline, title roles */
+  --font-pp-plain: "Inter", sans-serif;  /* body and label roles */
+}
 ```
 
 ### Theming
@@ -142,6 +169,29 @@ mix phoenix_paper.gen.theme --seed "#8839ef" --palette brand.json  # the seed fi
 Keys are the role names below (without the `--color-pp-` prefix, though
 it's accepted). The dark values are written to both the
 `[data-theme="dark"]` block and the `prefers-color-scheme` block.
+
+#### Always-dark regions
+
+The dark scheme is keyed on any element's `data-theme="dark"`, not just
+`<html>`'s, and custom properties inherit. So for a surface that stays
+dark whatever the page theme (a hero, a media player bar, a code
+panel), put the attribute on its container. Every component inside,
+icon buttons included, picks up the dark roles, with no per-component
+option needed:
+
+```heex
+<section data-theme="dark" class="bg-pp-surface text-pp-on-surface">
+  <.pp_icon_button icon="hero-play" label="Play" />
+</section>
+```
+
+This works one way only: the light values live on `:root`, so a
+`data-theme="light"` region inside a dark page stays dark. A generated
+theme file (`mix phoenix_paper.gen.theme`) uses the same
+`[data-theme="dark"]` selector, so dark regions follow your theme too.
+For content on a *colored* container instead (`primary`, a vibrant toolbar),
+give buttons `color="inherit"` so they take the container's `on-*`
+color.
 
 The color roles are MD3's and only MD3's: `primary`, `secondary`,
 `tertiary` and `error` (each with `on-*`, `*-container`,
@@ -222,7 +272,7 @@ never touches it.
 <.pp_chip variant="input" deletable on_delete={JS.push("remove_tag")}>elixir</.pp_chip>
 
 <.pp_tooltip title="Delete">
-  <.pp_icon_button icon="hero-trash" label="Delete" title={false} />
+  <.pp_icon_button icon="hero-trash" label="Delete" />
 </.pp_tooltip>
 
 <.pp_menu id="more" trigger_icon="hero-ellipsis-vertical" trigger_label="More">

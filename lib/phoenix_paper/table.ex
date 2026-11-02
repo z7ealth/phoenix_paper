@@ -39,6 +39,25 @@ defmodule PhoenixPaper.Table do
   child component the caller wrote, but a CSS descendant selector only
   cares about real DOM nesting.
 
+  ## On compact screens
+
+  A table keeps its columns and scrolls sideways inside a
+  `TableContainer`. There's no stacked "rows as cards" mode: MD3 has no
+  such pattern, and which columns matter on a phone is the app's call.
+  Where a table doesn't fit, render the same rows as a list below MD3's
+  medium window size (600dp) and the table above it:
+
+      <.pp_list class="min-[600px]:hidden">
+        <.pp_list_item :for={row <- @rows}>
+          {row.name}
+          <:secondary>{row.amount}</:secondary>
+        </.pp_list_item>
+      </.pp_list>
+
+      <.pp_table_container class="max-[599px]:hidden">
+        ...
+      </.pp_table_container>
+
   ## Migrating from 0.4
 
   `dense` is gone (it came from MUI's table, not MD3), as is

@@ -6,11 +6,11 @@ defmodule PhoenixPaper.Tooltip do
   [Live demo →](https://phoenixpaper.dev/components/data-display#tooltip)
 
       <.pp_tooltip title="Delete">
-        <.pp_icon_button icon="hero-trash" label="Delete" title={false} />
+        <.pp_icon_button icon="hero-trash" label="Delete" />
       </.pp_tooltip>
 
       <.pp_tooltip variant="rich" subhead="Autosave" title="Changes are saved as you type.">
-        <.pp_icon_button icon="hero-information-circle" label="About autosave" title={false} />
+        <.pp_icon_button icon="hero-information-circle" label="About autosave" />
         <:actions><.pp_button variant="text" size="xs" navigate={~p"/help/autosave"}>Learn more</.pp_button></:actions>
       </.pp_tooltip>
 
@@ -38,8 +38,15 @@ defmodule PhoenixPaper.Tooltip do
   opposite side when it would overflow the viewport (measured as it
   shows); without the hook the placement is fixed.
 
-  Give an icon button inside `title={false}` so it doesn't show its own
-  native tooltip too.
+  **Native titles inside are dropped.** A `pp_icon_button` sets a native
+  `title` (its label) by default, which would show the browser's tooltip
+  on top of this one. The wrapper's inline `onmouseenter` removes every
+  `title` attribute in the trigger (not in the bubble) before the
+  browser's own delay runs out, so there's no need to pass
+  `title={false}` (it still works). Accessible names are unaffected: an
+  icon button's name is its `aria-label`. A LiveView patch can bring a
+  `title` back; the next hover removes it again. Nothing is removed when
+  the tooltip has no text.
 
   The wrapper's `group/tooltip relative inline-flex` is structural and
   stays on under `paperize={false}`; the bubble's classes are gated as usual.
@@ -68,13 +75,21 @@ defmodule PhoenixPaper.Tooltip do
   slot(:inner_block, required: true, doc: "the trigger element")
   slot(:actions, doc: "rich tooltips: text buttons under the text")
 
+  # Drops the trigger's native `title`s so the browser's tooltip doesn't
+  # show on top of this one. Behavior, not skin: it runs under
+  # `paperize={false}` too, since the bubble still renders there.
+  @strip_titles "this.querySelectorAll('[title]:not([role=tooltip] *)').forEach(function(e){e.removeAttribute('title')})"
+
   @doc "Renders a tooltip. See the module doc."
   def pp_tooltip(assigns) do
+    assigns = assign(assigns, :strip_titles, @strip_titles)
+
     ~H"""
     <span
       data-pp-component="tooltip"
       phx-hook={Helpers.hook(@rest[:id])}
       class="group/tooltip relative inline-flex"
+      onmouseenter={@title not in [nil, ""] && @strip_titles}
       {@rest}
     >
       {render_slot(@inner_block)}

@@ -133,7 +133,11 @@ defmodule PhoenixPaper.Tabs do
     do:
       "group/tabs flex items-stretch border-b border-pp-surface-variant [&>[data-pp-component=tab]]:flex-1"
 
+  # Scrollable tabs keep their width and let the row overflow: a tab's
+  # `min-w-[90px]` replaces flexbox's `min-width: auto`, so without
+  # `shrink-0` a narrow row squeezed every tab to 90px and its
+  # `overflow-hidden` clipped the label instead of scrolling.
   defp paper_classes("scrollable"),
     do:
-      "group/tabs flex items-stretch overflow-x-auto border-b border-pp-surface-variant [scrollbar-width:none]"
+      "group/tabs flex items-stretch overflow-x-auto border-b border-pp-surface-variant [scrollbar-width:none] [&>[data-pp-component=tab]]:shrink-0"
 end

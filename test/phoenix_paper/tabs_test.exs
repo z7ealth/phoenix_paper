@@ -73,6 +73,9 @@ defmodule PhoenixPaper.TabsTest do
     html = rendered_to_string(~H"<.pp_tabs id='s' layout='scrollable'><span /></.pp_tabs>")
     assert html =~ "overflow-x-auto"
     refute html =~ "flex-1"
+    # tabs keep their width (their min-w-[90px] would otherwise let them
+    # shrink and clip the label) so the row overflows and scrolls
+    assert html =~ "[&amp;&gt;[data-pp-component=tab]]:shrink-0"
   end
 
   test "select/2 builds the exact op sequence" do

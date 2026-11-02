@@ -724,6 +724,12 @@ opacity), so `select/2` no longer adds or removes classes — and the
 variant (`primary`/`secondary`) is read from the root's `data-pp-variant`
 through `group/tabs`, so it's set once instead of per tab.
 
+`layout="scrollable"` makes the tabs `shrink-0` (through
+`[&>[data-pp-component=tab]]:`, like `fixed`'s `flex-1`). A tab's own
+`min-w-[90px]` replaces flexbox's `min-width: auto`, so until 0.5.5 a
+narrow row squeezed every tab to 90px and its `overflow-hidden` clipped
+the label instead of the row scrolling (reported from phones).
+
 Hidden panels use the `hidden` **class**, unconditionally: Tailwind's
 preflight makes the `[hidden]` attribute `display: none !important`, which
 `JS.show`'s inline `display` can't beat.
@@ -978,6 +984,14 @@ looks unfocused.
   because the gap to the trigger is padding, not margin) variants. Showing
   waits `delay-300`, hiding is immediate. No arrow (MD3 has none).
   Viewport flipping is the JS hook's (tooltips need an `id` for it).
+  **It drops its trigger's native titles** (since 0.5.5): a
+  `pp_icon_button`'s `title` defaults to its label, so inside a tooltip
+  the browser's tooltip showed on top of MD3's. HEEx can't pass
+  `title={false}` into a child the caller wrote, so the wrapper's inline
+  `onmouseenter` removes `[title]:not([role=tooltip] *)` (the bubble's
+  own buttons keep theirs) before the browser's ~500ms native delay. It's
+  behavior, not skin: it renders whenever the bubble does, `paperize`
+  or not, and the next hover handles a title a patch brought back.
 
   **A verification dead-end worth knowing about, so it isn't re-walked**:
   headless Chromium's `--virtual-time-budget` fast-forwards timers but
@@ -1147,7 +1161,11 @@ was `accent` from 0.2 to 0.3, and 0.4.0 renamed it back.
 - **Namespaced `pp-` on every token**, because daisyUI defines its own
   `primary`/`secondary`/`base-100`/... Never add an unprefixed token.
 - Dark mode keys off `[data-theme="dark"]` (daisyUI's and Phoenix 1.8's
-  attribute). With no `data-theme`, a `prefers-color-scheme: dark` block
+  attribute) on **any** element, not just `<html>`, so a container with
+  `data-theme="dark"` is an always-dark region; that's the answer to
+  "a dark option for component X" (README, Theming). The light values
+  live only on `:root`, so the reverse (a light region in a dark page)
+  doesn't work. With no `data-theme`, a `prefers-color-scheme: dark` block
   mirrors the dark values; an explicit `data-theme="light"` wins.
   Both dark blocks also set `color-scheme: dark`.
 - **Only one scheme ships**: the MD3 baseline (seed `#6750A4`). Don't add
@@ -1247,7 +1265,11 @@ a `hero-*` class string the same way, not draw its own SVG.
    `@source "../../lib";`, resolved relative to itself. Don't remove it.
 4. Load Roboto Flex (or override `--font-pp-brand`/`--font-pp-plain`).
 5. Register the hook: `import PhoenixPaperHooks from "phoenix_paper"`,
-   spread into the LiveSocket's `hooks`.
+   spread into the LiveSocket's `hooks`. The bare name resolves through
+   esbuild's `NODE_PATH` (`deps/`), which Phoenix 1.8 apps set; older
+   apps add `env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}` to
+   the esbuild profile. The CSS import (step 3) is relative and needs
+   nothing.
 
 ## HEEx gotcha: literal `{`/`}` in attribute strings and text
 
