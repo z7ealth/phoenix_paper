@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-11-02
+
+### Added
+
+- **`pp_list_item` `three_line`** — MD3's three-line list item, for text
+  that doesn't fit on one line: an 88dp row with 12dp vertical padding,
+  the headline wrapping instead of being cut with "…", the `:secondary`
+  supporting text wrapping to up to two lines, and the leading and
+  trailing content aligned to the top. Without it, items stay MD3's
+  one- and two-line items (each line cut to one line). Replaces app-side
+  rules like `.list-wrap`.
+
 ## [0.5.5] - 2026-11-02
 
 ### Fixed

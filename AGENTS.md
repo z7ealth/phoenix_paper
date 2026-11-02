@@ -470,6 +470,20 @@ in function components (see the `assign_new/3` gotcha below). They're
 tested with `live_isolated/3` through `PhoenixPaper.TestEndpoint` in
 `test/support` (needs the test-only `lazy_html` dep).
 
+## Containment: `ListItem` line counts
+
+MD3 has one-, two- and three-line list items (56/72/88dp, the
+material-web tokens). One- and two-line are automatic (the `:secondary`
+slot adds the second line) and cut each line with `truncate`.
+`three_line` is opt-in, because the spec, as Compose implements it, makes an item three-line
+when its supporting text *measures* as multi-line, which CSS can't
+detect. It switches the root to `min-h-[88px] items-start py-3`
+(Compose's 12dp three-line padding and top-offset leading/trailing),
+lets the headline wrap (Compose puts no `maxLines` on it) and clamps the
+supporting text at two lines (`line-clamp-2`). Each is a literal from a
+two-clause private function, per "Tailwind class safety". Added in
+0.5.6 after real lists had long descriptions cut off.
+
 ## Containment: `Card`
 
 `Card` renders MD3's three cards itself (`elevated`

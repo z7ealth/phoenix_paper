@@ -11,6 +11,24 @@ defmodule PhoenixPaper.ListItem do
   avatar keeps its own colors), the `:trailing` content `label-small`.
   Linked items get the state layer and focus ring.
 
+  ## Three-line items
+
+  By default the text is cut to one line each with "…" (MD3's one- and
+  two-line items). `three_line` makes it MD3's three-line item, for
+  longer text: an 88dp row with 12dp top and bottom padding, the
+  supporting line wrapping to up to two lines, the headline wrapping
+  instead of being cut, and the leading and trailing content aligned to
+  the top instead of centered.
+
+      <.pp_list_item three_line>
+        Close tab
+        <:secondary>Asks first if the tab is still uploading or has unsaved changes.</:secondary>
+      </.pp_list_item>
+
+  MD3 (like its Compose implementation) makes an item three-line when its
+  supporting text runs onto a second line. CSS can't tell when text has
+  wrapped, so here the caller says so.
+
   Renders as a `Phoenix.Component.link/1` (so `href`/`navigate`/`patch` all
   work) when any of those are set, or a plain `<div>` otherwise — a static
   info row doesn't need to be a link. Whether an item is "active" isn't
@@ -51,6 +69,12 @@ defmodule PhoenixPaper.ListItem do
   )
 
   attr(:disabled, :boolean, default: false)
+
+  attr(:three_line, :boolean,
+    default: false,
+    doc: "MD3's three-line item: text wraps (supporting text up to two lines), 88dp, top-aligned"
+  )
+
   attr(:paperize, :boolean, default: true)
   attr(:class, :any, default: nil)
 
@@ -85,7 +109,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, @ripple?, true, @three_line), @class)}
       onclick={Ripple.on_click(@ripple?)}
       {@rest}
     >
@@ -97,7 +121,7 @@ defmodule PhoenixPaper.ListItem do
       aria-disabled={to_string(@disabled)}
       aria-current={@active && "page"}
       data-pp-component="list-item"
-      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false), @class)}
+      class={Helpers.classes(@paperize, item_classes(@active, @disabled, false, false, @three_line), @class)}
       {@rest}
     >
       {item_content(assigns)}
@@ -115,12 +139,12 @@ defmodule PhoenixPaper.ListItem do
       {render_slot(@leading)}
     </span>
     <span class="min-w-0 flex-1">
-      <span class={Helpers.classes(@paperize, "block truncate pp-body-large", nil)}>
+      <span class={Helpers.classes(@paperize, headline_classes(@three_line), nil)}>
         {render_slot(@inner_block)}
       </span>
       <span
         :if={@secondary != []}
-        class={Helpers.classes(@paperize, "block truncate pp-body-medium text-pp-on-surface-variant [[aria-current]_&]:text-inherit", nil)}
+        class={Helpers.classes(@paperize, supporting_classes(@three_line), nil)}
       >
         {render_slot(@secondary)}
       </span>
@@ -135,16 +159,32 @@ defmodule PhoenixPaper.ListItem do
   end
 
   # MD3 one-line items are 56dp, two-line 72dp (the secondary line makes
-  # the content taller; min-h covers the one-line case).
-  defp item_classes(active, disabled, ripple, linked) do
+  # the content taller; min-h covers the one-line case). Three-line items
+  # are 88dp with 12dp vertical padding, and their leading/trailing
+  # content sits at the top (Compose offsets it by the top padding).
+  defp item_classes(active, disabled, ripple, linked, three_line) do
     [
-      "relative flex min-h-14 items-center gap-4 overflow-hidden px-4 py-2 pp-motion-effects-fast",
+      "relative flex gap-4 overflow-hidden px-4 pp-motion-effects-fast",
+      if(three_line, do: "min-h-[88px] items-start py-3", else: "min-h-14 items-center py-2"),
       linked && "cursor-pointer pp-state-layer pp-focus-ring",
       state_classes(active),
       disabled && "pointer-events-none opacity-38",
       Ripple.container_classes(ripple)
     ]
   end
+
+  # One- and two-line items cut each line with an ellipsis; three-line
+  # items wrap the headline and clamp the supporting text at MD3's two
+  # lines (`break-words` so a long URL can't push the row wider).
+  defp headline_classes(false), do: "block truncate pp-body-large"
+  defp headline_classes(true), do: "block break-words pp-body-large"
+
+  defp supporting_classes(false),
+    do: "block truncate pp-body-medium text-pp-on-surface-variant [[aria-current]_&]:text-inherit"
+
+  defp supporting_classes(true),
+    do:
+      "block line-clamp-2 break-words pp-body-medium text-pp-on-surface-variant [[aria-current]_&]:text-inherit"
 
   defp state_classes(true), do: "bg-pp-secondary-container text-pp-on-secondary-container"
   defp state_classes(false), do: "text-pp-on-surface"

@@ -128,6 +128,51 @@ defmodule PhoenixPaper.ListItemTest do
     assert html =~ "py-2"
   end
 
+  test "three_line: 88dp, 12dp padding, top-aligned, wrapping headline, two-line supporting text" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_list_item three_line>
+        Close tab (asks if busy)
+        <:secondary>Asks first if the tab is still uploading.</:secondary>
+      </.pp_list_item>
+      """)
+
+    assert html =~ "min-h-[88px] items-start py-3"
+    refute html =~ "min-h-14"
+    refute html =~ "truncate"
+    assert html =~ "block break-words pp-body-large"
+    assert html =~ "block line-clamp-2 break-words pp-body-medium"
+  end
+
+  test "without three_line, both lines are cut to one line" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_list_item>Title<:secondary>Supporting</:secondary></.pp_list_item>
+      """)
+
+    assert html =~ "min-h-14 items-center py-2"
+    assert html =~ "block truncate pp-body-large"
+    assert html =~ "block truncate pp-body-medium"
+    refute html =~ "line-clamp-2"
+  end
+
+  test "three_line under paperize={false} adds no classes" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.pp_list_item three_line paperize={false} class="mine">Title<:secondary>S</:secondary></.pp_list_item>
+      """)
+
+    refute html =~ "min-h-[88px]"
+    refute html =~ "line-clamp-2"
+    assert html =~ "mine"
+  end
+
   test "marks the leading slot" do
     assigns = %{}
 
